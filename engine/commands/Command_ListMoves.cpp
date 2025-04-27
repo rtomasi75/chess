@@ -19,7 +19,7 @@ bool Command_ListMoves::Try(const std::string& commandString)
 			for (MG_MOVEINDEX moveIndex = 0; moveIndex < GetEngine().LegalMoves().CountMoves; moveIndex++)
 			{
 				MG_MOVE move = GetEngine().LegalMoves().Move[moveIndex];
-				GetEngine().OutputStream() << "  " << MoveToString(move) << std::endl;
+				GetEngine().OutputStream() << "  " << MoveToHexString(move) << ": " << MoveToString(move) << std::endl;
 			}
 
 		}

@@ -2,6 +2,7 @@
 #include "MG_KING.h"
 #include "MG_ROOK.h"
 #include "libCommon.h"
+#include <iostream>
 
 size_t MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
@@ -13,14 +14,11 @@ size_t MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen)
 
 void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 {
-	SLIDEMASKS_Initialize(pMoveGen);
+	pMoveGen->CountSlideEntries = SLIDEMASKS_CountEntries();
+	pMoveGen->SlideEntries = new MG_SLIDEENTRY[pMoveGen->CountSlideEntries];
+	MG_SLIDEENTRYINDEX nextEntry = 0;
+	SLIDEMASKS_Initialize(pMoveGen, nextEntry);
 	ROOK_Initialize_LookUps(pMoveGen);
-	pMoveGen->CountSlideEntries = SLIDELOOKUP_CountSlideEntries(pMoveGen);
-	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
-	{
-		// Allocate entries
-		pMoveGen->SlideEntries[movingPlayer] = new MG_SLIDEENTRY[pMoveGen->CountSlideEntries];
-	}
 	pMoveGen->CountMoves = MOVEGEN_CountMoves(pMoveGen);
 	KING_Initialize_Targets(pMoveGen);
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
@@ -42,27 +40,28 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 			KING_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
 		// Rook
-	//	ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
-	//	ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
-	//	ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
+		ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
+		ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
+		ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 	}
 }
 
 void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen)
 {
+	delete[] pMoveGen->SlideEntries;
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
 	{
 		delete[] pMoveGen->MoveTable[movingPlayer];
-		delete[] pMoveGen->SlideEntries[movingPlayer];
 	}
 }
 
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, MG_MOVELIST* pMoveList)
 {
+	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
 	MOVELIST_Initialize(pMoveList);
 	for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 	{
-		switch (pMoveGen->PieceInfo[piece]->MoveMechanic[MOVETYPE_QUIET])
+		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_QUIET])
 		{
 		default:
 			ASSERT(false);
@@ -76,7 +75,7 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosit
 		case MOVEMECHANIC_NONE:
 			break;
 		}
-		switch (pMoveGen->PieceInfo[piece]->MoveMechanic[MOVETYPE_CAPTURE])
+		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_CAPTURE])
 		{
 		case MOVEMECHANIC_JUMPTABLE:
 			MOVEGEN_GenerateCaptureJumps(pMoveGen, pPosition, piece, pMoveList);
@@ -118,24 +117,31 @@ void MOVEGEN_GenerateQuietJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION* p
 
 void MOVEGEN_GenerateQuietSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-/*	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
+	const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[pMoveGen->PieceInfo[piece]->TableIndex[TABLEINDEX_QUIET]];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		MG_SLIDELOOKUPINDEX lookUpIndex = pMoveGen->SlideTable[pMoveGen->PieceInfo[piece]->TableIndex[TABLEINDEX_QUIET]].LookUp[0];
-		const MG_SLIDELOOKUP& lookUp = pMoveGen->SlideLookUp[lookUpIndex][fromSquareIndex];
-		const int lookUpIndex = (int)CM_BitExtract(pPosition->OccupancyTotal, lookUp.Mask);
-		const BB_BITBOARD targets = lookUp.Table[lookUpIndex].Targets;
-		BB_BITBOARD destinations = targets;
-		BB_SQUAREINDEX toSquareIndex;
-		while (SQUARE_Next(destinations, toSquareIndex))
+		for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
 		{
-			const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-			const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
-			const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
-			pMoveList->Move[pMoveList->CountMoves++] = move;
+			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+			const BB_BITBOARD mask = pMoveGen->SlideMasks[maskIndex].Mask[fromSquareIndex];
+			const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
+			const MG_SLIDEMASKINDEX lookUpIndex = (MG_SLIDEMASKINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
+			const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
+			ASSERT(entry < pMoveGen->CountSlideEntries);
+			const BB_BITBOARD targets = pMoveGen->SlideEntries[entry].Targets;
+			BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
+			BB_SQUAREINDEX toSquareIndex;
+			while (SQUARE_Next(destinations, toSquareIndex))
+			{
+				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
+				const MG_MOVE move = table.MoveBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex] + optionIndex;
+				pMoveList->Move[pMoveList->CountMoves++] = move;
+			}
 		}
-	}*/
+	}
 }
 
 void MOVEGEN_GenerateCaptureJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
@@ -163,26 +169,32 @@ void MOVEGEN_GenerateCaptureJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION*
 
 void MOVEGEN_GenerateCaptureSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-/*	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		const MG_SLIDELOOKUP& lookUp = pMoveGen->SlideTable[pMoveGen->PieceInfo[piece]->TableIndex[TABLEINDEX_CAPTURE(piece)]].LookUpFrom[fromSquareIndex];
-		const int lookUpIndex = (int)CM_BitExtract(pPosition->OccupancyTotal, lookUp.Mask);
-		const BB_BITBOARD targets = lookUp.Table[lookUpIndex].Targets;
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
-			BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
-			BB_SQUAREINDEX toSquareIndex;
-			while (SQUARE_Next(destinations, toSquareIndex))
+			const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[pMoveGen->PieceInfo[piece]->TableIndex[TABLEINDEX_CAPTURE(capturedPiece)]];
+			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
 			{
-				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
-				const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
-				pMoveList->Move[pMoveList->CountMoves++] = move;
+				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+				const BB_BITBOARD mask = pMoveGen->SlideMasks[maskIndex].Mask[fromSquareIndex];
+				const MG_SLIDEMASKINDEX lookUpIndex = (MG_SLIDEMASKINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
+				const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
+				ASSERT(entry < pMoveGen->CountSlideEntries);
+				BB_BITBOARD destinations = pMoveGen->SlideEntries[entry].Targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
+				BB_SQUAREINDEX toSquareIndex;
+				while (SQUARE_Next(destinations, toSquareIndex))
+				{
+					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+					const MG_MOVE move = table.MoveBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex] + optionIndex;
+					pMoveList->Move[pMoveList->CountMoves++] = move;
+				}
 			}
 		}
-	}*/
+	}
 }
 
 bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVELIST* pMoveList, const char* pString, const int& len, int& strPos, MG_MOVE& outParsed)

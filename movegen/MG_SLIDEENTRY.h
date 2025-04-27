@@ -4,9 +4,11 @@
 
 #include "libBitboard.h"
 
+typedef std::int32_t MG_SLIDEENTRYINDEX;
+
 struct MG_SLIDEENTRY
 {
-	BB_BITBOARD TargetsFrom[COUNT_SQUARES];
+	BB_BITBOARD Targets;
 };
 
 #endif

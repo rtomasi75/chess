@@ -5,6 +5,7 @@
 #include "MG_PIECEINFO.h"
 #include "MG_MOVEINFO.h"
 #include "MG_MOVE.h"
+#include "MG_SLIDELOOKUP.h"
 #include "libBitboard.h"
 
 struct MG_MOVEGEN;

@@ -42,7 +42,7 @@ struct MG_MOVEGEN
 	MG_SLIDELOOKUP SlideLookUp[COUNT_SLIDELOOKUPS];
 	BB_BITBOARD JumpTargets[COUNT_JUMPTARGETS][COUNT_SQUARES];
 	MG_MOVEINFO* MoveTable[COUNT_PLAYERS];
-	MG_SLIDEENTRY* SlideEntries[COUNT_PLAYERS];
+	MG_SLIDEENTRY* SlideEntries;
 	size_t CountMoves;
 	size_t CountSlideEntries;
 };

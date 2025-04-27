@@ -1,5 +1,94 @@
 #include "MG_SLIDEMASKS.h"
 #include "MG_MOVEGEN.h"
+#include "libCommon.h"
+
+BB_BITBOARD SLIDEMASKS_GenerateTargetsHorizontal(const BB_SQUARE& square, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD mask = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	BB_BITBOARD scratch;
+	// Up
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	{
+		current = BITBOARD_UP(current) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Down
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	{
+		current = BITBOARD_DOWN(current) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Right
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	{
+		current = BITBOARD_RIGHT(current) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Left
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	{
+		current = BITBOARD_LEFT(current) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	return mask;
+}
+
+BB_BITBOARD SLIDEMASKS_GenerateTargetsDiagonal(const BB_SQUARE& square, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD mask = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	BB_BITBOARD scratch;
+	// Up/Left
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	{
+		current = BITBOARD_LEFT(BITBOARD_UP(current)) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Down/Left
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	{
+		current = BITBOARD_LEFT(BITBOARD_DOWN(current)) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Up/Right
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	{
+		current = BITBOARD_UP(BITBOARD_RIGHT(current)) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	// Down/Right
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	{
+		current = BITBOARD_DOWN(BITBOARD_RIGHT(current)) & ~occupancy;
+		scratch |= current;
+	}
+	mask |= scratch;
+	return mask;
+}
 
 BB_BITBOARD SLIDEMASKS_GenerateMaskHorizontal(const BB_SQUARE& square)
 {
@@ -52,48 +141,136 @@ BB_BITBOARD SLIDEMASKS_GenerateMaskHorizontal(const BB_SQUARE& square)
 BB_BITBOARD SLIDEMASKS_GenerateMaskDiagonal(const BB_SQUARE& square)
 {
 	BB_BITBOARD mask = BITBOARD_EMPTY;
-	BB_BITBOARD  current;
+	BB_BITBOARD current;
+	BB_BITBOARD scratch;
 	// Up/Left
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
 	{
 		current = BITBOARD_LEFT(BITBOARD_UP(current));
-		mask |= current;
+		scratch |= current;
 	}
-	// Up/Right
-	current = square;
-	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
-	{
-		current = BITBOARD_RIGHT(BITBOARD_UP(current));
-		mask |= current;
-	}
+	scratch &= ~RANK_FromIndex(COUNT_RANKS - 1);
+	scratch &= ~FILE_FromIndex(0);
+	mask |= scratch;
 	// Down/Left
 	current = square;
-	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	scratch = BITBOARD_EMPTY;
+	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
 	{
 		current = BITBOARD_LEFT(BITBOARD_DOWN(current));
-		mask |= current;
+		scratch |= current;
 	}
-	// Down/Right
+	scratch &= ~RANK_FromIndex(0);
+	scratch &= ~FILE_FromIndex(0);
+	mask |= scratch;
+	// Up/Right
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
 	{
-		current = BITBOARD_RIGHT(BITBOARD_DOWN(current));
-		mask |= current;
+		current = BITBOARD_UP(BITBOARD_RIGHT(current));
+		scratch |= current;
 	}
-	// Don't care about border squares
-	mask &= ~FILE_FromIndex(0);
-	mask &= ~FILE_FromIndex(COUNT_FILES - 1);
-	mask &= ~RANK_FromIndex(0);
-	mask &= ~RANK_FromIndex(COUNT_RANKS - 1);
+	scratch &= ~RANK_FromIndex(COUNT_RANKS - 1);
+	scratch &= ~FILE_FromIndex(COUNT_FILES - 1);
+	mask |= scratch;
+	// Down/Right
+	current = square;
+	scratch = BITBOARD_EMPTY;
+	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	{
+		current = BITBOARD_DOWN(BITBOARD_RIGHT(current));
+		scratch |= current;
+	}
+	scratch &= ~RANK_FromIndex(0);
+	scratch &= ~FILE_FromIndex(COUNT_FILES - 1);
+	mask |= scratch;
 	return mask;
 }
 
-void SLIDEMASKS_Initialize(MG_MOVEGEN* pMoveGen)
+void SLIDEMASKS_InitializeDiagonal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry)
 {
 	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
 	{
-		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndex] = SLIDEMASKS_GenerateMaskHorizontal(SQUARE_FromIndex(squareIndex));
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].Mask[squareIndex] = SLIDEMASKS_GenerateMaskDiagonal(SQUARE_FromIndex(squareIndex));
+		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
+		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskDiagonal(square);
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].Mask[squareIndex] = mask;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex] = SLIDEMASKS_GenerateTargetsDiagonal(square, BITBOARD_EMPTY);
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].BaseEntry[squareIndex] = nextEntry;
+		const std::int8_t countBits = CM_PopulationCount(mask);
+		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountEntries[squareIndex] = count;
+		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
+		{
+			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);
+			const MG_SLIDEENTRYINDEX entry = nextEntry++;
+			ASSERT(entry < pMoveGen->CountSlideEntries);
+			pMoveGen->SlideEntries[entry].Targets = SLIDEMASKS_GenerateTargetsDiagonal(square, occupancy);
+		}
 	}
+}
+
+void SLIDEMASKS_InitializeHorizontal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry)
+{
+	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
+	{
+		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
+		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskHorizontal(square);
+		const BB_BITBOARD targets = SLIDEMASKS_GenerateTargetsHorizontal(square, BITBOARD_EMPTY);
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndex] = mask;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[squareIndex] = targets;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].BaseEntry[squareIndex] = nextEntry;
+		const std::int8_t countBits = CM_PopulationCount(mask);
+		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountEntries[squareIndex] = count;
+		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
+		{
+			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);
+			const MG_SLIDEENTRYINDEX entry = nextEntry++;
+			ASSERT(entry < pMoveGen->CountSlideEntries);
+			pMoveGen->SlideEntries[entry].Targets = SLIDEMASKS_GenerateTargetsHorizontal(square, occupancy);
+		}
+	}
+}
+
+void SLIDEMASKS_Initialize(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry)
+{
+	SLIDEMASKS_InitializeHorizontal(pMoveGen, nextEntry);
+	SLIDEMASKS_InitializeDiagonal(pMoveGen, nextEntry);
+}
+
+size_t SLIDEMASKS_CountEntriesDiagonal()
+{
+	size_t count = 0;
+	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
+	{
+		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
+		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskDiagonal(square);
+		const std::int8_t countBits = CM_PopulationCount(mask);
+		count += ((size_t)1) << countBits;
+	}
+	return count;
+}
+
+size_t SLIDEMASKS_CountEntriesHorizontal()
+{
+	size_t count = 0;
+	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
+	{
+		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
+		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskHorizontal(square);
+		const std::int8_t countBits = CM_PopulationCount(mask);
+		count += ((size_t)1) << countBits;
+	}
+	return count;
+}
+
+size_t SLIDEMASKS_CountEntries()
+{
+	size_t count = 0;
+	count += SLIDEMASKS_CountEntriesDiagonal();
+	count += SLIDEMASKS_CountEntriesHorizontal();
+	return count;
 }
