@@ -5,3 +5,4 @@
 .vs/
 
 out/
+/out/build/x64-debug/bitboard/CMakeFiles/bitboard.dir/BB_BITBOARD.cpp.obj
