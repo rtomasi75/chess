@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/roland/source/repos/pygmalion/engine
+# Install script for directory: E:/git/chess/engine
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/roland/source/repos/pygmalion/out/install/x64-release")
+  set(CMAKE_INSTALL_PREFIX "E:/git/chess/out/install/x64-release")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

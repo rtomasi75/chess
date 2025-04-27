@@ -25,7 +25,6 @@ std::string Command_DebugJumps::JumpTableIndexToString(const int& index)
 	}
 }
 
-
 bool Command_DebugJumps::Try(const std::string& commandString)
 {
 	std::string input = commandString;
@@ -57,7 +56,7 @@ bool Command_DebugJumps::Try(const std::string& commandString)
 				if (jumpTableIndex >= COUNT_JUMPTABLES)
 				{
 					std::stringstream ss;
-					ss << jumpTableIndex;
+					ss << (int)COUNT_JUMPTABLES;
 					GetEngine().ErrorMessage(tableString + " is not a valid jump-table index (must be below" + ss.str() + ").");
 					return true;
 				}

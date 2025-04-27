@@ -4,40 +4,48 @@
 BB_BITBOARD SLIDEMASKS_GenerateMaskHorizontal(const BB_SQUARE& square)
 {
 	BB_BITBOARD mask = BITBOARD_EMPTY;
-	BB_BITBOARD  current;
+	BB_BITBOARD current;
+	BB_BITBOARD scratch;
 	// Up
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
 	{
 		current = BITBOARD_UP(current);
-		mask |= current;
+		scratch |= current;
 	}
+	scratch &= ~RANK_FromIndex(COUNT_RANKS - 1);
+	mask |= scratch;
 	// Down
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
 	{
 		current = BITBOARD_DOWN(current);
-		mask |= current;
+		scratch |= current;
 	}
+	scratch &= ~RANK_FromIndex(0);
+	mask |= scratch;
 	// Right
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
 	{
 		current = BITBOARD_RIGHT(current);
-		mask |= current;
+		scratch |= current;
 	}
-	// Right
+	scratch &= ~FILE_FromIndex(COUNT_FILES - 1);
+	mask |= scratch;
+	// Left
 	current = square;
+	scratch = BITBOARD_EMPTY;
 	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
 	{
 		current = BITBOARD_LEFT(current);
-		mask |= current;
+		scratch |= current;
 	}
-	// Don't care about border squares
-	mask &= ~FILE_FromIndex(0);
-	mask &= ~FILE_FromIndex(COUNT_FILES - 1);
-	mask &= ~RANK_FromIndex(0);
-	mask &= ~RANK_FromIndex(COUNT_RANKS - 1);
+	scratch &= ~FILE_FromIndex(0);
+	mask |= scratch;
 	return mask;
 }
 

@@ -12,7 +12,7 @@ struct MG_MOVEGEN;
 
 BB_BITBOARD KING_MovesFromSquare(const BB_SQUARE& squareFrom);
 
-size_t KING_CountMoves();
+size_t KING_CountMoves(const MG_MOVEGEN* pMoveGen);
 
 void KING_Initialize_Targets(MG_MOVEGEN* pMoveGen);
 

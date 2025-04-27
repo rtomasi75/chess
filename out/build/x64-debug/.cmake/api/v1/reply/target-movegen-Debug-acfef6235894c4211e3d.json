@@ -12,7 +12,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "engine/engine.lib"
+			"path" : "movegen/movegen.lib"
 		}
 	],
 	"backtrace" : 1,
@@ -27,7 +27,7 @@
 		],
 		"files" : 
 		[
-			"engine/CMakeLists.txt"
+			"movegen/CMakeLists.txt"
 		],
 		"nodes" : 
 		[
@@ -37,25 +37,25 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 10,
+				"line" : 8,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 17,
+				"line" : 15,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 16,
+				"line" : 14,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 13,
+				"line" : 11,
 				"parent" : 0
 			}
 		]
@@ -73,23 +73,15 @@
 			[
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/roland/source/repos/pygmalion/engine/.."
+					"path" : "E:/git/chess/movegen/.."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/common/.."
+					"path" : "E:/git/chess/common/.."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/movegen/.."
-				},
-				{
-					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/bitboard/.."
-				},
-				{
-					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/search/.."
+					"path" : "E:/git/chess/bitboard/.."
 				}
 			],
 			"language" : "CXX",
@@ -103,16 +95,18 @@
 			},
 			"sourceIndexes" : 
 			[
-				0,
-				2,
-				4,
-				6,
-				8,
-				10,
-				12,
-				14,
+				1,
+				3,
+				5,
+				7,
+				9,
+				11,
 				16,
-				18
+				19,
+				21,
+				23,
+				25,
+				27
 			]
 		}
 	],
@@ -125,28 +119,20 @@
 		{
 			"backtrace" : 2,
 			"id" : "bitboard::@68d65d6428415e6ffcca"
-		},
-		{
-			"backtrace" : 2,
-			"id" : "movegen::@dccad8745911023451f0"
-		},
-		{
-			"backtrace" : 2,
-			"id" : "search::@b3e4e3481926c17d0075"
 		}
 	],
-	"id" : "engine::@4088515cb4035b412499",
-	"name" : "engine",
-	"nameOnDisk" : "engine.lib",
+	"id" : "movegen::@dccad8745911023451f0",
+	"name" : "movegen",
+	"nameOnDisk" : "movegen.lib",
 	"paths" : 
 	{
-		"build" : "engine",
-		"source" : "engine"
+		"build" : "movegen",
+		"source" : "movegen"
 	},
 	"sourceGroups" : 
 	[
 		{
-			"name" : "Source Files",
+			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
 				0,
@@ -156,13 +142,20 @@
 				8,
 				10,
 				12,
+				13,
 				14,
-				16,
-				18
+				15,
+				17,
+				18,
+				20,
+				22,
+				24,
+				26,
+				28
 			]
 		},
 		{
-			"name" : "Header Files",
+			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
 				1,
@@ -171,10 +164,12 @@
 				7,
 				9,
 				11,
-				13,
-				15,
-				17,
-				19
+				16,
+				19,
+				21,
+				23,
+				25,
+				27
 			]
 		}
 	],
@@ -182,113 +177,160 @@
 	[
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/Command.cpp",
+			"path" : "movegen/MG_JUMPTABLE.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/Command.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_KING.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/Engine.cpp",
+			"path" : "movegen/MG_KING.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/Engine.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_MOVE.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/StringHelper.cpp",
+			"path" : "movegen/MG_MOVE.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/StringHelper.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_MOVEDATA.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_DebugBoard.cpp",
+			"path" : "movegen/MG_MOVEDATA.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_DebugBoard.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_MOVEGEN.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_DebugJumps.cpp",
+			"path" : "movegen/MG_MOVEGEN.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_DebugJumps.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_MOVEINFO.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_DebugMove.cpp",
+			"path" : "movegen/MG_MOVEINFO.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_DebugMove.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_MOVELIST.cpp",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_DebugMoves.cpp",
+			"path" : "movegen/MG_MOVELIST.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_DebugMoves.h",
-			"sourceGroupIndex" : 1
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_ListMoves.cpp",
+			"path" : "movegen/MG_MOVEMECHANIC.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_ListMoves.h",
-			"sourceGroupIndex" : 1
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_Quit.cpp",
+			"path" : "movegen/MG_MOVETYPE.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_Quit.h",
-			"sourceGroupIndex" : 1
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "engine/commands/Command_Version.cpp",
+			"path" : "movegen/MG_PIECEINFO.h",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "engine/commands/Command_Version.h",
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_PIECETYPE.cpp",
 			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_PIECETYPE.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_PLAYER.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_POSITION.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_POSITION.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_ROOK.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_ROOK.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_SLIDEENTRY.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_SLIDEENTRY.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_SLIDELOOKUP.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_SLIDELOOKUP.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "movegen/MG_SLIDEMASKS.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "movegen/MG_SLIDEMASKS.h",
+			"sourceGroupIndex" : 0
 		}
 	],
 	"type" : "STATIC_LIBRARY"

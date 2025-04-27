@@ -16,7 +16,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeSystem.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeSystem.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -285,7 +285,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeCCompiler.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -534,7 +534,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeCXXCompiler.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeCXXCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -608,7 +608,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeRCCompiler.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeRCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -687,7 +687,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeCCompiler.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeCCompiler.cmake"
 		},
 		{
 			"isCMake" : true,
@@ -791,7 +791,7 @@
 		},
 		{
 			"isGenerated" : true,
-			"path" : "out/build/x64-debug/CMakeFiles/3.29.5-msvc4/CMakeCXXCompiler.cmake"
+			"path" : "out/build/x64-release/CMakeFiles/3.29.5-msvc4/CMakeCXXCompiler.cmake"
 		},
 		{
 			"path" : "common/CMakeLists.txt"
@@ -812,8 +812,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "C:/Users/roland/source/repos/pygmalion/out/build/x64-debug",
-		"source" : "C:/Users/roland/source/repos/pygmalion"
+		"build" : "E:/git/chess/out/build/x64-release",
+		"source" : "E:/git/chess"
 	},
 	"version" : 
 	{

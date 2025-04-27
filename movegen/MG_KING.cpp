@@ -1,5 +1,6 @@
 #include "MG_KING.h"
 #include "MG_MOVEGEN.h"
+#include "libCommon.h"
 
 BB_BITBOARD KING_MovesFromSquare(const BB_SQUARE& squareFrom)
 {
@@ -15,16 +16,17 @@ BB_BITBOARD KING_MovesFromSquare(const BB_SQUARE& squareFrom)
 	return targets;
 }
 
-size_t KING_CountMoves()
+size_t KING_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
 	size_t count = 0;
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
 		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		BB_BITBOARD targets = KING_MovesFromSquare(squareFrom);
-		count += BITBOARD_PopulationCount(targets);
+		const BB_BITBOARD targets = pMoveGen->JumpTargets[JUMPTARGETS_KING][squareIndexFrom];
+		BB_SQUARECOUNT countTargets = BITBOARD_PopulationCount(targets);
+		count += countTargets * (1 + COUNT_PIECETYPES);
 	}
-	return count * (1 + COUNT_PIECETYPES);
+	return count;
 }
 
 void KING_Initialize_Targets(MG_MOVEGEN* pMoveGen)
@@ -52,6 +54,7 @@ void KING_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
 			const MG_MOVE move = nextMove++;
 			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+			ASSERT(move < pMoveGen->CountMoves);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 			pMoveGen->MoveTable[player][move].KillMap = BITBOARD_EMPTY;
 			pMoveGen->MoveTable[player][move].CreateMap = BITBOARD_EMPTY;
@@ -88,6 +91,7 @@ void KING_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETYPE& p
 			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
 			const MG_MOVE move = nextMove++;
 			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+			ASSERT(move < pMoveGen->CountMoves);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 			pMoveGen->MoveTable[player][move].KillMap = squareTo;
 			pMoveGen->MoveTable[player][move].MoveMap = squareFrom ^ squareTo;

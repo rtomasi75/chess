@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/roland/source/repos/pygmalion
+# Install script for directory: E:/git/chess
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/roland/source/repos/pygmalion/out/install/x64-release")
+  set(CMAKE_INSTALL_PREFIX "E:/git/chess/out/install/x64-release")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,11 +34,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("C:/Users/roland/source/repos/pygmalion/out/build/x64-release/common/cmake_install.cmake")
-  include("C:/Users/roland/source/repos/pygmalion/out/build/x64-release/bitboard/cmake_install.cmake")
-  include("C:/Users/roland/source/repos/pygmalion/out/build/x64-release/movegen/cmake_install.cmake")
-  include("C:/Users/roland/source/repos/pygmalion/out/build/x64-release/search/cmake_install.cmake")
-  include("C:/Users/roland/source/repos/pygmalion/out/build/x64-release/engine/cmake_install.cmake")
+  include("E:/git/chess/out/build/x64-release/common/cmake_install.cmake")
+  include("E:/git/chess/out/build/x64-release/bitboard/cmake_install.cmake")
+  include("E:/git/chess/out/build/x64-release/movegen/cmake_install.cmake")
+  include("E:/git/chess/out/build/x64-release/search/cmake_install.cmake")
+  include("E:/git/chess/out/build/x64-release/engine/cmake_install.cmake")
 
 endif()
 
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/roland/source/repos/pygmalion/out/build/x64-release/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "E:/git/chess/out/build/x64-release/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

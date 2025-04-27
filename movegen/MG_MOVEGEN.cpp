@@ -6,7 +6,7 @@
 size_t MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
 	size_t count = 0;
-	count += KING_CountMoves();
+	count += KING_CountMoves(pMoveGen);
 	count += ROOK_CountMoves(pMoveGen);
 	return count;
 }
@@ -27,7 +27,9 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 	{
 		// Allocate tables
 		pMoveGen->MoveTable[movingPlayer] = new MG_MOVEINFO[pMoveGen->CountMoves];
-		pMoveGen->SlideEntries[movingPlayer] = new MG_SLIDEENTRY[pMoveGen->CountSlideEntries];
+	}
+	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
+	{
 		// nullmove
 		MG_MOVE nextMove = MOVE_NULLMOVE;
 		MOVE_InitializeNullMove(pMoveGen->MoveTable[movingPlayer], movingPlayer);
@@ -40,9 +42,9 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 			KING_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
 		// Rook
-		ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
-		ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
-		ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
+	//	ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
+	//	ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
+	//	ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 	}
 }
 

@@ -39,7 +39,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/roland/source/repos/pygmalion/out/build/x64-release"
+			"value" : "e:/git/chess/out/build/x64-release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -467,7 +467,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/roland/source/repos/pygmalion/out/build/x64-release/CMakeFiles/pkgRedirects"
+			"value" : "E:/git/chess/out/build/x64-release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -527,7 +527,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/roland/source/repos/pygmalion"
+			"value" : "E:/git/chess"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -539,7 +539,7 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "C:/Users/roland/source/repos/pygmalion/out/install/x64-release"
+			"value" : "E:/git/chess/out/install/x64-release"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -1111,7 +1111,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/roland/source/repos/pygmalion/out/build/x64-release"
+			"value" : "E:/git/chess/out/build/x64-release"
 		},
 		{
 			"name" : "pygmalion_IS_TOP_LEVEL",
@@ -1135,7 +1135,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/roland/source/repos/pygmalion"
+			"value" : "E:/git/chess"
 		},
 		{
 			"name" : "search_LIB_DEPENDS",

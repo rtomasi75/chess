@@ -73,19 +73,19 @@
 			[
 				{
 					"backtrace" : 3,
-					"path" : "C:/Users/roland/source/repos/pygmalion/search/.."
+					"path" : "E:/git/chess/search/.."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/common/.."
+					"path" : "E:/git/chess/common/.."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/bitboard/.."
+					"path" : "E:/git/chess/bitboard/.."
 				},
 				{
 					"backtrace" : 2,
-					"path" : "C:/Users/roland/source/repos/pygmalion/movegen/.."
+					"path" : "E:/git/chess/movegen/.."
 				}
 			],
 			"language" : "CXX",
