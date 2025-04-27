@@ -2,7 +2,6 @@
 # Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
 ################################################################################
 
-.vs/
+/.vs/
 
-out/
-/out/build/x64-debug/bitboard/CMakeFiles/bitboard.dir/BB_BITBOARD.cpp.obj
+/out/
