@@ -2,6 +2,8 @@
 # Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
 ################################################################################
 
-/.vs/
+# Visual Studio 2019 cache/options directory
+.vs/
 
-/out/
+# Add this line
+out/
