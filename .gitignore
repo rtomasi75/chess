@@ -4,5 +4,4 @@
 
 /.vs/
 
-*.obj
-/out/build/x64-debug/bitboard/CMakeFiles/bitboard.dir/BB_FILE.cpp.obj
+out/
