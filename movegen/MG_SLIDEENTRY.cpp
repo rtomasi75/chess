@@ -1,0 +1,1 @@
+#include "MG_SLIDEENTRY.h"
