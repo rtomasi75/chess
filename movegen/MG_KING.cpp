@@ -16,17 +16,9 @@ BB_BITBOARD KING_MovesFromSquare(const BB_SQUARE& squareFrom)
 	return targets;
 }
 
-size_t KING_CountMoves(const MG_MOVEGEN* pMoveGen)
+MG_MOVE KING_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
-	size_t count = 0;
-	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
-	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		const BB_BITBOARD targets = pMoveGen->JumpTargets[JUMPTARGETS_KING][squareIndexFrom];
-		BB_SQUARECOUNT countTargets = BITBOARD_PopulationCount(targets);
-		count += countTargets * (1 + COUNT_PIECETYPES);
-	}
-	return count;
+	return JUMPTABLE_CountMoves(pMoveGen, JUMPTARGETS_KING);
 }
 
 void KING_Initialize_Targets(MG_MOVEGEN* pMoveGen)
@@ -41,75 +33,12 @@ void KING_Initialize_Targets(MG_MOVEGEN* pMoveGen)
 
 void KING_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
-	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
-	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		const BB_BITBOARD targets = pMoveGen->JumpTargets[JUMPTARGETS_KING][squareIndexFrom];
-		pMoveGen->JumpTable[JUMPTABLE_KING_QUIET].MovesBaseFrom[squareIndexFrom] = nextMove;
-		pMoveGen->JumpTable[JUMPTABLE_KING_QUIET].TargetIndex = JUMPTARGETS_KING;
-		BB_SQUARECOUNT count = BITBOARD_PopulationCount(targets);
-		for (BB_SQUARECOUNT squareBit = 0; squareBit < count; squareBit++)
-		{
-			BB_BITBOARD squareBitIndex = UINT64_C(1) << squareBit;
-			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
-			const MG_MOVE move = nextMove++;
-			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
-			ASSERT(move < pMoveGen->CountMoves);
-#ifndef MOVEGEN_COMPACT_MOVEINFO
-			pMoveGen->MoveTable[player][move].KillMap = BITBOARD_EMPTY;
-			pMoveGen->MoveTable[player][move].CreateMap = BITBOARD_EMPTY;
-			pMoveGen->MoveTable[player][move].MoveMap = squareFrom ^ squareTo;
-#endif
-			pMoveGen->MoveTable[player][move].MoveDest = squareIndexTo;
-			pMoveGen->MoveTable[player][move].MoveSource = squareIndexFrom;
-			pMoveGen->MoveTable[player][move].KillPiece = PIECETYPE_NONE;
-			pMoveGen->MoveTable[player][move].KillPlayer = PLAYER_NONE;
-			pMoveGen->MoveTable[player][move].KillDest = SQUAREINDEX_NONE;
-			pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
-			pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
-			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
-			pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_KING;
-			pMoveGen->MoveTable[player][move].MovePlayer = player;
-			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
-		}
-	}
+	JUMPTABLE_Initialize_QuietMoves(player, PIECETYPE_KING, pMoveGen, nextMove, JUMPTARGETS_KING, JUMPTABLE_KING_QUIET);
 }
 
-void KING_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETYPE& piece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
+void KING_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETYPE& capturedPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
-	const MG_PLAYER otherPlayer = PLAYER_OTHER(player);
-	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
-	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		const BB_BITBOARD targets = pMoveGen->JumpTargets[JUMPTARGETS_KING][squareIndexFrom];
-		pMoveGen->JumpTable[JUMPTABLE_KING_CAPTURE(piece)].MovesBaseFrom[squareIndexFrom] = nextMove;
-		pMoveGen->JumpTable[JUMPTABLE_KING_CAPTURE(piece)].TargetIndex = JUMPTARGETS_KING;
-		BB_SQUARECOUNT count = BITBOARD_PopulationCount(targets);
-		for (BB_SQUARECOUNT squareBit = 0; squareBit < count; squareBit++)
-		{
-			BB_BITBOARD squareBitIndex = UINT64_C(1) << squareBit;
-			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
-			const MG_MOVE move = nextMove++;
-			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
-			ASSERT(move < pMoveGen->CountMoves);
-#ifndef MOVEGEN_COMPACT_MOVEINFO
-			pMoveGen->MoveTable[player][move].KillMap = squareTo;
-			pMoveGen->MoveTable[player][move].MoveMap = squareFrom ^ squareTo;
-			pMoveGen->MoveTable[player][move].CreateMap = BITBOARD_EMPTY;
-#endif
-			pMoveGen->MoveTable[player][move].MoveDest = squareIndexTo;
-			pMoveGen->MoveTable[player][move].MoveSource = squareIndexFrom;
-			pMoveGen->MoveTable[player][move].KillPiece = piece;
-			pMoveGen->MoveTable[player][move].KillPlayer = otherPlayer;
-			pMoveGen->MoveTable[player][move].KillDest = squareIndexTo;
-			pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_KING;
-			pMoveGen->MoveTable[player][move].MovePlayer = player;
-			pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
-			pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
-			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
-			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
-		}
-	}
+	JUMPTABLE_Initialize_CaptureMoves(player, PIECETYPE_KING, capturedPiece, pMoveGen, nextMove, JUMPTARGETS_KING, JUMPTABLE_KING_CAPTURE(capturedPiece));
 }
 
 void KING_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)

@@ -64,6 +64,15 @@ typedef std::int8_t BB_SQUAREINDEX;
 #define SQUARE_F7 (RANK_7&FILE_F)
 #define SQUARE_F8 (RANK_8&FILE_F)
 
+#define SQUARE_G1 (RANK_1&FILE_G)
+#define SQUARE_G2 (RANK_2&FILE_G)
+#define SQUARE_G3 (RANK_3&FILE_G)
+#define SQUARE_G4 (RANK_4&FILE_G)
+#define SQUARE_G5 (RANK_5&FILE_G)
+#define SQUARE_G6 (RANK_6&FILE_G)
+#define SQUARE_G7 (RANK_7&FILE_G)
+#define SQUARE_G8 (RANK_8&FILE_G)
+
 #define SQUARE_H1 (RANK_1&FILE_H)
 #define SQUARE_H2 (RANK_2&FILE_H)
 #define SQUARE_H3 (RANK_3&FILE_H)

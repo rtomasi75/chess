@@ -11,11 +11,13 @@
 #define TABLEINDEX_SPECIAL 1
 #define TABLEINDEX_CAPTURE(_PIECE_) (2+(_PIECE_))
 
+typedef std::int8_t MG_TABLEINDEX;
+
 struct MG_PIECEINFO
 {
 	bool IsRoyal;
 	MG_MOVEMECHANIC MoveMechanic[COUNT_MOVETYPES];
-	std::uint8_t TableIndex[COUNT_TABLEINDICES];
+	MG_TABLEINDEX TableIndex[COUNT_TABLEINDICES];
 };
 
 #endif

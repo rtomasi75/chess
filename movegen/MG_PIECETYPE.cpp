@@ -13,12 +13,20 @@ bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECET
 		outParsedPiece = PIECETYPE_KING;
 		outParsedPlayer = PLAYER_BLACK;
 		break;
+	case 'n':
+		outParsedPiece = PIECETYPE_KNIGHT;
+		outParsedPlayer = PLAYER_BLACK;
+		break;
 	case 'r':
 		outParsedPiece = PIECETYPE_ROOK;
 		outParsedPlayer = PLAYER_BLACK;
 		break;
 	case 'K':
 		outParsedPiece = PIECETYPE_KING;
+		outParsedPlayer = PLAYER_WHITE;
+		break;
+	case 'N':
+		outParsedPiece = PIECETYPE_KNIGHT;
 		outParsedPlayer = PLAYER_WHITE;
 		break;
 	case 'R':
@@ -44,8 +52,14 @@ bool PIECETYPE_ToString(char* pString, const int& len, int& strPos, const MG_PIE
 		case PIECETYPE_KING:
 			pString[strPos] = 'K';
 			break;
+		case PIECETYPE_KNIGHT:
+			pString[strPos] = 'N';
+			break;
 		case PIECETYPE_ROOK:
 			pString[strPos] = 'R';
+			break;
+		case PIECETYPE_NONE:
+			pString[strPos] = '.';
 			break;
 		}
 	}
@@ -58,6 +72,9 @@ bool PIECETYPE_ToString(char* pString, const int& len, int& strPos, const MG_PIE
 			break;
 		case PIECETYPE_KING:
 			pString[strPos] = 'k';
+			break;
+		case PIECETYPE_KNIGHT:
+			pString[strPos] = 'n';
 			break;
 		case PIECETYPE_ROOK:
 			pString[strPos] = 'r';

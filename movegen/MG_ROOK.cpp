@@ -2,15 +2,15 @@
 #include "MG_MOVEGEN.h"
 #include "libCommon.h"
 
-size_t ROOK_CountMoves(const MG_MOVEGEN* pMoveGen)
+MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
-	size_t count = 0;
+	MG_MOVE count = 0;
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
 		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
 		const BB_BITBOARD mask = pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndexFrom];
-		BB_SQUARECOUNT countIndices = (BB_SQUARECOUNT)(UINT64_C(1) << BITBOARD_PopulationCount(mask));
-		for (BB_SQUARECOUNT index = 0; index < countIndices; index++)
+		std::uint64_t countIndices = (UINT64_C(1) << BITBOARD_PopulationCount(mask));
+		for (std::uint64_t index = 0; index < countIndices; index++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitExtract(index, mask);
 			count += BITBOARD_PopulationCount(ROOK_QuietMovesFromSquare(squareFrom, occupancy));
@@ -143,49 +143,45 @@ void ROOK_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 
 void ROOK_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
-	/*	const MG_PLAYER otherPlayer = PLAYER_OTHER(player);
-		for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
+	const MG_PLAYER otherPlayer = PLAYER_OTHER(player);
+	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
+	{
+		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
+		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].CountMasks; idx++)
 		{
-			const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-			const BB_BITBOARD mask = ROOK_GenerateMask(squareFrom);
-			SLIDELOOKUP_Initialize(&pSlideTable->LookUpFrom[squareIndexFrom], mask);
-			const BB_BITBOARD allTargets = ROOK_QuietMovesFromSquare(squareFrom, BITBOARD_EMPTY);
-			BB_SQUARECOUNT count = BITBOARD_PopulationCount(allTargets);
+			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].MaskIndex[idx];
+			const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
+			const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
+			pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].MoveBase[player][idx][squareIndexFrom] = nextMove;
 			for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 			{
-				pSlideTable->LookUpFrom[squareIndexFrom].CaptureMoveBase[capturedPiece] = nextMove;
-				for (BB_SQUARECOUNT squareBit = 0; squareBit < count; squareBit++)
+				for (BB_SQUARECOUNT bitIndex = 0; bitIndex < countBits; bitIndex++)
 				{
-					BB_BITBOARD squareBitIndex = UINT64_C(1) << squareBit;
-					const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, allTargets);
-					const MG_MOVE move = nextMove++;
+					const BB_BITBOARD bit = UINT64_C(1) << bitIndex;
+					const BB_SQUARE squareTo = BITBOARD_BitDeposit(bit, allTargets);
 					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
-	#ifndef MOVEGEN_COMPACT_MOVEINFO
-					pMoveInfo[move].KillMap = squareTo;
-					pMoveInfo[move].MoveMap = squareFrom ^ squareTo;
-					pMoveInfo[move].CreateMap = BITBOARD_EMPTY;
-	#endif
-					pMoveInfo[move].MoveDest = squareIndexTo;
-					pMoveInfo[move].MoveSource = squareIndexFrom;
-					pMoveInfo[move].KillPiece = capturedPiece;
-					pMoveInfo[move].KillPlayer = otherPlayer;
-					pMoveInfo[move].KillDest = squareIndexTo;
-					pMoveInfo[move].MovePiece = PIECETYPE_ROOK;
-					pMoveInfo[move].MovePlayer = player;
-					pMoveInfo[move].CreatePiece = PIECETYPE_NONE;
-					pMoveInfo[move].CreatePlayer = PLAYER_NONE;
-					pMoveInfo[move].CreateDest = SQUAREINDEX_NONE;
-					MOVEINFO_InitializeMoveString(pMoveInfo[move].MoveString, squareFrom, squareTo);
+					const MG_MOVE move = nextMove++;
+					ASSERT(move < pMoveGen->CountMoves);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+					pMoveGen->MoveTable[player][move].KillMap = squareTo;
+					pMoveGen->MoveTable[player][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[player][move].CreateMap = BITBOARD_EMPTY;
+#endif
+					pMoveGen->MoveTable[player][move].MoveDest = squareIndexTo;
+					pMoveGen->MoveTable[player][move].MoveSource = squareIndexFrom;
+					pMoveGen->MoveTable[player][move].KillPiece = capturedPiece;
+					pMoveGen->MoveTable[player][move].KillPlayer = otherPlayer;
+					pMoveGen->MoveTable[player][move].KillDest = squareIndexTo;
+					pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_ROOK;
+					pMoveGen->MoveTable[player][move].MovePlayer = player;
+					pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 				}
 			}
-			for (MG_SLIDELOOKUPINDEX index = 0; index < pSlideTable->LookUpFrom[squareIndexFrom].TableSize; index++)
-			{
-				const BB_BITBOARD occupancy = BITBOARD_BitDeposit(index, mask);
-				const BB_BITBOARD targets = ROOK_CaptureMovesFromSquare(squareFrom, occupancy);
-				pSlideTable->LookUpFrom[squareIndexFrom].Table[index].Targets = targets;
-			}
-		}*/
-
+		}
+	}
 }
 
 void ROOK_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)
