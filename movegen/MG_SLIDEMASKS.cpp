@@ -199,9 +199,12 @@ void SLIDEMASKS_InitializeDiagonal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nex
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].Mask[squareIndex] = mask;
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex] = SLIDEMASKS_GenerateTargetsDiagonal(square, BITBOARD_EMPTY);
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].BaseEntry[squareIndex] = nextEntry;
-		const std::int8_t countBits = CM_PopulationCount(mask);
+		const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(mask);
 		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountEntries[squareIndex] = count;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargetsBits[squareIndex] = BITBOARD_PopulationCount(pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex]);
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargets[squareIndex] = INT16_C(1) << pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargetsBits[squareIndex];
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountMaskBits[squareIndex] = countBits;
 		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);
@@ -222,9 +225,12 @@ void SLIDEMASKS_InitializeHorizontal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& n
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndex] = mask;
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[squareIndex] = targets;
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].BaseEntry[squareIndex] = nextEntry;
-		const std::int8_t countBits = CM_PopulationCount(mask);
+		const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(mask);
 		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountEntries[squareIndex] = count;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargetsBits[squareIndex] = BITBOARD_PopulationCount(pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[squareIndex]);
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargets[squareIndex] = INT16_C(1) << pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargetsBits[squareIndex];
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountMaskBits[squareIndex] = countBits;
 		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);

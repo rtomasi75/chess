@@ -182,7 +182,6 @@ void MOVEGEN_GenerateCaptureJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION*
 
 void MOVEGEN_GenerateCaptureSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	return;
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))
@@ -204,7 +203,7 @@ void MOVEGEN_GenerateCaptureSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION
 				{
 					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
-					const MG_MOVE captureOffset = pMoveGen->SlideMasks[maskIndex].CountEntries[fromSquareIndex] * capturedPiece;
+					const MG_MOVE captureOffset = pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[fromSquareIndex] * capturedPiece;
 					const MG_MOVE move = captureOffset + table.MoveBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex] + optionIndex;
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
