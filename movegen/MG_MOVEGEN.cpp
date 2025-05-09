@@ -2,6 +2,7 @@
 #include "MG_KING.h"
 #include "MG_ROOK.h"
 #include "MG_KNIGHT.h"
+#include "MG_BISHOP.h"
 #include "libCommon.h"
 #include <iostream>
 
@@ -21,6 +22,7 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 	MG_SLIDEENTRYINDEX nextEntry = 0;
 	SLIDEMASKS_Initialize(pMoveGen, nextEntry);
 	ROOK_Initialize_LookUps(pMoveGen);
+	BISHOP_Initialize_LookUps(pMoveGen);
 	KING_Initialize_Targets(pMoveGen);
 	KNIGHT_Initialize_Targets(pMoveGen);
 	pMoveGen->CountMoves = MOVEGEN_CountMoves(pMoveGen);
@@ -53,6 +55,10 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
 		ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
+		// Bishop
+		BISHOP_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_BISHOP]);
+		BISHOP_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
+		BISHOP_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 	}
 }
 
