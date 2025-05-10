@@ -313,13 +313,13 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pP
 				const BB_BITBOARD targetsRight = BITBOARD_UP(BITBOARD_RIGHT(squareFrom)) & pPosition->OccupancyPlayerPiece[PLAYER_BLACK][capturedPiece];
 				if (targetsLeft)
 				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset + capturedPiece;
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].CaptureBase + offset + capturedPiece;
 					ASSERT(move < pMoveGen->CountMoves);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 				if (targetsRight)
 				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset + capturedPiece + COUNT_PIECETYPES;
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].CaptureBase + offset + capturedPiece + COUNT_PIECETYPES;
 					ASSERT(move < pMoveGen->CountMoves);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
@@ -342,13 +342,13 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pP
 				const BB_BITBOARD targetsRight = BITBOARD_DOWN(BITBOARD_RIGHT(squareFrom)) & pPosition->OccupancyPlayerPiece[PLAYER_WHITE][capturedPiece];
 				if (targetsLeft)
 				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset + capturedPiece;
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].CaptureBase + offset + capturedPiece;
 					ASSERT(move < pMoveGen->CountMoves);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 				if (targetsRight)
 				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset + capturedPiece + COUNT_PIECETYPES;
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].CaptureBase + offset + capturedPiece + COUNT_PIECETYPES;
 					ASSERT(move < pMoveGen->CountMoves);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
