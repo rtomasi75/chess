@@ -276,17 +276,17 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
-		const BB_BITBOARD killMap = ~MOVEINFO_GetKillMap(&moveInfo);
-		pPosition->OccupancyTotal &= killMap;
-		pPosition->OccupancyPlayer[moveInfo.KillPlayer] &= killMap;
-		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] &= killMap;
+		const BB_BITBOARD killMap = MOVEINFO_GetKillMap(&moveInfo);
+		pPosition->OccupancyTotal ^= killMap;
+		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD createMap = MOVEINFO_GetCreateMap(&moveInfo);
-		pPosition->OccupancyTotal |= createMap;
-		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] |= createMap;
-		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] |= createMap;
+		pPosition->OccupancyTotal ^= createMap;
+		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
@@ -311,17 +311,17 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
-		const BB_BITBOARD createMap = ~MOVEINFO_GetCreateMap(&moveInfo);
-		pPosition->OccupancyTotal &= createMap;
-		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] &= createMap;
-		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] &= createMap;
+		const BB_BITBOARD createMap = MOVEINFO_GetCreateMap(&moveInfo);
+		pPosition->OccupancyTotal ^= createMap;
+		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD killMap = MOVEINFO_GetKillMap(&moveInfo);
-		pPosition->OccupancyTotal |= killMap;
-		pPosition->OccupancyPlayer[moveInfo.KillPlayer] |= killMap;
-		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] |= killMap;
+		pPosition->OccupancyTotal ^= killMap;
+		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
