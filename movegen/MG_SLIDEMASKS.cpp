@@ -428,3 +428,99 @@ BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareDiagonal(const BB_SQUARE& squareFro
 	}
 	return targets;
 }
+
+void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
+{
+	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][movingPiece];
+	const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_QUIET];
+	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
+	{
+		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
+		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[tableIndex].CountMasks; idx++)
+		{
+			pMoveGen->SlideLookUp[tableIndex].MoveBase[movingPlayer][idx][squareIndexFrom] = nextMove;
+			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[tableIndex].MaskIndex[idx];
+			const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
+			const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
+			ASSERT(countBits == pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[squareIndexFrom]);
+			for (BB_SQUARECOUNT bitIndex = 0; bitIndex < countBits; bitIndex++)
+			{
+				const BB_BITBOARD bit = UINT64_C(1) << bitIndex;
+				const BB_SQUARE squareTo = BITBOARD_BitDeposit(bit, allTargets);
+				const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+				const MG_MOVE move = nextMove++;
+				ASSERT(move < pMoveGen->CountMoves);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+				pMoveGen->MoveTable[movingPlayer][move].KillMap = BITBOARD_EMPTY;
+				pMoveGen->MoveTable[movingPlayer][move].CreateMap = BITBOARD_EMPTY;
+				pMoveGen->MoveTable[movingPlayer][move].MoveMap = squareFrom ^ squareTo;
+#endif
+				pMoveGen->MoveTable[movingPlayer][move].MoveDest = squareIndexTo;
+				pMoveGen->MoveTable[movingPlayer][move].MoveSource = squareIndexFrom;
+				pMoveGen->MoveTable[movingPlayer][move].KillPiece = PIECETYPE_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].KillPlayer = PLAYER_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].KillDest = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].CreatePiece = PIECETYPE_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].CreatePlayer = PLAYER_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].CreateDest = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].MovePiece = movingPiece;
+				pMoveGen->MoveTable[movingPlayer][move].MovePlayer = movingPlayer;
+				pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo);
+				pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(movingPlayer, movingPiece, squareFrom, squareTo);
+				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);
+			}
+		}
+	}
+}
+
+void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
+{
+	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][movingPiece];
+	const MG_PLAYER otherPlayer = PLAYER_OTHER(movingPlayer);
+	MG_TABLEINDEX tableIndex[COUNT_PIECETYPES];
+	for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+	{
+		tableIndex[capturedPiece] = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
+	}
+	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
+	{
+		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
+		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+		{
+			for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[tableIndex[capturedPiece]].CountMasks; idx++)
+			{
+				const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[tableIndex[capturedPiece]].MaskIndex[idx];
+				const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
+				const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
+				ASSERT(countBits == pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[squareIndexFrom]);
+				pMoveGen->SlideLookUp[tableIndex[capturedPiece]].CaptureBase[movingPlayer][idx][squareIndexFrom][capturedPiece] = nextMove;
+				for (BB_SQUARECOUNT bitIndex = 0; bitIndex < countBits; bitIndex++)
+				{
+					const BB_BITBOARD bit = UINT64_C(1) << bitIndex;
+					const BB_SQUARE squareTo = BITBOARD_BitDeposit(bit, allTargets);
+					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+					const MG_MOVE move = nextMove++;
+					ASSERT(move < pMoveGen->CountMoves);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+					pMoveGen->MoveTable[movingPlayer][move].KillMap = squareTo;
+					pMoveGen->MoveTable[movingPlayer][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[movingPlayer][move].CreateMap = BITBOARD_EMPTY;
+#endif
+					pMoveGen->MoveTable[movingPlayer][move].MoveDest = squareIndexTo;
+					pMoveGen->MoveTable[movingPlayer][move].MoveSource = squareIndexFrom;
+					pMoveGen->MoveTable[movingPlayer][move].KillPiece = capturedPiece;
+					pMoveGen->MoveTable[movingPlayer][move].KillPlayer = otherPlayer;
+					pMoveGen->MoveTable[movingPlayer][move].KillDest = squareIndexTo;
+					pMoveGen->MoveTable[movingPlayer][move].MovePiece = movingPiece;
+					pMoveGen->MoveTable[movingPlayer][move].MovePlayer = movingPlayer;
+					pMoveGen->MoveTable[movingPlayer][move].CreatePiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].CreatePlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
+					pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(movingPlayer, movingPiece, squareFrom, squareTo, capturedPiece);
+					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);
+				}
+			}
+		}
+	}
+}

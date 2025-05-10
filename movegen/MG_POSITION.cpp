@@ -14,8 +14,16 @@ void POSITION_Clear(MG_POSITION* pPosition)
 	pPosition->MovingPlayer = PLAYER_WHITE;
 	pPosition->PassivePlayer = PLAYER_BLACK;
 	pPosition->CastlingRights = CASTLEFLAGS_NONE;
-	pPosition->Hash = HASH_EMPTY;
+	pPosition->Hash = HASH_CastleRights(CASTLEFLAGS_NONE);
 }
+
+void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& castlingRights)
+{
+	const MG_CASTLEFLAGS oldFlags = pPosition->CastlingRights;
+	pPosition->CastlingRights = castlingRights;
+	pPosition->Hash ^= HASH_CastleRights(oldFlags) ^ HASH_CastleRights(castlingRights);
+}
+
 
 void POSITION_SetPiece(MG_POSITION* pPosition, const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square)
 {
@@ -44,6 +52,7 @@ void POSITION_Initialize(MG_POSITION* pPosition)
 	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_BISHOP, SQUARE_F8);
 	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_QUEEN, SQUARE_D1);
 	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_QUEEN, SQUARE_D8);
+	POSITION_SetCastleRights(pPosition, CASTLEFLAGS_BLACK_KINGSIDE | CASTLEFLAGS_BLACK_QUEENSIDE | CASTLEFLAGS_WHITE_KINGSIDE | CASTLEFLAGS_WHITE_QUEENSIDE);
 }
 
 bool POSITION_GetPiece(const MG_POSITION* pPosition, const BB_SQUARE& square, MG_PLAYER& outPlayer, MG_PIECETYPE& outPiece)

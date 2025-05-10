@@ -222,8 +222,7 @@ void MOVEGEN_GenerateCaptureSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION
 				{
 					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
-					const MG_MOVE captureOffset = pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[fromSquareIndex] * capturedPiece;
-					const MG_MOVE move = captureOffset + table.MoveBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex] + optionIndex;
+					const MG_MOVE move = table.CaptureBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece] + optionIndex;
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 			}
@@ -292,7 +291,12 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
-	pPosition->Hash ^= moveInfo.HashDelta;
+	const MG_CASTLEFLAGS oldFlags = pPosition->CastlingRights;
+	const MG_CASTLEFLAGS newFlags = oldFlags & moveInfo.CastleRightsMask;
+	pOutMoveData->OldHash = pPosition->Hash;
+	pOutMoveData->OldCastlingRights = oldFlags;
+	pPosition->Hash ^= moveInfo.HashDelta ^ HASH_CastleRights(oldFlags) ^ HASH_CastleRights(newFlags) ^ HASH_MOVINGPLAYER_BLACK;
+	pPosition->CastlingRights = newFlags;
 }
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)
@@ -322,5 +326,6 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
-	pPosition->Hash ^= moveInfo.HashDelta;
+	pPosition->Hash = pMoveData->OldHash;
+	pPosition->CastlingRights = pMoveData->OldCastlingRights;
 }

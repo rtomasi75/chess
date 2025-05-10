@@ -3,6 +3,8 @@
 #define MG_CASTLEFLAGS_H
 
 #include <cstdint>
+#include "MG_PIECETYPE.h"
+#include "libBitboard.h"
 
 typedef std::uint8_t MG_CASTLEFLAGS;
 
@@ -16,5 +18,8 @@ bool CASTLEFLAGS_Parse(const char* pString, const int& len, int& strPos, MG_CAST
 
 bool CASTLEFLAGS_ToString(char* pString, const int& len, int& strPos, const MG_CASTLEFLAGS& castleFlags);
 
+MG_CASTLEFLAGS CASTLEFLAGS_EliminateFlags_Move(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare);
+
+MG_CASTLEFLAGS CASTLEFLAGS_EliminateFlags_Capture(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare, const MG_PIECETYPE& capturedPiece);
 
 #endif

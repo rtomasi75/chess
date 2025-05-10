@@ -69,3 +69,64 @@ bool CASTLEFLAGS_ToString(char* pString, const int& len, int& strPos, const MG_C
 	}
 	return true;
 }
+
+MG_CASTLEFLAGS CASTLEFLAGS_EliminateFlags_Move(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare)
+{
+	if (movingPiece == PIECETYPE_ROOK)
+	{
+		if (movingPlayer == PLAYER_WHITE)
+		{
+			if (fromSquare == SQUARE_H1)
+				return CASTLEFLAGS_WHITE_KINGSIDE;
+			else if (fromSquare == SQUARE_A1)
+				return CASTLEFLAGS_WHITE_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+		else
+		{
+			if (fromSquare == SQUARE_H8)
+				return CASTLEFLAGS_BLACK_KINGSIDE;
+			else if (fromSquare == SQUARE_A8)
+				return CASTLEFLAGS_BLACK_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+	}
+	else if (movingPiece == PIECETYPE_KING)
+	{
+		if (movingPlayer == PLAYER_WHITE)
+			return CASTLEFLAGS_WHITE_KINGSIDE | CASTLEFLAGS_WHITE_QUEENSIDE;
+		else
+			return CASTLEFLAGS_BLACK_KINGSIDE | CASTLEFLAGS_BLACK_QUEENSIDE;
+	}
+	else
+		return CASTLEFLAGS_NONE;
+}
+
+MG_CASTLEFLAGS CASTLEFLAGS_EliminateFlags_Capture(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare, const MG_PIECETYPE& capturedPiece)
+{
+	if (capturedPiece == PIECETYPE_ROOK)
+	{
+		if (movingPlayer == PLAYER_BLACK)
+		{
+			if (toSquare == SQUARE_H1)
+				return CASTLEFLAGS_WHITE_KINGSIDE;
+			else if (toSquare == SQUARE_A1)
+				return CASTLEFLAGS_WHITE_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+		else
+		{
+			if (toSquare == SQUARE_H8)
+				return CASTLEFLAGS_BLACK_KINGSIDE;
+			else if (toSquare == SQUARE_A8)
+				return CASTLEFLAGS_BLACK_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+	}
+	else
+		return CASTLEFLAGS_NONE;
+}

@@ -4,6 +4,9 @@
 
 #include "libBitboard.h"
 #include "MG_SLIDEENTRY.h"
+#include "MG_PLAYER.h"
+#include "MG_PIECETYPE.h"
+#include "MG_MOVE.h"
 
 typedef std::int8_t MG_SLIDEMASKINDEX;
 
@@ -54,5 +57,9 @@ void SLIDEMASKS_Initialize(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry);
 void SLIDEMASKS_InitializeDiagonal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry);
 
 void SLIDEMASKS_InitializeHorizontal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry);
+
+void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove);
+
+void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove);
 
 #endif

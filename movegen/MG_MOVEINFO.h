@@ -5,6 +5,7 @@
 #include "MG_PIECETYPE.h"
 #include "MG_PLAYER.h"
 #include "MG_HASH.h"
+#include "MG_CASTLEFLAGS.h"
 #include "libBitboard.h"
 
 #define MOVESTRING_LENGTH 6
@@ -29,6 +30,7 @@ struct MG_MOVEINFO
 	BB_SQUAREINDEX MoveDest;
 	BB_SQUAREINDEX KillDest;
 	BB_SQUAREINDEX CreateDest;
+	MG_CASTLEFLAGS CastleRightsMask;
 	char MoveString[MOVESTRING_LENGTH];
 };
 

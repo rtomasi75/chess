@@ -29,4 +29,6 @@ bool POSITION_GetPiece(const MG_POSITION* pPosition, const BB_SQUARE& square, MG
 
 bool POSITION_CheckConsistency(const MG_POSITION* pPosition, const BB_SQUARE& square);
 
+void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& castlingRights);
+
 #endif
