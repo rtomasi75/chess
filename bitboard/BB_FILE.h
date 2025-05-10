@@ -22,6 +22,6 @@ bool FILE_Parse(const char* pString, const int& len, int& strPos, BB_FILE& outPa
 
 bool FILE_ToString(char* pString, const int& len, int& strPos, const BB_FILE& file);
 
-#define COUNT_FILES INT16_C(8)
+#define COUNT_FILES INT8_C(8)
 
 #endif

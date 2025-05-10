@@ -9,6 +9,10 @@ typedef std::int16_t MG_JUMPTARGETSINDEX;
 
 struct MG_MOVEGEN;
 
+struct MG_MOVELIST;
+
+struct MG_POSITION;
+
 struct MG_JUMPTABLE
 {
 	MG_MOVE MovesBaseFrom[COUNT_SQUARES];
@@ -20,6 +24,10 @@ void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE
 void JUMPTABLE_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETYPE& movingPiece, const MG_PIECETYPE& capturedPiece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove, const int& jumptarget, const int& jumptable);
 
 MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget);
+
+void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
+
+void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
 
 
 #endif

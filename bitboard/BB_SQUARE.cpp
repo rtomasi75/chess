@@ -78,3 +78,13 @@ BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
 	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
 	return RANK_FromIndex(idx / COUNT_RANKS);
 }
+
+BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex)
+{
+	return squareIndex / COUNT_RANKS;
+}
+
+BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex)
+{
+	return squareIndex % COUNT_RANKS;
+}

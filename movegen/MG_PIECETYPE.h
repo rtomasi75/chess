@@ -13,8 +13,9 @@ typedef std::int8_t MG_PIECETYPE;
 #define PIECETYPE_KNIGHT INT8_C(2)
 #define PIECETYPE_BISHOP INT8_C(3)
 #define PIECETYPE_QUEEN INT8_C(4)
+#define PIECETYPE_PAWN INT8_C(5)
 
-#define COUNT_PIECETYPES 5
+#define COUNT_PIECETYPES 6
 
 
 bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECETYPE& outParsedPiece, MG_PLAYER& outParsedPlayer);

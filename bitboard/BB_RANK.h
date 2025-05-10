@@ -22,6 +22,6 @@ bool RANK_Parse(const char* pString, const int& len, int& strPos, BB_RANK& outPa
 
 bool RANK_ToString(char* pString, const int& len, int& strPos, const BB_RANK& rank);
 
-#define COUNT_RANKS INT16_C(8)
+#define COUNT_RANKS INT8_C(8)
 
 #endif

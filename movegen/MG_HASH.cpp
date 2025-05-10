@@ -1,5 +1,5 @@
 #include "MG_HASH.h"
-#include "libCommon.h";
+#include "libCommon.h"
 
 constexpr MG_HASH HASH_PieceSquare[12][64] =
 {

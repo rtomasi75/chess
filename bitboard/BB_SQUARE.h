@@ -85,6 +85,11 @@ typedef std::int8_t BB_SQUAREINDEX;
 BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file);
 BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index);
 BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile);
+
+BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex);
+
+BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex);
+
 BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square);
 
 bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex);

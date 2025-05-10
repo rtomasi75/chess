@@ -15,6 +15,7 @@
 #include "MG_MOVELIST.h"
 #include "MG_MOVEDATA.h"
 #include "MG_SLIDEENTRY.h"
+#include "MG_PAWN.h"
 
 #define JUMPTABLE_KING_QUIET 0
 #define JUMPTABLE_KING_CAPTURE(_PIECE_) (JUMPTABLE_KING_QUIET+(_PIECE_)+1)
@@ -46,6 +47,7 @@ struct MG_MOVEGEN
 	MG_JUMPTABLE JumpTable[COUNT_JUMPTABLES];
 	MG_SLIDELOOKUP SlideLookUp[COUNT_SLIDELOOKUPS];
 	BB_BITBOARD JumpTargets[COUNT_JUMPTARGETS][COUNT_SQUARES];
+	MG_PAWNTABLE PawnTable[COUNT_PLAYERS];
 	MG_MOVEINFO* MoveTable[COUNT_PLAYERS];
 	MG_SLIDEENTRY* SlideEntries;
 	MG_MOVE CountMoves;
@@ -61,14 +63,6 @@ void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen);
 MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITBOARD& targets);
 
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, MG_MOVELIST* pMoveList);
-
-void MOVEGEN_GenerateQuietJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
-
-void MOVEGEN_GenerateQuietSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
-
-void MOVEGEN_GenerateCaptureJumps(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
-
-void MOVEGEN_GenerateCaptureSlides(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
 
 bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVELIST* pMoveList, const char* pString, const int& len, int& strPos, MG_MOVE& outParsed);
 
