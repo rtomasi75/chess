@@ -31,4 +31,6 @@ bool POSITION_CheckConsistency(const MG_POSITION* pPosition, const BB_SQUARE& sq
 
 void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& castlingRights);
 
+MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition);
+
 #endif

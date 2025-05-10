@@ -1,6 +1,7 @@
 #include "Command_DebugMove.h"
 #include "../StringHelper.h"
 #include "../Engine.h"
+#include <sstream>
 
 Command_DebugMove::Command_DebugMove(Engine* pEngine) :
 	Command(pEngine)
@@ -20,9 +21,15 @@ bool Command_DebugMove::Try(const std::string& commandString)
 			MG_MOVE move;
 			if (ParseMove(remainder, move))
 			{
-				GetEngine().OutputStream() << "Performing move " + MoveToString(move) + ":" << std::endl;
+				std::stringstream sstream;
+				sstream << "Performing move " + MoveToString(move) + ":" << std::endl;
 				GetEngine().MakeMove(move);
-				GetEngine().OutputStream() << PositionToString(GetEngine().Position());
+				sstream << PositionToString(GetEngine().Position());
+				if (GetEngine().Position().Hash != POSITION_ComputeHash(&GetEngine().Position()))
+				{
+					sstream << "Position hash does NOT match!" << std::endl;
+				}
+				GetEngine().OutputStream() << sstream.str();
 				return true;
 			}
 			else

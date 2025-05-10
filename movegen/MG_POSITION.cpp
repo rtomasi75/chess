@@ -131,3 +131,23 @@ bool POSITION_CheckConsistency(const MG_POSITION* pPosition, const BB_SQUARE& sq
 	}
 	return true;
 }
+
+MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
+{
+	MG_HASH hash = pPosition->MovingPlayer == PLAYER_BLACK ? HASH_MOVINGPLAYER_BLACK : HASH_EMPTY;
+	hash ^= HASH_CastleRights(pPosition->CastlingRights);
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			BB_BITBOARD occupancy = pPosition->OccupancyPlayerPiece[player][piece];
+			BB_SQUAREINDEX squareIndex;
+			while (SQUARE_Next(occupancy, squareIndex))
+			{
+				hash ^= HASH_PlayerPieceSquare(player, piece, SQUARE_FromIndex(squareIndex));
+			}
+		}
+	}
+	return hash;
+}
+
