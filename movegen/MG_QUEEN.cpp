@@ -1,8 +1,8 @@
-#include "MG_ROOK.h"
+#include "MG_QUEEN.h"
 #include "MG_MOVEGEN.h"
 #include "libCommon.h"
 
-MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen)
+MG_MOVE QUEEN_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
 	MG_MOVE count = 0;
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
@@ -17,26 +17,40 @@ MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen)
 			count += BITBOARD_PopulationCount(SLIDEMASKS_CaptureMovesFromSquareHorizontal(squareFrom, occupancy)) * COUNT_PIECETYPES;
 		}
 	}
+	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
+	{
+		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
+		const BB_BITBOARD mask = pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].Mask[squareIndexFrom];
+		std::uint64_t countIndices = (UINT64_C(1) << BITBOARD_PopulationCount(mask));
+		for (std::uint64_t index = 0; index < countIndices; index++)
+		{
+			const BB_BITBOARD occupancy = BITBOARD_BitExtract(index, mask);
+			count += BITBOARD_PopulationCount(SLIDEMASKS_QuietMovesFromSquareDiagonal(squareFrom, occupancy));
+			count += BITBOARD_PopulationCount(SLIDEMASKS_CaptureMovesFromSquareDiagonal(squareFrom, occupancy)) * COUNT_PIECETYPES;
+		}
+	}
 	return count;
 }
 
-void ROOK_Initialize_LookUps(MG_MOVEGEN* pMoveGen)
+void QUEEN_Initialize_LookUps(MG_MOVEGEN* pMoveGen)
 {
-	pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_QUIET].CountMasks = 1;
-	pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_QUIET].MaskIndex[0] = SLIDEMASKS_HORIZONTAL;
-	pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].CountMasks = 1;
-	pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].MaskIndex[0] = SLIDEMASKS_HORIZONTAL;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].CountMasks = 2;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].MaskIndex[0] = SLIDEMASKS_HORIZONTAL;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].MaskIndex[1] = SLIDEMASKS_DIAGONAL;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].CountMasks = 2;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].MaskIndex[0] = SLIDEMASKS_HORIZONTAL;
+	pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].MaskIndex[1] = SLIDEMASKS_DIAGONAL;
 }
 
-void ROOK_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
+void QUEEN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
 		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_QUIET].CountMasks; idx++)
+		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].CountMasks; idx++)
 		{
-			pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_QUIET].MoveBase[player][idx][squareIndexFrom] = nextMove;
-			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_QUIET].MaskIndex[idx];
+			pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].MoveBase[player][idx][squareIndexFrom] = nextMove;
+			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_QUIET].MaskIndex[idx];
 			const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
 			const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
 			ASSERT(countBits == pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[squareIndexFrom]);
@@ -60,7 +74,7 @@ void ROOK_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 				pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
-				pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_ROOK;
+				pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_QUEEN;
 				pMoveGen->MoveTable[player][move].MovePlayer = player;
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 			}
@@ -68,19 +82,19 @@ void ROOK_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 	}
 }
 
-void ROOK_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
+void QUEEN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
 	const MG_PLAYER otherPlayer = PLAYER_OTHER(player);
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
 		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].CountMasks; idx++)
+		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].CountMasks; idx++)
 		{
-			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].MaskIndex[idx];
+			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].MaskIndex[idx];
 			const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
 			const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
 			ASSERT(countBits == pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[squareIndexFrom]);
-			pMoveGen->SlideLookUp[SLIDELOOKUP_ROOK_CAPTURE].MoveBase[player][idx][squareIndexFrom] = nextMove;
+			pMoveGen->SlideLookUp[SLIDELOOKUP_QUEEN_CAPTURE].MoveBase[player][idx][squareIndexFrom] = nextMove;
 			for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 			{
 				for (BB_SQUARECOUNT bitIndex = 0; bitIndex < countBits; bitIndex++)
@@ -100,7 +114,7 @@ void ROOK_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[player][move].KillPiece = capturedPiece;
 					pMoveGen->MoveTable[player][move].KillPlayer = otherPlayer;
 					pMoveGen->MoveTable[player][move].KillDest = squareIndexTo;
-					pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_ROOK;
+					pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_QUEEN;
 					pMoveGen->MoveTable[player][move].MovePlayer = player;
 					pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
@@ -112,16 +126,16 @@ void ROOK_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 	}
 }
 
-void ROOK_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)
+void QUEEN_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)
 {
 	pPieceInfo->IsRoyal = false;
 	pPieceInfo->MoveMechanic[MOVETYPE_QUIET] = MOVEMECHANIC_SLIDETABLE;
 	pPieceInfo->MoveMechanic[MOVETYPE_CAPTURE] = MOVEMECHANIC_SLIDETABLE;
 	pPieceInfo->MoveMechanic[MOVETYPE_SPECIAL] = MOVEMECHANIC_NONE;
-	pPieceInfo->TableIndex[TABLEINDEX_QUIET] = SLIDELOOKUP_ROOK_QUIET;
+	pPieceInfo->TableIndex[TABLEINDEX_QUIET] = SLIDELOOKUP_QUEEN_QUIET;
 	pPieceInfo->TableIndex[TABLEINDEX_SPECIAL] = 0;
 	for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 	{
-		pPieceInfo->TableIndex[TABLEINDEX_CAPTURE(piece)] = SLIDELOOKUP_ROOK_CAPTURE;
+		pPieceInfo->TableIndex[TABLEINDEX_CAPTURE(piece)] = SLIDELOOKUP_QUEEN_CAPTURE;
 	}
 }

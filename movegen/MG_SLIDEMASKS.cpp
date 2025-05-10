@@ -247,36 +247,184 @@ void SLIDEMASKS_Initialize(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry)
 	SLIDEMASKS_InitializeDiagonal(pMoveGen, nextEntry);
 }
 
-size_t SLIDEMASKS_CountEntriesDiagonal()
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesDiagonal()
 {
-	size_t count = 0;
+	MG_SLIDEENTRYINDEX count = 0;
 	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
 	{
 		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
 		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskDiagonal(square);
 		const std::int8_t countBits = CM_PopulationCount(mask);
-		count += ((size_t)1) << countBits;
+		count += ((MG_SLIDEENTRYINDEX)1) << countBits;
 	}
 	return count;
 }
 
-size_t SLIDEMASKS_CountEntriesHorizontal()
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesHorizontal()
 {
-	size_t count = 0;
+	MG_SLIDEENTRYINDEX count = 0;
 	for (BB_SQUAREINDEX squareIndex = 0; squareIndex < COUNT_SQUARES; squareIndex++)
 	{
 		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
 		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskHorizontal(square);
 		const std::int8_t countBits = CM_PopulationCount(mask);
-		count += ((size_t)1) << countBits;
+		count += ((MG_SLIDEENTRYINDEX)1) << countBits;
 	}
 	return count;
 }
 
-size_t SLIDEMASKS_CountEntries()
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntries()
 {
-	size_t count = 0;
+	MG_SLIDEENTRYINDEX count = 0;
 	count += SLIDEMASKS_CountEntriesDiagonal();
 	count += SLIDEMASKS_CountEntriesHorizontal();
 	return count;
+}
+
+BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD targets = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	// up
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_UP(current) & ~occupancy;
+		targets |= current;
+	}
+	// down
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_DOWN(current) & ~occupancy;
+		targets |= current;
+	}
+	// left
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_LEFT(current) & ~occupancy;
+		targets |= current;
+	}
+	// right
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_RIGHT(current) & ~occupancy;
+		targets |= current;
+	}
+	return targets;
+}
+
+BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD targets = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	// up/left
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_UP(BITBOARD_LEFT(current)) & ~occupancy;
+		targets |= current;
+	}
+	// down/left
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_DOWN(BITBOARD_LEFT(current)) & ~occupancy;
+		targets |= current;
+	}
+	// up/right
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_UP(BITBOARD_RIGHT(current)) & ~occupancy;
+		targets |= current;
+	}
+	// down/right
+	current = squareFrom;
+	while (current)
+	{
+		current = BITBOARD_DOWN(BITBOARD_RIGHT(current)) & ~occupancy;
+		targets |= current;
+	}
+	return targets;
+}
+
+BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD targets = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	// up
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_UP(current);
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// down
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_DOWN(current);
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// left
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_LEFT(current);
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// right
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_RIGHT(current);
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	return targets;
+}
+
+BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
+{
+	BB_BITBOARD targets = BITBOARD_EMPTY;
+	BB_BITBOARD current;
+	// up/left
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_UP(BITBOARD_LEFT(current));
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// down/left
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_DOWN(BITBOARD_LEFT(current));
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// up/right
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_UP(BITBOARD_RIGHT(current));
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	// down/right
+	current = squareFrom;
+	while (current)
+	{
+		const BB_BITBOARD next = BITBOARD_DOWN(BITBOARD_RIGHT(current));
+		targets |= next & occupancy;
+		current = next & ~occupancy;
+	}
+	return targets;
 }

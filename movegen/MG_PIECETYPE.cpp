@@ -25,6 +25,10 @@ bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECET
 		outParsedPiece = PIECETYPE_BISHOP;
 		outParsedPlayer = PLAYER_BLACK;
 		break;
+	case 'q':
+		outParsedPiece = PIECETYPE_QUEEN;
+		outParsedPlayer = PLAYER_BLACK;
+		break;
 	case 'K':
 		outParsedPiece = PIECETYPE_KING;
 		outParsedPlayer = PLAYER_WHITE;
@@ -39,6 +43,10 @@ bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECET
 		break;
 	case 'B':
 		outParsedPiece = PIECETYPE_BISHOP;
+		outParsedPlayer = PLAYER_WHITE;
+		break;
+	case 'Q':
+		outParsedPiece = PIECETYPE_QUEEN;
 		outParsedPlayer = PLAYER_WHITE;
 		break;
 	}
@@ -69,6 +77,9 @@ bool PIECETYPE_ToString(char* pString, const int& len, int& strPos, const MG_PIE
 		case PIECETYPE_BISHOP:
 			pString[strPos] = 'B';
 			break;
+		case PIECETYPE_QUEEN:
+			pString[strPos] = 'Q';
+			break;
 		case PIECETYPE_NONE:
 			pString[strPos] = '.';
 			break;
@@ -92,6 +103,9 @@ bool PIECETYPE_ToString(char* pString, const int& len, int& strPos, const MG_PIE
 			break;
 		case PIECETYPE_BISHOP:
 			pString[strPos] = 'b';
+			break;
+		case PIECETYPE_QUEEN:
+			pString[strPos] = 'q';
 			break;
 		case PIECETYPE_NONE:
 			pString[strPos] = '.';

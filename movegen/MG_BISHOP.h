@@ -10,10 +10,6 @@
 
 struct MG_MOVEGEN;
 
-BB_BITBOARD BISHOP_QuietMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
-BB_BITBOARD BISHOP_CaptureMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
 MG_MOVE BISHOP_CountMoves(const MG_MOVEGEN* pMoveGen);
 
 void BISHOP_Initialize_LookUps(MG_MOVEGEN* pMoveGen);

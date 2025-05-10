@@ -13,85 +13,11 @@ MG_MOVE BISHOP_CountMoves(const MG_MOVEGEN* pMoveGen)
 		for (std::uint64_t index = 0; index < countIndices; index++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitExtract(index, mask);
-			count += BITBOARD_PopulationCount(BISHOP_QuietMovesFromSquare(squareFrom, occupancy));
-			count += BITBOARD_PopulationCount(BISHOP_CaptureMovesFromSquare(squareFrom, occupancy)) * COUNT_PIECETYPES;
+			count += BITBOARD_PopulationCount(SLIDEMASKS_QuietMovesFromSquareDiagonal(squareFrom, occupancy));
+			count += BITBOARD_PopulationCount(SLIDEMASKS_CaptureMovesFromSquareDiagonal(squareFrom, occupancy)) * COUNT_PIECETYPES;
 		}
 	}
 	return count;
-}
-
-BB_BITBOARD BISHOP_QuietMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
-{
-	BB_BITBOARD targets = BITBOARD_EMPTY;
-	BB_BITBOARD current;
-	// up/left
-	current = squareFrom;
-	while (current)
-	{
-		current = BITBOARD_UP(BITBOARD_LEFT(current)) & ~occupancy;
-		targets |= current;
-	}
-	// down/left
-	current = squareFrom;
-	while (current)
-	{
-		current = BITBOARD_DOWN(BITBOARD_LEFT(current)) & ~occupancy;
-		targets |= current;
-	}
-	// up/right
-	current = squareFrom;
-	while (current)
-	{
-		current = BITBOARD_UP(BITBOARD_RIGHT(current)) & ~occupancy;
-		targets |= current;
-	}
-	// down/right
-	current = squareFrom;
-	while (current)
-	{
-		current = BITBOARD_DOWN(BITBOARD_RIGHT(current)) & ~occupancy;
-		targets |= current;
-	}
-	return targets;
-}
-
-BB_BITBOARD BISHOP_CaptureMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy)
-{
-	BB_BITBOARD targets = BITBOARD_EMPTY;
-	BB_BITBOARD current;
-	// up/left
-	current = squareFrom;
-	while (current)
-	{
-		const BB_BITBOARD next = BITBOARD_UP(BITBOARD_LEFT(current));
-		targets |= next & occupancy;
-		current = next & ~occupancy;
-	}
-	// down/left
-	current = squareFrom;
-	while (current)
-	{
-		const BB_BITBOARD next = BITBOARD_DOWN(BITBOARD_LEFT(current));
-		targets |= next & occupancy;
-		current = next & ~occupancy;
-	}
-	// up/right
-	current = squareFrom;
-	while (current)
-	{
-		const BB_BITBOARD next = BITBOARD_UP(BITBOARD_RIGHT(current));
-		targets |= next & occupancy;
-		current = next & ~occupancy;
-	}
-	// down/right
-	current = squareFrom;
-	while (current)
-	{
-		const BB_BITBOARD next = BITBOARD_DOWN(BITBOARD_RIGHT(current));
-		targets |= next & occupancy;
-		current = next & ~occupancy;
-	}
-	return targets;
 }
 
 void BISHOP_Initialize_LookUps(MG_MOVEGEN* pMoveGen)

@@ -10,10 +10,6 @@
 
 struct MG_MOVEGEN;
 
-BB_BITBOARD ROOK_QuietMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
-BB_BITBOARD ROOK_CaptureMovesFromSquare(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
 MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen);
 
 void ROOK_Initialize_LookUps(MG_MOVEGEN* pMoveGen);

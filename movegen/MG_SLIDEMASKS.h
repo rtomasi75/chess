@@ -26,6 +26,15 @@ struct MG_MOVEGEN;
 #define SLIDEMASKS_HORIZONTAL 0
 #define SLIDEMASKS_DIAGONAL 1
 
+
+BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
+
+BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
+
+BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
+
+BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
+
 BB_BITBOARD SLIDEMASKS_GenerateTargetsHorizontal(const BB_SQUARE& square, const BB_BITBOARD& occupancy);
 
 BB_BITBOARD SLIDEMASKS_GenerateTargetsDiagonal(const BB_SQUARE& square, const BB_BITBOARD& occupancy);
@@ -34,11 +43,11 @@ BB_BITBOARD SLIDEMASKS_GenerateMaskHorizontal(const BB_SQUARE& square);
 
 BB_BITBOARD SLIDEMASKS_GenerateMaskDiagonal(const BB_SQUARE& square);
 
-size_t SLIDEMASKS_CountEntriesDiagonal();
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesDiagonal();
 
-size_t SLIDEMASKS_CountEntriesHorizontal();
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesHorizontal();
 
-size_t SLIDEMASKS_CountEntries();
+MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntries();
 
 void SLIDEMASKS_Initialize(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nextEntry);
 

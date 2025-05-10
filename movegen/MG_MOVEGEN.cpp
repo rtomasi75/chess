@@ -3,15 +3,23 @@
 #include "MG_ROOK.h"
 #include "MG_KNIGHT.h"
 #include "MG_BISHOP.h"
+#include "MG_QUEEN.h"
 #include "libCommon.h"
 #include <iostream>
 
 MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen)
 {
 	MG_MOVE count = 0;
-	count += KING_CountMoves(pMoveGen);
-	count += ROOK_CountMoves(pMoveGen);
-	count += KNIGHT_CountMoves(pMoveGen);
+	const MG_MOVE countKingMoves = KING_CountMoves(pMoveGen);
+	const MG_MOVE countRookMoves = ROOK_CountMoves(pMoveGen);
+	const MG_MOVE countKnightMoves = KNIGHT_CountMoves(pMoveGen);
+	const MG_MOVE countBishopMoves = BISHOP_CountMoves(pMoveGen);
+	const MG_MOVE countQueenMoves = QUEEN_CountMoves(pMoveGen);
+	count += countKingMoves;
+	count += countRookMoves;
+	count += countKnightMoves;
+	count += countBishopMoves;
+	count += countQueenMoves;
 	return count;
 }
 
@@ -23,6 +31,7 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 	SLIDEMASKS_Initialize(pMoveGen, nextEntry);
 	ROOK_Initialize_LookUps(pMoveGen);
 	BISHOP_Initialize_LookUps(pMoveGen);
+	QUEEN_Initialize_LookUps(pMoveGen);
 	KING_Initialize_Targets(pMoveGen);
 	KNIGHT_Initialize_Targets(pMoveGen);
 	pMoveGen->CountMoves = MOVEGEN_CountMoves(pMoveGen);
@@ -59,6 +68,10 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		BISHOP_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_BISHOP]);
 		BISHOP_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		BISHOP_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
+		// Queen
+		QUEEN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_QUEEN]);
+		QUEEN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
+		QUEEN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 	}
 }
 
