@@ -292,6 +292,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
+	pPosition->Hash ^= moveInfo.HashDelta;
 }
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)
@@ -321,4 +322,5 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
+	pPosition->Hash ^= moveInfo.HashDelta;
 }

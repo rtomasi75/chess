@@ -13,6 +13,8 @@ void POSITION_Clear(MG_POSITION* pPosition)
 	}
 	pPosition->MovingPlayer = PLAYER_WHITE;
 	pPosition->PassivePlayer = PLAYER_BLACK;
+	pPosition->CastlingRights = CASTLEFLAGS_NONE;
+	pPosition->Hash = HASH_EMPTY;
 }
 
 void POSITION_SetPiece(MG_POSITION* pPosition, const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square)
@@ -20,6 +22,7 @@ void POSITION_SetPiece(MG_POSITION* pPosition, const MG_PLAYER& player, const MG
 	pPosition->OccupancyPlayer[player] |= square;
 	pPosition->OccupancyPlayerPiece[player][piece] |= square;
 	pPosition->OccupancyTotal |= square;
+	pPosition->Hash ^= HASH_PlayerPieceSquare(player, piece, square);
 }
 
 void POSITION_Initialize(MG_POSITION* pPosition)

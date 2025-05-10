@@ -76,6 +76,7 @@ void QUEEN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, 
 				pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_QUEEN;
 				pMoveGen->MoveTable[player][move].MovePlayer = player;
+				pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_QUEEN, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_QUEEN, squareTo);
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 			}
 		}
@@ -119,6 +120,7 @@ void QUEEN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen
 					pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_QUEEN, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_QUEEN, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 				}
 			}

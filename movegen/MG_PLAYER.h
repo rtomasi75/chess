@@ -14,4 +14,8 @@ typedef std::int8_t MG_PLAYER;
 
 #define PLAYER_OTHER(_PL_) ((MG_PLAYER)(((_PL_)+1)%COUNT_PLAYERS))
 
+bool PLAYER_Parse(const char* pString, const int& len, int& strPos, MG_PLAYER& outParsedPlayer);
+
+bool PLAYER_ToString(char* pString, const int& len, int& strPos, const MG_PLAYER& player);
+
 #endif

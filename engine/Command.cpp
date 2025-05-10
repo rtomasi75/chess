@@ -86,6 +86,54 @@ std::string Command::SquareToString(const BB_SQUARE& square) const
 	return buffer;
 }
 
+std::string Command::RankToString(const BB_RANK& rank) const
+{
+	char buffer[16];
+	for (int i = 0; i < 16; i++)
+	{
+		buffer[i] = 0;
+	}
+	int pos = 0;
+	RANK_ToString(buffer, 16, pos, rank);
+	return buffer;
+}
+
+std::string Command::FileToString(const BB_FILE& file) const
+{
+	char buffer[16];
+	for (int i = 0; i < 16; i++)
+	{
+		buffer[i] = 0;
+	}
+	int pos = 0;
+	FILE_ToString(buffer, 16, pos, file);
+	return buffer;
+}
+
+std::string Command::CastleFlagsToString(const MG_CASTLEFLAGS& castleFlags) const
+{
+	char buffer[16];
+	for (int i = 0; i < 16; i++)
+	{
+		buffer[i] = 0;
+	}
+	int pos = 0;
+	CASTLEFLAGS_ToString(buffer, 16, pos, castleFlags);
+	return buffer;
+}
+
+std::string Command::PlayerToString(const MG_PLAYER& player) const
+{
+	char buffer[16];
+	for (int i = 0; i < 16; i++)
+	{
+		buffer[i] = 0;
+	}
+	int pos = 0;
+	PLAYER_ToString(buffer, 16, pos, player);
+	return buffer;
+}
+
 std::string Command::PositionToString(const MG_POSITION& position, int indentation) const
 {
 	std::stringstream sstream;
@@ -96,6 +144,7 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 			sstream << " ";
 		}
 		BB_RANK rank = RANK_FromIndex(rankIndex);
+		sstream << RankToString(rank) << "|";
 		for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
 		{
 			BB_FILE file = FILE_FromIndex(fileIndex);
@@ -118,5 +167,34 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 		}
 		sstream << std::endl;
 	}
+	for (int i = 0; i < indentation; i++)
+	{
+		sstream << " ";
+	}
+	sstream << "-+";
+	for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+	{
+		sstream << "-";
+	}
+	sstream << std::endl;
+	for (int i = 0; i < indentation; i++)
+	{
+		sstream << " ";
+	}
+	sstream << PlayerToString(GetEngine().Position().MovingPlayer);
+	sstream << "|";
+	for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+	{
+		BB_FILE file = FILE_FromIndex(fileIndex);
+		std::string fileString = FileToString(file);
+		sstream << StringHelper::ToUpper(fileString);
+	}
+	sstream << " " << CastleFlagsToString(GetEngine().Position().CastlingRights);
+	sstream << std::endl;
+	for (int i = 0; i < indentation; i++)
+	{
+		sstream << " ";
+	}
+	sstream << StringHelper::ToHexString(GetEngine().Position().Hash) << std::endl;
 	return sstream.str();
 }

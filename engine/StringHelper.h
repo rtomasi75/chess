@@ -10,6 +10,7 @@ class StringHelper
 {
 public:
 	static std::string& ToLower(std::string& input);
+	static std::string& ToUpper(std::string& input);
 	static std::string& TrimLeft(std::string& input);
 	static std::string& TrimRight(std::string& input);
 	static std::string& Trim(std::string& input);

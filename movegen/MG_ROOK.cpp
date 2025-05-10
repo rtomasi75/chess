@@ -62,6 +62,7 @@ void ROOK_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[player][move].MovePiece = PIECETYPE_ROOK;
 				pMoveGen->MoveTable[player][move].MovePlayer = player;
+				pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, squareTo);
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 			}
 		}
@@ -105,6 +106,7 @@ void ROOK_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 				}
 			}

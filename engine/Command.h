@@ -15,6 +15,10 @@ protected:
 	Command(Engine* pEngine);
 	Engine& GetEngine();
 	const Engine& GetEngine() const;
+	std::string RankToString(const BB_RANK& rank) const;
+	std::string CastleFlagsToString(const MG_CASTLEFLAGS& castleFlags) const;
+	std::string FileToString(const BB_FILE& file) const;
+	std::string PlayerToString(const MG_PLAYER& player) const;
 	std::string PieceToString(const MG_PIECETYPE& piece, const MG_PLAYER& player) const;
 	std::string BitboardToString(const BB_BITBOARD& bitboard, int indentation = 0) const;
 	bool ParseMove(const std::string& moveString, MG_MOVE& parsedMove) const;

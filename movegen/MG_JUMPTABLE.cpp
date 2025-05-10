@@ -34,6 +34,7 @@ void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE
 			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
 			pMoveGen->MoveTable[player][move].MovePiece = piece;
 			pMoveGen->MoveTable[player][move].MovePlayer = player;
+			pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, piece, squareFrom) ^ HASH_PlayerPieceSquare(player, piece, squareTo);
 			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 		}
 	}
@@ -71,6 +72,7 @@ void JUMPTABLE_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETY
 			pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 			pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+			pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(player, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
 		}
 	}

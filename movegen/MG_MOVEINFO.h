@@ -4,6 +4,7 @@
 
 #include "MG_PIECETYPE.h"
 #include "MG_PLAYER.h"
+#include "MG_HASH.h"
 #include "libBitboard.h"
 
 #define MOVESTRING_LENGTH 6
@@ -12,6 +13,7 @@
 
 struct MG_MOVEINFO
 {
+	MG_HASH HashDelta;
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 	BB_BITBOARD MoveMap;
 	BB_BITBOARD CreateMap;

@@ -5,14 +5,18 @@
 #include "libBitboard.h"
 #include "MG_PLAYER.h"
 #include "MG_PIECETYPE.h"
+#include "MG_CASTLEFLAGS.h"
+#include "MG_HASH.h"
 
 struct MG_POSITION
 {
 	BB_BITBOARD OccupancyPlayer[COUNT_PLAYERS];
 	BB_BITBOARD OccupancyPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 	BB_BITBOARD OccupancyTotal;
+	MG_HASH Hash;
 	MG_PLAYER MovingPlayer;
 	MG_PLAYER PassivePlayer;
+	MG_CASTLEFLAGS CastlingRights;
 };
 
 void POSITION_Clear(MG_POSITION* pPosition);

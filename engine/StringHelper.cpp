@@ -11,6 +11,15 @@ std::string& StringHelper::ToLower(std::string& input)
 	return input;
 }
 
+std::string& StringHelper::ToUpper(std::string& input)
+{
+	std::transform(input.begin(), input.end(), input.begin(), [](unsigned char c)
+		{
+			return std::toupper(c);
+		});
+	return input;
+}
+
 std::string& StringHelper::TrimLeft(std::string& input)
 {
 	input.erase(input.begin(), std::find_if(input.begin(), input.end(), [](unsigned char ch)
