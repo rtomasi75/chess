@@ -73,7 +73,7 @@ void Engine::Start()
 		return;
 	_isStopped = false;
 	_isRunning = true;
-	_pMainThread = std::make_unique<std::thread>([=]() {MainThread(); });
+	_pMainThread = std::make_unique<std::thread>([this]() {MainThread(); });
 }
 
 void Engine::Stop()

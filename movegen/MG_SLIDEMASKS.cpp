@@ -354,7 +354,6 @@ MG_MOVE SLIDEMASKS_Count_QuietMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER&
 	const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_QUIET];
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
 		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[tableIndex].CountMasks; idx++)
 		{
 			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[tableIndex].MaskIndex[idx];
@@ -424,7 +423,6 @@ MG_MOVE SLIDEMASKS_Count_CaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYE
 	const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_QUIET];
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
 		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[tableIndex].CountMasks; idx++)
 		{
 			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[tableIndex].MaskIndex[idx];

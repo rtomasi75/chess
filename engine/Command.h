@@ -3,6 +3,7 @@
 #define COMMAND_H
 
 #include <string>
+#include "libCommon.h"
 #include "libMovegen.h"
 
 class Engine;

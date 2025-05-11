@@ -18,17 +18,17 @@
 class Engine
 {
 private:
+	std::atomic_bool _isRunning;
 	std::istream& _inputStream;
 	std::ostream& _outputStream;
+	bool _isStopped;
 	MG_MOVEGEN _moveGen;
 	SE_GAME _game;
-	std::atomic_bool _isRunning;
 	std::vector<std::unique_ptr<Command>> _basicCommands;
 	std::condition_variable _signalStop;
 	std::mutex _stopMutex;
 	std::unique_ptr<std::thread> _pMainThread;
 	bool _UCI;
-	bool _isStopped;
 	bool TryParse(const std::string& commandString);
 	void MainThread();
 public:

@@ -87,7 +87,6 @@ MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget)
 	MG_MOVE count = 0;
 	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
 	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
 		const BB_BITBOARD targets = pMoveGen->JumpTargets[jumptarget][squareIndexFrom];
 		BB_SQUARECOUNT countTargets = BITBOARD_PopulationCount(targets);
 		count += ((MG_MOVE)countTargets) * (1 + COUNT_PIECETYPES);

@@ -38,7 +38,6 @@ bool Command_DebugSlideTargets::Try(const std::string& commandString)
 			{
 				std::stringstream sstream;
 				sstream << "Slide-targets for " << SquareToString(square) << ":" << std::endl;
-				BB_SQUAREINDEX squareIndex = SQUARE_GetIndex(square);
 				sstream << "  Occupancy:" << std::endl;
 				sstream << BitboardToString(GetEngine().Position().OccupancyTotal, 4);
 				sstream << "  Diagonal targets:" << std::endl;

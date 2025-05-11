@@ -147,7 +147,7 @@ bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player
 		found = moveIndex;
 		while (localPos < MOVESTRING_LENGTH)
 		{
-			if ((pMoveGen->MoveTable[player][move].MoveString[localPos] == 0))
+			if (pMoveGen->MoveTable[player][move].MoveString[localPos] == 0)
 			{
 				break;
 			}
