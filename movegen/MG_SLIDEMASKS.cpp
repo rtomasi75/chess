@@ -475,9 +475,6 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITI
 				const MG_SLIDEENTRYINDEX lookUpIndex = (MG_SLIDEENTRYINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
 				const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
 				ASSERT(entry < pMoveGen->CountSlideEntries);
-				BITBOARD_Dump(pPosition->OccupancyTotal, "Occupancy:");
-				BITBOARD_Dump(pMoveGen->SlideEntries[entry].Targets, "Targets:");
-				BITBOARD_Dump(pMoveGen->SlideEntries[entry].Occupancy, "RefOcc:");
 				BB_BITBOARD destinations = pMoveGen->SlideEntries[entry].Targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
 				BB_SQUAREINDEX toSquareIndex;
 				while (SQUARE_Next(destinations, toSquareIndex))
