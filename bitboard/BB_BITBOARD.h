@@ -25,7 +25,7 @@ BB_BITBOARD BITBOARD_BitDeposit(const BB_BITBOARD& bitboard, const BB_BITBOARD& 
 
 BB_BITBOARD BITBOARD_BitExtract(const BB_BITBOARD& bitboard, const BB_BITBOARD& mask);
 
-void BITBOARD_Dump(const BB_BITBOARD& bitboard);
+void BITBOARD_Dump(const BB_BITBOARD& bitboard, const char* pStr = nullptr);
 
 
 #endif

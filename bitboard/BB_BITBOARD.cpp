@@ -21,8 +21,10 @@ BB_BITBOARD BITBOARD_BitExtract(const BB_BITBOARD& bitboard, const BB_BITBOARD& 
 	return CM_BitExtract(bitboard, mask);
 }
 
-void BITBOARD_Dump(const BB_BITBOARD& bitboard)
+void BITBOARD_Dump(const BB_BITBOARD& bitboard, const char* pStr)
 {
+	if (pStr)
+		std::cout << pStr << std::endl;
 	for (BB_RANKINDEX rankIndex = COUNT_RANKS - 1; rankIndex >= 0; rankIndex--)
 	{
 		for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)

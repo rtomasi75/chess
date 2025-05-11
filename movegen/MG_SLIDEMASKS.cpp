@@ -4,90 +4,98 @@
 
 BB_BITBOARD SLIDEMASKS_GenerateTargetsHorizontal(const BB_SQUARE& square, const BB_BITBOARD& occupancy)
 {
-	BB_BITBOARD mask = BITBOARD_EMPTY;
+	BB_BITBOARD targets = BITBOARD_EMPTY;
 	BB_BITBOARD current;
-	BB_BITBOARD scratch;
+	BB_BITBOARD rayTargets;
 	// Up
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_UP(current) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_UP(current);
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
+	targets |= rayTargets;
 	// Down
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_DOWN(current) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_DOWN(current);
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
-	// Right
-	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
-	{
-		current = BITBOARD_RIGHT(current) & ~occupancy;
-		scratch |= current;
-	}
-	mask |= scratch;
+	targets |= rayTargets;
 	// Left
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_LEFT(current) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_LEFT(current);
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
-	return mask;
+	targets |= rayTargets;
+	// Right
+	current = square;
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
+	{
+		current = BITBOARD_RIGHT(current);
+		rayTargets |= current;
+		current &= ~occupancy;
+	}
+	targets |= rayTargets;
+	return targets;
 }
 
 BB_BITBOARD SLIDEMASKS_GenerateTargetsDiagonal(const BB_SQUARE& square, const BB_BITBOARD& occupancy)
 {
-	BB_BITBOARD mask = BITBOARD_EMPTY;
+	BB_BITBOARD targets = BITBOARD_EMPTY;
 	BB_BITBOARD current;
-	BB_BITBOARD scratch;
+	BB_BITBOARD rayTargets;
 	// Up/Left
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_LEFT(BITBOARD_UP(current)) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_UP(BITBOARD_LEFT(current));
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
-	// Down/Left
-	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_RANKINDEX rank = 0; rank < COUNT_RANKS; rank++)
-	{
-		current = BITBOARD_LEFT(BITBOARD_DOWN(current)) & ~occupancy;
-		scratch |= current;
-	}
-	mask |= scratch;
+	targets |= rayTargets;
 	// Up/Right
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_UP(BITBOARD_RIGHT(current)) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_UP(BITBOARD_RIGHT(current));
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
+	targets |= rayTargets;
+	// Down/Left
+	current = square;
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
+	{
+		current = BITBOARD_DOWN(BITBOARD_LEFT(current));
+		rayTargets |= current;
+		current &= ~occupancy;
+	}
+	targets |= rayTargets;
 	// Down/Right
 	current = square;
-	scratch = BITBOARD_EMPTY;
-	for (BB_FILEINDEX file = 0; file < COUNT_FILES; file++)
+	rayTargets = BITBOARD_EMPTY;
+	while (current)
 	{
-		current = BITBOARD_DOWN(BITBOARD_RIGHT(current)) & ~occupancy;
-		scratch |= current;
+		current = BITBOARD_DOWN(BITBOARD_RIGHT(current));
+		rayTargets |= current;
+		current &= ~occupancy;
 	}
-	mask |= scratch;
-	return mask;
+	targets |= rayTargets;
+	return targets;
 }
 
 BB_BITBOARD SLIDEMASKS_GenerateMaskHorizontal(const BB_SQUARE& square)
@@ -196,21 +204,24 @@ void SLIDEMASKS_InitializeDiagonal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& nex
 	{
 		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
 		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskDiagonal(square);
+		const BB_BITBOARD targets = SLIDEMASKS_GenerateTargetsDiagonal(square, BITBOARD_EMPTY);
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].Mask[squareIndex] = mask;
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex] = SLIDEMASKS_GenerateTargetsDiagonal(square, BITBOARD_EMPTY);
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex] = targets;
 		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].BaseEntry[squareIndex] = nextEntry;
-		const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(mask);
-		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountEntries[squareIndex] = count;
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargetsBits[squareIndex] = BITBOARD_PopulationCount(pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].PotentialTargets[squareIndex]);
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargets[squareIndex] = INT16_C(1) << pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargetsBits[squareIndex];
-		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountMaskBits[squareIndex] = countBits;
-		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
+		const BB_SQUARECOUNT countMaskBits = BITBOARD_PopulationCount(mask);
+		const BB_SQUARECOUNT countPotentialTargetsBits = BITBOARD_PopulationCount(targets);
+		const MG_SLIDEENTRYINDEX countEntries = ((MG_SLIDEENTRYINDEX)1) << countMaskBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountEntries[squareIndex] = countEntries;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargetsBits[squareIndex] = countPotentialTargetsBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountPotentialTargets[squareIndex] = INT16_C(1) << countPotentialTargetsBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_DIAGONAL].CountMaskBits[squareIndex] = countMaskBits;
+		for (MG_SLIDEENTRYINDEX idx = 0; idx < countEntries; idx++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);
 			const MG_SLIDEENTRYINDEX entry = nextEntry++;
 			ASSERT(entry < pMoveGen->CountSlideEntries);
 			pMoveGen->SlideEntries[entry].Targets = SLIDEMASKS_GenerateTargetsDiagonal(square, occupancy);
+			pMoveGen->SlideEntries[entry].Occupancy = occupancy;
 		}
 	}
 }
@@ -225,18 +236,20 @@ void SLIDEMASKS_InitializeHorizontal(MG_MOVEGEN* pMoveGen, MG_SLIDEENTRYINDEX& n
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndex] = mask;
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[squareIndex] = targets;
 		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].BaseEntry[squareIndex] = nextEntry;
-		const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(mask);
-		const MG_SLIDEENTRYINDEX count = ((MG_SLIDEENTRYINDEX)1) << countBits;
-		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountEntries[squareIndex] = count;
-		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargetsBits[squareIndex] = BITBOARD_PopulationCount(pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[squareIndex]);
-		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargets[squareIndex] = INT16_C(1) << pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargetsBits[squareIndex];
-		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountMaskBits[squareIndex] = countBits;
-		for (MG_SLIDEENTRYINDEX idx = 0; idx < count; idx++)
+		const BB_SQUARECOUNT countMaskBits = BITBOARD_PopulationCount(mask);
+		const BB_SQUARECOUNT countPotentialTargetsBits = BITBOARD_PopulationCount(targets);
+		const MG_SLIDEENTRYINDEX countEntries = ((MG_SLIDEENTRYINDEX)1) << countMaskBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountEntries[squareIndex] = countEntries;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargetsBits[squareIndex] = countPotentialTargetsBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountPotentialTargets[squareIndex] = INT16_C(1) << countPotentialTargetsBits;
+		pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].CountMaskBits[squareIndex] = countMaskBits;
+		for (MG_SLIDEENTRYINDEX idx = 0; idx < countEntries; idx++)
 		{
 			const BB_BITBOARD occupancy = BITBOARD_BitDeposit(idx, mask);
 			const MG_SLIDEENTRYINDEX entry = nextEntry++;
 			ASSERT(entry < pMoveGen->CountSlideEntries);
 			pMoveGen->SlideEntries[entry].Targets = SLIDEMASKS_GenerateTargetsHorizontal(square, occupancy);
+			pMoveGen->SlideEntries[entry].Occupancy = occupancy;
 		}
 	}
 }
@@ -254,8 +267,9 @@ MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesDiagonal()
 	{
 		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
 		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskDiagonal(square);
-		const std::int8_t countBits = CM_PopulationCount(mask);
-		count += ((MG_SLIDEENTRYINDEX)1) << countBits;
+		const BB_SQUARECOUNT countMaskBits = BITBOARD_PopulationCount(mask);
+		const MG_SLIDEENTRYINDEX countEntries = ((MG_SLIDEENTRYINDEX)1) << countMaskBits;
+		count += countEntries;
 	}
 	return count;
 }
@@ -267,8 +281,9 @@ MG_SLIDEENTRYINDEX SLIDEMASKS_CountEntriesHorizontal()
 	{
 		const BB_SQUARE square = SQUARE_FromIndex(squareIndex);
 		const BB_BITBOARD mask = SLIDEMASKS_GenerateMaskHorizontal(square);
-		const std::int8_t countBits = CM_PopulationCount(mask);
-		count += ((MG_SLIDEENTRYINDEX)1) << countBits;
+		const BB_SQUARECOUNT countMaskBits = BITBOARD_PopulationCount(mask);
+		const MG_SLIDEENTRYINDEX countEntries = ((MG_SLIDEENTRYINDEX)1) << countMaskBits;
+		count += countEntries;
 	}
 	return count;
 }
@@ -426,7 +441,7 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION
 			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
 			const BB_BITBOARD mask = pMoveGen->SlideMasks[maskIndex].Mask[fromSquareIndex];
 			const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
-			const MG_SLIDEMASKINDEX lookUpIndex = (MG_SLIDEMASKINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
+			const MG_SLIDEENTRYINDEX lookUpIndex = (MG_SLIDEENTRYINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
 			const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
 			ASSERT(entry < pMoveGen->CountSlideEntries);
 			const BB_BITBOARD targets = pMoveGen->SlideEntries[entry].Targets;
@@ -457,9 +472,12 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITI
 			{
 				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
 				const BB_BITBOARD mask = pMoveGen->SlideMasks[maskIndex].Mask[fromSquareIndex];
-				const MG_SLIDEMASKINDEX lookUpIndex = (MG_SLIDEMASKINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
+				const MG_SLIDEENTRYINDEX lookUpIndex = (MG_SLIDEENTRYINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
 				const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
 				ASSERT(entry < pMoveGen->CountSlideEntries);
+				BITBOARD_Dump(pPosition->OccupancyTotal, "Occupancy:");
+				BITBOARD_Dump(pMoveGen->SlideEntries[entry].Targets, "Targets:");
+				BITBOARD_Dump(pMoveGen->SlideEntries[entry].Occupancy, "RefOcc:");
 				BB_BITBOARD destinations = pMoveGen->SlideEntries[entry].Targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
 				BB_SQUAREINDEX toSquareIndex;
 				while (SQUARE_Next(destinations, toSquareIndex))

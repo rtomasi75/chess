@@ -9,6 +9,7 @@ typedef std::int32_t MG_SLIDEENTRYINDEX;
 struct MG_SLIDEENTRY
 {
 	BB_BITBOARD Targets;
+	BB_BITBOARD Occupancy;
 };
 
 #endif
