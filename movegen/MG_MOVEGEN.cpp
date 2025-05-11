@@ -7,14 +7,14 @@
 #include "libCommon.h"
 #include <iostream>
 
-MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen)
+MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer)
 {
 	MG_MOVE count = 0;
 	const MG_MOVE countKingMoves = KING_CountMoves(pMoveGen);
-	const MG_MOVE countRookMoves = ROOK_CountMoves(pMoveGen);
+	const MG_MOVE countRookMoves = ROOK_CountMoves(pMoveGen, movingPlayer);
 	const MG_MOVE countKnightMoves = KNIGHT_CountMoves(pMoveGen);
-	const MG_MOVE countBishopMoves = BISHOP_CountMoves(pMoveGen);
-	const MG_MOVE countQueenMoves = QUEEN_CountMoves(pMoveGen);
+	const MG_MOVE countBishopMoves = BISHOP_CountMoves(pMoveGen, movingPlayer);
+	const MG_MOVE countQueenMoves = QUEEN_CountMoves(pMoveGen, movingPlayer);
 	const MG_MOVE countPawnMoves = PAWN_CountMoves();
 	count += countKingMoves;
 	count += countRookMoves;
@@ -36,11 +36,17 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 	QUEEN_Initialize_LookUps(pMoveGen);
 	KING_Initialize_Targets(pMoveGen);
 	KNIGHT_Initialize_Targets(pMoveGen);
-	pMoveGen->CountMoves = MOVEGEN_CountMoves(pMoveGen);
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
 	{
 		// Allocate tables
-		pMoveGen->MoveTable[movingPlayer] = new MG_MOVEINFO[pMoveGen->CountMoves];
+		KING_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_KING]);
+		KNIGHT_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_KNIGHT]);
+		ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
+		BISHOP_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_BISHOP]);
+		QUEEN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_QUEEN]);
+		PAWN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_PAWN]);
+		pMoveGen->CountMoves[movingPlayer] = MOVEGEN_CountMoves(pMoveGen, movingPlayer);
+		pMoveGen->MoveTable[movingPlayer] = new MG_MOVEINFO[pMoveGen->CountMoves[movingPlayer]];
 	}
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
 	{
@@ -49,34 +55,28 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		MOVE_InitializeNullMove(pMoveGen->MoveTable[movingPlayer], movingPlayer);
 		nextMove++;
 		// King
-		KING_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_KING]);
 		KING_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			KING_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
 		// Knight
-		KNIGHT_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_KNIGHT]);
 		KNIGHT_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			KNIGHT_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
 		// Rook
-		ROOK_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_ROOK]);
 		ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 		// Bishop
-		BISHOP_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_BISHOP]);
 		BISHOP_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		BISHOP_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 		// Queen
-		QUEEN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_QUEEN]);
 		QUEEN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		QUEEN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 		// Pawn
 
-		PAWN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_PAWN]);
 		PAWN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		PAWN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 	}

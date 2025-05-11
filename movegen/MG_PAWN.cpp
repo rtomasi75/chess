@@ -51,7 +51,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
 				const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
 				const MG_MOVE move = nextMove++;
-				ASSERT(move < pMoveGen->CountMoves);
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 				pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
@@ -86,7 +86,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
 				const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
 				const MG_MOVE move = nextMove++;
-				ASSERT(move < pMoveGen->CountMoves);
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 				pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
@@ -131,7 +131,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 					{
 						const MG_MOVE move = nextMove++;
-						ASSERT(move < pMoveGen->CountMoves);
+						ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
@@ -160,7 +160,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 					{
 						const MG_MOVE move = nextMove++;
-						ASSERT(move < pMoveGen->CountMoves);
+						ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
@@ -204,7 +204,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 					{
 						const MG_MOVE move = nextMove++;
-						ASSERT(move < pMoveGen->CountMoves);
+						ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
@@ -233,7 +233,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 					{
 						const MG_MOVE move = nextMove++;
-						ASSERT(move < pMoveGen->CountMoves);
+						ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
@@ -274,7 +274,7 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPos
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
 			const MG_MOVE offset = (fromRankIndex - 1) * COUNT_FILES + fromFileIndex;
 			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset;
-			ASSERT(move < pMoveGen->CountMoves);
+			ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 			pMoveList->Move[pMoveList->CountMoves++] = move;
 		}
 	}
@@ -287,8 +287,8 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPos
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
 			const MG_MOVE offset = (fromRankIndex - 2) * COUNT_FILES + fromFileIndex;
-			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset;
-			ASSERT(move < pMoveGen->CountMoves);
+			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset;
+			ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 			pMoveList->Move[pMoveList->CountMoves++] = move;
 		}
 	}
@@ -314,13 +314,13 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pP
 				if (targetsLeft)
 				{
 					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].CaptureBase + offset + capturedPiece;
-					ASSERT(move < pMoveGen->CountMoves);
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 				if (targetsRight)
 				{
 					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].CaptureBase + offset + capturedPiece + COUNT_PIECETYPES;
-					ASSERT(move < pMoveGen->CountMoves);
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 			}
@@ -343,13 +343,13 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pP
 				if (targetsLeft)
 				{
 					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].CaptureBase + offset + capturedPiece;
-					ASSERT(move < pMoveGen->CountMoves);
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 				if (targetsRight)
 				{
 					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].CaptureBase + offset + capturedPiece + COUNT_PIECETYPES;
-					ASSERT(move < pMoveGen->CountMoves);
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 					pMoveList->Move[pMoveList->CountMoves++] = move;
 				}
 			}

@@ -50,11 +50,11 @@ struct MG_MOVEGEN
 	MG_PAWNTABLE PawnTable[COUNT_PLAYERS];
 	MG_MOVEINFO* MoveTable[COUNT_PLAYERS];
 	MG_SLIDEENTRY* SlideEntries;
-	MG_MOVE CountMoves;
+	MG_MOVE CountMoves[COUNT_PLAYERS];
 	MG_SLIDEENTRYINDEX CountSlideEntries;
 };
 
-MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen);
+MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer);
 
 void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen);
 

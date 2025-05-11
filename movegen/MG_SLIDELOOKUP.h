@@ -20,6 +20,4 @@ struct MG_SLIDELOOKUP
 	MG_MOVE CaptureBase[COUNT_PLAYERS][COUNT_SLIDEMASKS][COUNT_SQUARES][COUNT_PIECETYPES];
 };
 
-size_t SLIDELOOKUP_CountSlideEntries(const MG_MOVEGEN* pMoveGen);
-
 #endif

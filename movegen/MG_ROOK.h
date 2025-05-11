@@ -10,7 +10,7 @@
 
 struct MG_MOVEGEN;
 
-MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen);
+MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer);
 
 void ROOK_Initialize_LookUps(MG_MOVEGEN* pMoveGen);
 

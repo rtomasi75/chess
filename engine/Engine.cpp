@@ -7,6 +7,7 @@
 #include "commands/Command_DebugMove.h"
 #include "commands/Command_DebugJumps.h"
 #include "commands/Command_DebugSlideMask.h"
+#include "commands/Command_DebugMoveGen.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_isRunning(false),
@@ -26,6 +27,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_DebugMove>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugJumps>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugSlideMask>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugMoveGen>(this));
 }
 
 Engine::~Engine()

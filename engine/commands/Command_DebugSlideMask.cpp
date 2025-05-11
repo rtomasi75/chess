@@ -68,17 +68,20 @@ bool Command_DebugSlideMask::Try(const std::string& commandString)
 					GetEngine().OutputStream() << "  Mask:" << std::endl;
 					BB_BITBOARD mask = GetEngine().MoveGen().SlideMasks[slideMaskIndex].Mask[squareIndex];
 					GetEngine().OutputStream() << BitboardToString(mask, 4);
-					GetEngine().OutputStream() << "  Targets:" << std::endl;
+					GetEngine().OutputStream() << "  Potential targets:" << std::endl;
 					BB_BITBOARD targets = GetEngine().MoveGen().SlideMasks[slideMaskIndex].PotentialTargets[squareIndex];
 					GetEngine().OutputStream() << BitboardToString(targets, 4);
-			/*		GetEngine().OutputStream() << "  Entries (" << (int)GetEngine().MoveGen().SlideMasks[slideMaskIndex].CountEntries[squareIndex] << "):" << std::endl;
+					GetEngine().OutputStream() << "  Entries (" << (int)GetEngine().MoveGen().SlideMasks[slideMaskIndex].CountEntries[squareIndex] << "):" << std::endl;
 					for (MG_SLIDEENTRYINDEX entry = 0; entry < GetEngine().MoveGen().SlideMasks[slideMaskIndex].CountEntries[squareIndex]; entry++)
 					{
 						GetEngine().OutputStream() << "    entry = " << StringHelper::ToHexString(entry) << std::endl;
 						BB_BITBOARD occupancy = BITBOARD_BitDeposit(entry, targets);
 						BB_BITBOARD targets2 = GetEngine().MoveGen().SlideEntries[GetEngine().MoveGen().SlideMasks[slideMaskIndex].BaseEntry[squareIndex] + entry].Targets;
-						GetEngine().OutputStream() << BitboardToString(targets2, 6);
-					}*/
+						GetEngine().OutputStream() << "      occupancy:" << std::endl;
+						GetEngine().OutputStream() << BitboardToString(occupancy, 8);
+						GetEngine().OutputStream() << "      targets:" << std::endl;
+						GetEngine().OutputStream() << BitboardToString(targets2, 8);
+					}
 				}
 				else
 				{

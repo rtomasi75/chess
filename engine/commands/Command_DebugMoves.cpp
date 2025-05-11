@@ -1,6 +1,7 @@
 #include "Command_DebugMoves.h"
 #include "../StringHelper.h"
 #include "../Engine.h"
+#include <sstream>
 
 Command_DebugMoves::Command_DebugMoves(Engine* pEngine) :
 	Command(pEngine)
@@ -15,29 +16,30 @@ bool Command_DebugMoves::Try(const std::string& commandString)
 	{
 		if (GetEngine().LegalMoves().CountMoves > 0)
 		{
-			GetEngine().OutputStream() << "Found " << ((int)GetEngine().LegalMoves().CountMoves) << " legal moves:" << std::endl;
+			std::stringstream sstream;
+			sstream << "Found " << ((int)GetEngine().LegalMoves().CountMoves) << " legal moves:" << std::endl;
 			for (MG_MOVEINDEX moveIndex = 0; moveIndex < GetEngine().LegalMoves().CountMoves; moveIndex++)
 			{
 				MG_MOVE move = GetEngine().LegalMoves().Move[moveIndex];
-				std::string movestring(GetEngine().MoveGen().MoveTable[GetEngine().MovingPlayer()][move].MoveString);
-				GetEngine().OutputStream() << " - " << movestring << ":" << std::endl;
+				sstream << " - " << MoveToString(move) << "(" << MoveToHexString(move) << ")" << ":" << std::endl;
 				const MG_MOVEINFO& moveInfo = GetEngine().MoveGen().MoveTable[GetEngine().MovingPlayer()][move];
 				if (moveInfo.MovePiece != PIECETYPE_NONE)
 				{
-					GetEngine().OutputStream() << "    Move piece: " << PieceToString(moveInfo.MovePiece, moveInfo.MovePlayer) << std::endl;
-					GetEngine().OutputStream() << BitboardToString(MOVEINFO_GetMoveMap(&moveInfo), 6);
+					sstream << "    Move piece: " << PieceToString(moveInfo.MovePiece, moveInfo.MovePlayer) << std::endl;
+					sstream << BitboardToString(MOVEINFO_GetMoveMap(&moveInfo), 6);
 				}
 				if (moveInfo.CreatePiece != PIECETYPE_NONE)
 				{
-					GetEngine().OutputStream() << "    Create piece: " << PieceToString(moveInfo.CreatePiece, moveInfo.CreatePlayer) << std::endl;
-					GetEngine().OutputStream() << BitboardToString(MOVEINFO_GetCreateMap(&moveInfo), 6);
+					sstream << "    Create piece: " << PieceToString(moveInfo.CreatePiece, moveInfo.CreatePlayer) << std::endl;
+					sstream << BitboardToString(MOVEINFO_GetCreateMap(&moveInfo), 6);
 				}
 				if (moveInfo.KillPiece != PIECETYPE_NONE)
 				{
-					GetEngine().OutputStream() << "    Kill piece: " << PieceToString(moveInfo.KillPiece, moveInfo.KillPlayer) << std::endl;
-					GetEngine().OutputStream() << BitboardToString(MOVEINFO_GetKillMap(&moveInfo), 6);
+					sstream << "    Kill piece: " << PieceToString(moveInfo.KillPiece, moveInfo.KillPlayer) << std::endl;
+					sstream << BitboardToString(MOVEINFO_GetKillMap(&moveInfo), 6);
 				}
 			}
+			GetEngine().OutputStream() << sstream.str();
 		}
 		else
 		{

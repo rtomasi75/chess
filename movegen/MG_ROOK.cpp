@@ -2,21 +2,11 @@
 #include "MG_MOVEGEN.h"
 #include "libCommon.h"
 
-MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen)
+MG_MOVE ROOK_CountMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer)
 {
-	MG_MOVE count = 0;
-	for (BB_SQUAREINDEX squareIndexFrom = 0; squareIndexFrom < COUNT_SQUARES; squareIndexFrom++)
-	{
-		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
-		const BB_BITBOARD mask = pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].Mask[squareIndexFrom];
-		std::uint64_t countIndices = (UINT64_C(1) << BITBOARD_PopulationCount(mask));
-		for (std::uint64_t index = 0; index < countIndices; index++)
-		{
-			const BB_BITBOARD occupancy = BITBOARD_BitExtract(index, mask);
-			count += BITBOARD_PopulationCount(SLIDEMASKS_QuietMovesFromSquareHorizontal(squareFrom, occupancy));
-			count += BITBOARD_PopulationCount(SLIDEMASKS_CaptureMovesFromSquareHorizontal(squareFrom, occupancy)) * COUNT_PIECETYPES;
-		}
-	}
+	const MG_MOVE countQuietMoves = SLIDEMASKS_Count_QuietMoves(pMoveGen, movingPlayer, PIECETYPE_ROOK);
+	const MG_MOVE countCaptureMoves = SLIDEMASKS_Count_CaptureMoves(pMoveGen, movingPlayer, PIECETYPE_ROOK);
+	const MG_MOVE count = countQuietMoves + countCaptureMoves;
 	return count;
 }
 

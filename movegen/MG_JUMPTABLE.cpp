@@ -20,7 +20,7 @@ void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE
 			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
 			const MG_MOVE move = nextMove++;
 			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
-			ASSERT(move < pMoveGen->CountMoves);
+			ASSERT(move < pMoveGen->CountMoves[player]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 			pMoveGen->MoveTable[player][move].KillMap = BITBOARD_EMPTY;
 			pMoveGen->MoveTable[player][move].CreateMap = BITBOARD_EMPTY;
@@ -59,7 +59,7 @@ void JUMPTABLE_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETY
 			const BB_SQUARE squareTo = BITBOARD_BitDeposit(squareBitIndex, targets);
 			const MG_MOVE move = nextMove++;
 			const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
-			ASSERT(move < pMoveGen->CountMoves);
+			ASSERT(move < pMoveGen->CountMoves[player]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 			pMoveGen->MoveTable[player][move].KillMap = squareTo;
 			pMoveGen->MoveTable[player][move].MoveMap = squareFrom ^ squareTo;

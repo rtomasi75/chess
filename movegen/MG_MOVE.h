@@ -9,7 +9,7 @@
 #include "MG_PLAYER.h"
 #include "MG_MOVEINFO.h"
 
-typedef std::uint32_t MG_MOVE;
+typedef std::uint16_t MG_MOVE;
 
 #define MOVE_NULLMOVE UINT16_C(0)
 

@@ -32,14 +32,6 @@ struct MG_POSITION;
 #define SLIDEMASKS_DIAGONAL 1
 
 
-BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
-BB_BITBOARD SLIDEMASKS_QuietMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
-BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareHorizontal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
-BB_BITBOARD SLIDEMASKS_CaptureMovesFromSquareDiagonal(const BB_SQUARE& squareFrom, const BB_BITBOARD& occupancy);
-
 BB_BITBOARD SLIDEMASKS_GenerateTargetsHorizontal(const BB_SQUARE& square, const BB_BITBOARD& occupancy);
 
 BB_BITBOARD SLIDEMASKS_GenerateTargetsDiagonal(const BB_SQUARE& square, const BB_BITBOARD& occupancy);
@@ -67,5 +59,9 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
 
 void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
+
+MG_MOVE SLIDEMASKS_Count_QuietMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece);
+
+MG_MOVE SLIDEMASKS_Count_CaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer, const MG_PIECETYPE& movingPiece);
 
 #endif
