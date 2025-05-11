@@ -76,10 +76,9 @@ bool Command_DebugSlideMask::Try(const std::string& commandString)
 					{
 						GetEngine().OutputStream() << "    entry = " << StringHelper::ToHexString(entry) << std::endl;
 						BB_BITBOARD occupancy = BITBOARD_BitDeposit(entry, targets);
-						BB_BITBOARD targets2 = GetEngine().MoveGen().SlideEntries[GetEngine().MoveGen().SlideMasks[slideMaskIndex].BaseEntry[squareIndex] + entry].Targets;
-						BB_BITBOARD occupancy2 = GetEngine().MoveGen().SlideEntries[GetEngine().MoveGen().SlideMasks[slideMaskIndex].BaseEntry[squareIndex] + entry].Occupancy;
+						BB_BITBOARD targets2 = SLIDEMASKS_EntryTargets(&GetEngine().MoveGen(), GetEngine().MoveGen().SlideMasks[slideMaskIndex].BaseEntry[squareIndex] + entry, squareIndex);
 						GetEngine().OutputStream() << "      occupancy:" << std::endl;
-						GetEngine().OutputStream() << BitboardToString(occupancy2, 8);
+						GetEngine().OutputStream() << BitboardToString(occupancy, 8);
 						GetEngine().OutputStream() << "      targets:" << std::endl;
 						GetEngine().OutputStream() << BitboardToString(targets2, 8);
 					}

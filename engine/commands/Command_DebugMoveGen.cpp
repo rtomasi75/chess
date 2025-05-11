@@ -37,6 +37,9 @@ bool Command_DebugMoveGen::Try(const std::string& commandString)
 		sstream << "  sizeof(MG_SLIDEENTRYINDEX) = " << sizeof(MG_SLIDEENTRYINDEX) << std::endl;
 		sstream << "  sizeof(MG_SLIDEMASKINDEX) = " << sizeof(MG_SLIDEMASKINDEX) << std::endl;
 		sstream << "  sizeof(MG_SLIDETARGETINDEX) = " << sizeof(MG_SLIDETARGETINDEX) << std::endl;
+#ifdef MOVEGEN_COMPACT_TARGETS
+		sstream << "  sizeof(MG_COMPRESSEDTARGETS) = " << sizeof(MG_COMPRESSEDTARGETS) << std::endl;
+#endif
 		sstream << "Count moves (white): " << GetEngine().MoveGen().CountMoves[PLAYER_WHITE] << std::endl;
 		sstream << "Count moves (black): " << GetEngine().MoveGen().CountMoves[PLAYER_BLACK] << std::endl;
 		sstream << "Count slide-entries: " << GetEngine().MoveGen().CountSlideEntries << std::endl;
