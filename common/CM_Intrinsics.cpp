@@ -28,14 +28,105 @@ static const std::int8_t CM_Index64[64] =
 	INT8_C(25), INT8_C(14), INT8_C(19), INT8_C(9),  INT8_C(13), INT8_C(8),  INT8_C(7),  INT8_C(6)
 };
 
+typedef std::int8_t(*CM_PopCountFn)(std::uint64_t);
+typedef std::uint64_t(*CM_BitDepFn)(std::uint64_t, std::uint64_t);
+typedef std::uint64_t(*CM_BitExtFn)(std::uint64_t, std::uint64_t);
+typedef std::int8_t(*CM_BsfFn)(std::uint64_t);
+
+
+// Fallbacks (portable implementations)
+static std::int8_t CM_PopulationCountFallback(std::uint64_t value)
+{
+	value = value - ((value >> 1) & UINT64_C(0x5555555555555555));
+	value = (value & UINT64_C(0x3333333333333333)) + ((value >> 2) & UINT64_C(0x3333333333333333));
+	value = (value + (value >> 4)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
+	return (std::int8_t)((value * UINT64_C(0x0101010101010101)) >> 56);
+}
+
+#if CM_HAVE_POPCNT
+static std::int8_t CM_PopulationCountIntrinsic(std::uint64_t value)
+{
+	return (std::int8_t)_mm_popcnt_u64(value);
+}
+#endif
+
+
+static std::uint64_t CM_BitDepositFallback(std::uint64_t value, std::uint64_t mask)
+{
+	std::uint64_t result = 0;
+	for (std::uint64_t bb = 1; mask != 0; bb <<= 1)
+	{
+		if (value & bb)
+			result |= mask & (std::uint64_t)-(std::int64_t)mask;
+		mask &= (mask - 1);
+	}
+	return result;
+}
+
+static std::uint64_t CM_BitExtractFallback(std::uint64_t value, std::uint64_t mask)
+{
+	std::uint64_t result = 0;
+	std::uint64_t bb = 1;
+	for (std::uint64_t m = mask; m != 0; m &= (m - 1))
+	{
+		std::uint64_t bit = m & (std::uint64_t)-(std::int64_t)m;
+		if (value & bit)
+			result |= bb;
+		bb <<= 1;
+	}
+	return result;
+}
+
+#if CM_HAVE_BMI2
+static std::uint64_t CM_BitDepositIntrinsic(std::uint64_t value, std::uint64_t mask)
+{
+	return _pdep_u64(value, mask);
+}
+
+static std::uint64_t CM_BitExtractIntrinsic(std::uint64_t value, std::uint64_t mask)
+{
+	return _pext_u64(value, mask);
+}
+#endif
+
+static std::int8_t CM_BitScanForwardFallback(std::uint64_t value)
+{
+	return CM_Index64[((value & (std::uint64_t)-(std::int64_t)value) * CM_DEBRUIJN64) >> 58];
+}
+
+#if CM_HAVE_BMI1
+static std::int8_t CM_BitScanForwardIntrinsic(std::uint64_t value)
+{
+#if defined(_MSC_VER)
+	unsigned long index;
+	_BitScanForward64(&index, value);
+	return static_cast<std::int8_t>(index);
+#else
+	return static_cast<std::int8_t>(_tzcnt_u64(value));
+#endif
+}
+#endif
+
+static CM_PopCountFn g_PopCountDispatch = CM_PopulationCountFallback;
+static CM_BitDepFn g_BitDepDispatch = CM_BitDepositFallback;
+static CM_BitExtFn g_BitExtDispatch = CM_BitExtractFallback;
+static CM_BsfFn g_BsfDispatch = CM_BitScanForwardFallback;
+
 void CM_DetectIntrinsics()
 {
 	int cpuInfo[4]{};
+#if CM_HAVE_POPCNT
 	__cpuid(cpuInfo, 1);
 	g_hasPOPCNT = (cpuInfo[2] & (1 << 23)) != 0;
+	g_PopCountDispatch = g_hasPOPCNT ? CM_PopulationCountIntrinsic : CM_PopulationCountFallback;
+#endif
 
+#if CM_HAVE_BMI2
 	__cpuid(cpuInfo, 7);
 	g_hasBMI2 = (cpuInfo[1] & (1 << 8)) != 0;
+	g_BitDepDispatch = g_hasBMI2 ? CM_BitDepositIntrinsic : CM_BitDepositFallback;
+	g_BitExtDispatch = g_hasBMI2 ? CM_BitExtractIntrinsic : CM_BitExtractFallback;
+#endif
 
 	__cpuid(cpuInfo, 7);
 	g_hasBMI1 = (cpuInfo[1] & (1 << 3)) != 0;
@@ -68,68 +159,6 @@ bool CM_HasBMI1()
 #endif
 }
 
-// Fallbacks (portable implementations)
-std::int8_t CM_PopulationCountFallback(std::uint64_t value)
-{
-	value = value - ((value >> 1) & UINT64_C(0x5555555555555555));
-	value = (value & UINT64_C(0x3333333333333333)) + ((value >> 2) & UINT64_C(0x3333333333333333));
-	value = (value + (value >> 4)) & UINT64_C(0x0F0F0F0F0F0F0F0F);
-	return (std::int8_t)((value * UINT64_C(0x0101010101010101)) >> 56);
-}
-
-std::uint64_t CM_BitDepositFallback(std::uint64_t value, std::uint64_t mask)
-{
-	std::uint64_t result = 0;
-	for (std::uint64_t bb = 1; mask != 0; bb <<= 1)
-	{
-		if (value & bb)
-			result |= mask & (std::uint64_t)-(std::int64_t)mask;
-		mask &= (mask - 1);
-	}
-	return result;
-}
-
-std::uint64_t CM_BitExtractFallback(std::uint64_t value, std::uint64_t mask)
-{
-	std::uint64_t result = 0;
-	std::uint64_t bb = 1;
-	for (std::uint64_t m = mask; m != 0; m &= (m - 1))
-	{
-		std::uint64_t bit = m & (std::uint64_t)-(std::int64_t)m;
-		if (value & bit)
-			result |= bb;
-		bb <<= 1;
-	}
-	return result;
-}
-
-std::int8_t CM_PopulationCount(std::uint64_t value)
-{
-#if CM_HAVE_POPCNT
-	if (g_hasPOPCNT)
-		return (std::int8_t)_mm_popcnt_u64(value);
-#endif
-	return CM_PopulationCountFallback(value);
-}
-
-std::uint64_t CM_BitDeposit(std::uint64_t value, std::uint64_t mask)
-{
-#if CM_HAVE_BMI2
-	if (g_hasBMI2)
-		return _pdep_u64(value, mask);
-#endif
-	return CM_BitDepositFallback(value, mask);
-}
-
-std::uint64_t CM_BitExtract(std::uint64_t value, std::uint64_t mask)
-{
-#if CM_HAVE_BMI2
-	if (g_hasBMI2)
-		return _pext_u64(value, mask);
-#endif
-	return CM_BitExtractFallback(value, mask);
-}
-
 std::string CM_GetIntrinsicInfo()
 {
 	std::string result = "Runtime CPU features:";
@@ -141,25 +170,22 @@ std::string CM_GetIntrinsicInfo()
 	return result;
 }
 
-std::int8_t CM_BitScanForwardFallback(std::uint64_t value)
+std::int8_t CM_PopulationCount(std::uint64_t value)
 {
-	return CM_Index64[((value & (std::uint64_t)-(std::int64_t)value) * CM_DEBRUIJN64) >> 58];
+	return g_PopCountDispatch(value);
+}
+
+std::uint64_t CM_BitDeposit(std::uint64_t value, std::uint64_t mask)
+{
+	return g_BitDepDispatch(value, mask);
+}
+
+std::uint64_t CM_BitExtract(std::uint64_t value, std::uint64_t mask)
+{
+	return g_BitExtDispatch(value, mask);
 }
 
 std::int8_t CM_BitScanForward(std::uint64_t value)
 {
-#if CM_HAVE_BMI1
-#if defined(_MSC_VER)
-	if (g_hasBMI1)
-	{
-		unsigned long index;
-		_BitScanForward64(&index, value);
-		return static_cast<std::int8_t>(index);
-	}
-#else
-	if (g_hasBMI1)
-		return static_cast<std::int8_t>(_tzcnt_u64(value));
-#endif
-#endif
-	return CM_BitScanForwardFallback(value);
+	return g_BsfDispatch(value);
 }
