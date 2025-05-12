@@ -195,6 +195,13 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
 	}
+	if (moveInfo.PromoPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD promoMap = MOVEINFO_GetPromoMap(&moveInfo);
+		pPosition->OccupancyTotal ^= promoMap;
+		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
+	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
@@ -229,6 +236,13 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= killMap;
 		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
+	}
+	if (moveInfo.PromoPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD promoMap = MOVEINFO_GetPromoMap(&moveInfo);
+		pPosition->OccupancyTotal ^= promoMap;
+		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;

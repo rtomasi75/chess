@@ -15,6 +15,8 @@ struct MG_PAWNTABLE
 {
 	MG_MOVE QuietBase;
 	MG_MOVE CaptureBase;
+	MG_MOVE PromotionBase;
+	MG_MOVE PromoCaptureBase;
 };
 
 MG_MOVE PAWN_CountQuietMoves();

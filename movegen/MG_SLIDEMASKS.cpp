@@ -326,6 +326,7 @@ void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PI
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 				pMoveGen->MoveTable[movingPlayer][move].KillMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[movingPlayer][move].CreateMap = BITBOARD_EMPTY;
+				pMoveGen->MoveTable[movingPlayer][move].PromoMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[movingPlayer][move].MoveMap = squareFrom ^ squareTo;
 #endif
 				pMoveGen->MoveTable[movingPlayer][move].MoveDest = squareIndexTo;
@@ -336,6 +337,9 @@ void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PI
 				pMoveGen->MoveTable[movingPlayer][move].CreatePiece = PIECETYPE_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].CreatePlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].CreateDest = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].PromoPiece = PIECETYPE_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].PromoPlayer = PLAYER_NONE;
+				pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].MovePiece = movingPiece;
 				pMoveGen->MoveTable[movingPlayer][move].MovePlayer = movingPlayer;
 				pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo);
@@ -394,6 +398,7 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 					pMoveGen->MoveTable[movingPlayer][move].KillMap = squareTo;
 					pMoveGen->MoveTable[movingPlayer][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[movingPlayer][move].PromoMap = BITBOARD_EMPTY;
 					pMoveGen->MoveTable[movingPlayer][move].CreateMap = BITBOARD_EMPTY;
 #endif
 					pMoveGen->MoveTable[movingPlayer][move].MoveDest = squareIndexTo;
@@ -406,6 +411,9 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 					pMoveGen->MoveTable[movingPlayer][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].CreatePlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].PromoPiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].PromoPlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 					pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(movingPlayer, movingPiece, squareFrom, squareTo, capturedPiece);
 					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);

@@ -2,6 +2,8 @@
 #include "MG_MOVEGEN.h"
 #include "libCommon.h"
 
+#define MOVEGEN_COUNT_PROMOPIECES 4
+
 void PAWN_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)
 {
 	pPieceInfo->IsRoyal = false;
@@ -20,13 +22,15 @@ void PAWN_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo)
 MG_MOVE PAWN_CountQuietMoves()
 {
 	const MG_MOVE countPushes = (COUNT_RANKS - 3) * COUNT_FILES;
-	return countPushes;
+	const MG_MOVE countPromotions = COUNT_FILES * MOVEGEN_COUNT_PROMOPIECES;
+	return countPushes + countPromotions;
 }
 
 MG_MOVE PAWN_CountCaptureMoves()
 {
 	const MG_MOVE countCaptures = (COUNT_RANKS - 3) * COUNT_FILES * 2 * COUNT_PIECETYPES;
-	return countCaptures;
+	const MG_MOVE countPromoCaptures = COUNT_FILES * 2 * COUNT_PIECETYPES * MOVEGEN_COUNT_PROMOPIECES;
+	return countCaptures + countPromoCaptures;
 }
 
 MG_MOVE PAWN_CountMoves()
@@ -34,12 +38,20 @@ MG_MOVE PAWN_CountMoves()
 	return PAWN_CountQuietMoves() + PAWN_CountCaptureMoves();
 }
 
+constexpr MG_PIECETYPE PAWN_PromoPieces[MOVEGEN_COUNT_PROMOPIECES]
+{
+	PIECETYPE_KNIGHT,
+	PIECETYPE_BISHOP,
+	PIECETYPE_ROOK,
+	PIECETYPE_QUEEN
+};
+
 void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove)
 {
-	pMoveGen->PawnTable[player].QuietBase = nextMove;
 	// normal pushes
 	if (player == PLAYER_WHITE)
 	{
+		pMoveGen->PawnTable[PLAYER_WHITE].QuietBase = nextMove;
 		for (BB_RANKINDEX rankIndex = 1; rankIndex < COUNT_RANKS - 2; rankIndex++)
 		{
 			const BB_RANK rank = RANK_FromIndex(rankIndex);
@@ -56,6 +68,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = squareIndexTo;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = squareIndexFrom;
@@ -65,6 +78,9 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = PIECETYPE_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
+				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
+				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_PAWN;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo);
@@ -72,9 +88,50 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareTo);
 			}
 		}
+		pMoveGen->PawnTable[PLAYER_WHITE].PromotionBase = nextMove;
+		{
+			const BB_RANK rank = RANK_7;
+			for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+			{
+				const BB_FILE file = FILE_FromIndex(fileIndex);
+				const BB_SQUARE squareFrom = SQUARE_FromRankFile(rank, file);
+				const BB_SQUARE squareTo = BITBOARD_UP(squareFrom);
+				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
+				const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+				{
+					const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+					const MG_MOVE move = nextMove++;
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = squareFrom;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = BITBOARD_EMPTY;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareTo;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = BITBOARD_EMPTY;
+#endif
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_PAWN;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_WHITE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = squareIndexFrom;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].KillPiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].KillPlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].KillDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = promoPiece;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_WHITE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareTo);
+					pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
+					MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareTo, promoPiece);
+				}
+			}
+		}
 	}
 	else
 	{
+		pMoveGen->PawnTable[PLAYER_BLACK].QuietBase = nextMove;
 		for (BB_RANKINDEX rankIndex = 2; rankIndex < COUNT_RANKS - 1; rankIndex++)
 		{
 			const BB_RANK rank = RANK_FromIndex(rankIndex);
@@ -90,6 +147,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 				pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
 #endif
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = squareIndexTo;
@@ -100,11 +158,54 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_PAWN;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareTo);
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareTo);
+			}
+		}
+		pMoveGen->PawnTable[PLAYER_BLACK].PromotionBase = nextMove;
+		{
+			const BB_RANK rank = RANK_2;
+			for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+			{
+				const BB_FILE file = FILE_FromIndex(fileIndex);
+				const BB_SQUARE squareFrom = SQUARE_FromRankFile(rank, file);
+				const BB_SQUARE squareTo = BITBOARD_DOWN(squareFrom);
+				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
+				const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareTo);
+				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+				{
+					const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+					const MG_MOVE move = nextMove++;
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = squareFrom;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = BITBOARD_EMPTY;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareTo;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = BITBOARD_EMPTY;
+#endif
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_PAWN;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_BLACK;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].KillPiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].KillPlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].KillDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = promoPiece;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareTo);
+					pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareTo);
+					MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareTo, promoPiece);
+				}
 			}
 		}
 	}
@@ -136,6 +237,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = squareIndexTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = squareIndexFrom;
@@ -147,6 +249,9 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToLeft);
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
 						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToLeft);
@@ -165,6 +270,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = squareIndexTo;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = squareIndexFrom;
@@ -176,9 +282,98 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToRight);
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
 						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToRight);
+					}
+				}
+				else
+					nextMove += COUNT_PIECETYPES;
+			}
+		}
+		pMoveGen->PawnTable[PLAYER_WHITE].PromoCaptureBase = nextMove;
+		{
+			const BB_RANK rank = RANK_7;
+			for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+			{
+				const BB_FILE file = FILE_FromIndex(fileIndex);
+				const BB_SQUARE squareFrom = SQUARE_FromRankFile(rank, file);
+				const BB_SQUARE squareToLeft = BITBOARD_LEFT(BITBOARD_UP(squareFrom));
+				const BB_SQUARE squareToRight = BITBOARD_RIGHT(BITBOARD_UP(squareFrom));
+				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
+				if (squareToLeft)
+				{
+					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareToLeft);
+					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+					{
+						for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+						{
+							const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+							const MG_MOVE move = nextMove++;
+							ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = BITBOARD_EMPTY;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = squareFrom;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareTo;
+#endif
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillPiece = capturedPiece;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillPlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = promoPiece;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = squareIndexFrom;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToLeft);
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToLeft, promoPiece);
+						}
+					}
+				}
+				else
+					nextMove += COUNT_PIECETYPES;
+				if (squareToRight)
+				{
+					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareToRight);
+					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+					{
+						for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+						{
+							const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+							const MG_MOVE move = nextMove++;
+							ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = BITBOARD_EMPTY;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = squareFrom;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareTo;
+#endif
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_NONE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillPiece = capturedPiece;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillPlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = promoPiece;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = squareIndexFrom;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToRight);
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToRight, promoPiece);
+						}
 					}
 				}
 				else
@@ -209,6 +404,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = squareIndexTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = squareIndexFrom;
@@ -220,6 +416,9 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToLeft);
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
 						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToLeft);
@@ -238,6 +437,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = squareIndexTo;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = squareIndexFrom;
@@ -249,9 +449,98 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToRight);
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
 						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToRight);
+					}
+				}
+				else
+					nextMove += COUNT_PIECETYPES;
+			}
+		}
+		pMoveGen->PawnTable[PLAYER_BLACK].PromoCaptureBase = nextMove;
+		{
+			const BB_RANK rank = RANK_2;
+			for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
+			{
+				const BB_FILE file = FILE_FromIndex(fileIndex);
+				const BB_SQUARE squareFrom = SQUARE_FromRankFile(rank, file);
+				const BB_SQUARE squareToLeft = BITBOARD_LEFT(BITBOARD_DOWN(squareFrom));
+				const BB_SQUARE squareToRight = BITBOARD_RIGHT(BITBOARD_DOWN(squareFrom));
+				const BB_SQUAREINDEX squareIndexFrom = SQUARE_GetIndex(squareFrom);
+				if (squareToLeft)
+				{
+					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareToLeft);
+					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+					{
+						for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+						{
+							const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+							const MG_MOVE move = nextMove++;
+							ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = BITBOARD_EMPTY;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = squareFrom;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareTo;
+#endif
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillPiece = capturedPiece;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillPlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = promoPiece;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToLeft);
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToLeft, promoPiece);
+						}
+					}
+				}
+				else
+					nextMove += COUNT_PIECETYPES;
+				if (squareToRight)
+				{
+					const BB_SQUAREINDEX squareIndexTo = SQUARE_GetIndex(squareToRight);
+					for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+					{
+						for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+						{
+							const MG_PIECETYPE promoPiece = PAWN_PromoPieces[promoPieceIndex];
+							const MG_MOVE move = nextMove++;
+							ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+#ifndef MOVEGEN_COMPACT_MOVEINFO
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = BITBOARD_EMPTY;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = squareFrom;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareTo;
+#endif
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = SQUAREINDEX_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_NONE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillPiece = capturedPiece;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillPlayer = PLAYER_WHITE;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = promoPiece;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_BLACK;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToRight);
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToRight, promoPiece);
+						}
 					}
 				}
 				else
@@ -277,6 +566,19 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPos
 			ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 			pMoveList->Move[pMoveList->CountMoves++] = move;
 		}
+		movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & RANK_7;
+		while (SQUARE_Next(movers, fromSquareIndex))
+		{
+			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
+			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
+			const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
+			for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+			{
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset + promoPieceIndex;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+				pMoveList->Move[pMoveList->CountMoves++] = move;
+			}
+		}
 	}
 	else
 	{
@@ -290,6 +592,19 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPos
 			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset;
 			ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 			pMoveList->Move[pMoveList->CountMoves++] = move;
+		}
+		movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & RANK_2;
+		while (SQUARE_Next(movers, fromSquareIndex))
+		{
+			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
+			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
+			const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
+			for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+			{
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset + promoPieceIndex;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+				pMoveList->Move[pMoveList->CountMoves++] = move;
+			}
 		}
 	}
 }

@@ -19,6 +19,7 @@ struct MG_MOVEINFO
 	BB_BITBOARD MoveMap;
 	BB_BITBOARD CreateMap;
 	BB_BITBOARD KillMap;
+	BB_BITBOARD PromoMap;
 #endif
 	MG_PIECETYPE MovePiece;
 	MG_PLAYER MovePlayer;
@@ -26,20 +27,27 @@ struct MG_MOVEINFO
 	MG_PLAYER CreatePlayer;
 	MG_PIECETYPE KillPiece;
 	MG_PLAYER KillPlayer;
+	MG_PIECETYPE PromoPiece;
+	MG_PLAYER PromoPlayer;
 	BB_SQUAREINDEX MoveSource;
 	BB_SQUAREINDEX MoveDest;
 	BB_SQUAREINDEX KillDest;
 	BB_SQUAREINDEX CreateDest;
+	BB_SQUAREINDEX PromoSource;
 	MG_CASTLEFLAGS CastleRightsMask;
 	char MoveString[MOVESTRING_LENGTH];
 };
 
 void MOVEINFO_InitializeMoveString(char* pMoveString, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare);
 
+void MOVEINFO_InitializeMoveStringPromotion(char* pMoveString, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare, const MG_PIECETYPE& promoPiece);
+
 BB_BITBOARD MOVEINFO_GetMoveMap(const MG_MOVEINFO* pMoveInfo);
 
 BB_BITBOARD MOVEINFO_GetKillMap(const MG_MOVEINFO* pMoveInfo);
 
 BB_BITBOARD MOVEINFO_GetCreateMap(const MG_MOVEINFO* pMoveInfo);
+
+BB_BITBOARD MOVEINFO_GetPromoMap(const MG_MOVEINFO* pMoveInfo);
 
 #endif
