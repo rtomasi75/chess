@@ -16,6 +16,6 @@ bool Command_DebugIntrinsics::Try(const std::string& commandString)
 		return false;
 	}
 
-	std::cout << "Intrinsic info: " << CM_GetIntrinsicInfo() << std::endl;
+	std::cout << CM_GetIntrinsicInfo() << std::endl;
 	return true;
 }
