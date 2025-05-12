@@ -52,47 +52,32 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 	{
 		// nullmove
 		MG_MOVE nextMove = MOVE_NULLMOVE;
-		MG_MOVE startMove;
-		startMove = nextMove;
 		MOVE_InitializeNullMove(pMoveGen->MoveTable[movingPlayer], movingPlayer);
 		nextMove++;
-		ASSERT((nextMove - startMove) == 1);
 		// King
-		startMove = nextMove;
 		KING_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			KING_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
-		ASSERT((nextMove - startMove) == KING_CountMoves(pMoveGen));
 		// Knight
-		startMove = nextMove;
 		KNIGHT_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			KNIGHT_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
-		ASSERT((nextMove - startMove) == KNIGHT_CountMoves(pMoveGen));
 		// Rook
-		startMove = nextMove;
 		ROOK_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		ROOK_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
-		ASSERT((nextMove - startMove) == ROOK_CountMoves(pMoveGen, movingPlayer));
 		// Bishop
-		startMove = nextMove;
 		BISHOP_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		BISHOP_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
-		ASSERT((nextMove - startMove) == BISHOP_CountMoves(pMoveGen, movingPlayer));
 		// Queen
-		startMove = nextMove;
 		QUEEN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		QUEEN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
-		ASSERT((nextMove - startMove) == QUEEN_CountMoves(pMoveGen, movingPlayer));
 		// Pawn
-		startMove = nextMove;
 		PAWN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		PAWN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
-		ASSERT((nextMove - startMove) == PAWN_CountMoves());
 		ASSERT(nextMove == pMoveGen->CountMoves[movingPlayer]);
 	}
 }

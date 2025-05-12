@@ -9,6 +9,7 @@
 #include "commands/Command_DebugSlideMask.h"
 #include "commands/Command_DebugMoveGen.h"
 #include "commands/Command_DebugSlideTargets.h"
+#include "commands/Command_DebugIntrinsics.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_isRunning(false),
@@ -18,6 +19,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_pMainThread(nullptr),
 	_UCI(false)
 {
+	CM_DetectIntrinsics();
 	MOVEGEN_Initialize(&_moveGen);
 	GAME_Initialize(&_game, &_moveGen);
 	_basicCommands.emplace_back(std::make_unique<Command_Quit>(this));
@@ -30,6 +32,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_DebugSlideMask>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugMoveGen>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugSlideTargets>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugIntrinsics>(this));
 }
 
 Engine::~Engine()
