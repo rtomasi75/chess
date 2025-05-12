@@ -16,7 +16,7 @@
 #else
 #define CM_HAVE_BMI2 0
 #endif
-#if defined(__BMI1__)
+#if defined(__BMI__)
 #define CM_HAVE_BMI1 1
 #else
 #define CM_HAVE_BMI1 0

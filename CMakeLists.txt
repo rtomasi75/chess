@@ -12,6 +12,9 @@ file(GLOB pygmalion_SRC
      "*.h"
      "*.cpp"
 )
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    add_compile_options(-march=native)
+endif()
 
 # Schließen Sie Unterprojekte ein.
 add_subdirectory ("common")
