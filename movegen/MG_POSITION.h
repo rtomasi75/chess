@@ -17,6 +17,7 @@ struct MG_POSITION
 	MG_PLAYER MovingPlayer;
 	MG_PLAYER PassivePlayer;
 	MG_CASTLEFLAGS CastlingRights;
+	BB_FILEINDEX EpFileIndex;
 };
 
 void POSITION_Clear(MG_POSITION* pPosition);

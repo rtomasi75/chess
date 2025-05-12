@@ -35,6 +35,7 @@ struct MG_MOVEINFO
 	BB_SQUAREINDEX CreateDest;
 	BB_SQUAREINDEX PromoSource;
 	MG_CASTLEFLAGS CastleRightsMask;
+	BB_FILEINDEX EnPassantFileIndex;
 	char MoveString[MOVESTRING_LENGTH];
 };
 

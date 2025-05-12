@@ -66,6 +66,6 @@ MG_MOVE SLIDEMASKS_Count_CaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYE
 
 BB_BITBOARD SLIDEMASKS_LookUpTargets(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_SLIDEMASKINDEX& maskIndex, const BB_SQUAREINDEX& fromSquareIndex);
 
-BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEENTRYINDEX& entry, const BB_SQUAREINDEX& fromSquareIndex);
+BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEENTRYINDEX& entry, const MG_SLIDEMASKINDEX& maskIndex, const BB_SQUAREINDEX& fromSquareIndex);
 
 #endif

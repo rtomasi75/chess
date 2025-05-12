@@ -16,6 +16,8 @@ typedef std::int8_t BB_FILEINDEX;
 #define FILE_G	UINT64_C(0x4040404040404040)
 #define FILE_H	UINT64_C(0x8080808080808080)
 
+#define FILEINDEX_NONE INT8_C(-1)
+
 BB_FILE FILE_FromIndex(const BB_FILEINDEX& index);
 
 bool FILE_Parse(const char* pString, const int& len, int& strPos, BB_FILE& outParsed);

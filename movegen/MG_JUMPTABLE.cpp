@@ -40,6 +40,7 @@ void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE
 			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
 			pMoveGen->MoveTable[player][move].MovePiece = piece;
 			pMoveGen->MoveTable[player][move].MovePlayer = player;
+			pMoveGen->MoveTable[player][move].EnPassantFileIndex = FILEINDEX_NONE;
 			pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, piece, squareFrom) ^ HASH_PlayerPieceSquare(player, piece, squareTo);
 			pMoveGen->MoveTable[player][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(player, piece, squareFrom, squareTo);
 			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);
@@ -83,6 +84,7 @@ void JUMPTABLE_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETY
 			pMoveGen->MoveTable[player][move].PromoPiece = PIECETYPE_NONE;
 			pMoveGen->MoveTable[player][move].PromoPlayer = PLAYER_NONE;
 			pMoveGen->MoveTable[player][move].PromoSource = SQUAREINDEX_NONE;
+			pMoveGen->MoveTable[player][move].EnPassantFileIndex = FILEINDEX_NONE;
 			pMoveGen->MoveTable[player][move].HashDelta = HASH_PlayerPieceSquare(player, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(player, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 			pMoveGen->MoveTable[player][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(player, movingPiece, squareFrom, squareTo, capturedPiece);
 			MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[player][move].MoveString, squareFrom, squareTo);

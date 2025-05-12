@@ -18,4 +18,6 @@ MG_HASH HASH_CastleRights(const MG_CASTLEFLAGS& castlingRights);
 
 MG_HASH HASH_PlayerPieceSquare(const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square);
 
+MG_HASH HASH_EnPassantFile(const BB_FILEINDEX& epFileIndex);
+
 #endif // MG_HASH_H

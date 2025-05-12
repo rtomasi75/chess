@@ -190,6 +190,13 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 		sstream << StringHelper::ToUpper(fileString);
 	}
 	sstream << " " << CastleFlagsToString(GetEngine().Position().CastlingRights);
+	if (GetEngine().Position().EpFileIndex != FILEINDEX_NONE)
+	{
+		std::string epFileString = FileToString(FILE_FromIndex(GetEngine().Position().EpFileIndex));
+		sstream << " " << StringHelper::ToUpper(epFileString) << (GetEngine().Position().MovingPlayer == PLAYER_WHITE ? "6" : "3");
+	}
+	else
+		sstream << " -";
 	sstream << std::endl;
 	for (int i = 0; i < indentation; i++)
 	{

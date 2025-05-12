@@ -342,6 +342,7 @@ void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PI
 				pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].MovePiece = movingPiece;
 				pMoveGen->MoveTable[movingPlayer][move].MovePlayer = movingPlayer;
+				pMoveGen->MoveTable[movingPlayer][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo);
 				pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(movingPlayer, movingPiece, squareFrom, squareTo);
 				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);
@@ -414,6 +415,7 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 					pMoveGen->MoveTable[movingPlayer][move].PromoPiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].PromoPlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 					pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(movingPlayer, movingPiece, squareFrom, squareTo, capturedPiece);
 					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);
@@ -445,14 +447,14 @@ BB_BITBOARD SLIDEMASKS_LookUpTargets(const MG_MOVEGEN* pMoveGen, const MG_POSITI
 	const BB_BITBOARD mask = pMoveGen->SlideMasks[maskIndex].Mask[fromSquareIndex];
 	const MG_SLIDEENTRYINDEX lookUpIndex = (MG_SLIDEENTRYINDEX)CM_BitExtract(pPosition->OccupancyTotal, mask);
 	const MG_SLIDEENTRYINDEX entry = pMoveGen->SlideMasks[maskIndex].BaseEntry[fromSquareIndex] + lookUpIndex;
-	return SLIDEMASKS_EntryTargets(pMoveGen, entry, fromSquareIndex);
+	return SLIDEMASKS_EntryTargets(pMoveGen, entry, maskIndex, fromSquareIndex);
 }
 
-BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEENTRYINDEX& entry, const BB_SQUAREINDEX& fromSquareIndex)
+BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEENTRYINDEX& entry, const MG_SLIDEMASKINDEX& maskIndex, const BB_SQUAREINDEX& fromSquareIndex)
 {
 	ASSERT(entry < pMoveGen->CountSlideEntries);
 #ifdef MOVEGEN_COMPACT_TARGETS
-	const BB_BITBOARD potTargets = pMoveGen->SlideMasks[SLIDEMASKS_HORIZONTAL].PotentialTargets[fromSquareIndex];
+	const BB_BITBOARD potTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
 	const BB_BITBOARD targets = BITBOARD_BitDeposit(pMoveGen->SlideEntries[entry].CompressedTargets, potTargets);
 	return targets;
 #else

@@ -37,8 +37,9 @@ constexpr MG_HASH HASH_CastlingRights[16] =
 	UINT64_C(0x9CA3EFEF1A2DE87D)
 };
 
-constexpr MG_HASH HASH_EnPassant[8] =
+constexpr MG_HASH HASH_EnPassant[9] =
 {
+	UINT64_C(0),
 	UINT64_C(0xD322611D330B0CAB),
 	UINT64_C(0xB0773AC05C11E4FF),
 	UINT64_C(0x141957994E1D9A9F),
@@ -58,4 +59,9 @@ MG_HASH HASH_CastleRights(const MG_CASTLEFLAGS& castlingRights)
 MG_HASH HASH_PlayerPieceSquare(const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square)
 {
 	return HASH_PieceSquare[COUNT_PIECETYPES * player + piece][SQUARE_GetIndex(square)];
+}
+
+MG_HASH HASH_EnPassantFile(const BB_FILEINDEX& epFileIndex)
+{
+	return HASH_EnPassant[epFileIndex + 1];
 }

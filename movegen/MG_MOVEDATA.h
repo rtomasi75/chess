@@ -9,6 +9,7 @@ struct MG_MOVEDATA
 {
 	MG_HASH OldHash;
 	MG_CASTLEFLAGS OldCastlingRights;
+	BB_FILEINDEX OldEnPassantFile;
 };
 
 #endif

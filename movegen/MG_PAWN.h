@@ -17,6 +17,8 @@ struct MG_PAWNTABLE
 	MG_MOVE CaptureBase;
 	MG_MOVE PromotionBase;
 	MG_MOVE PromoCaptureBase;
+	MG_MOVE DoublePushBase;
+	MG_MOVE EnPassantBase;
 };
 
 MG_MOVE PAWN_CountQuietMoves();
