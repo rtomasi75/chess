@@ -30,11 +30,11 @@ bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECET
 		outParsedPlayer = PLAYER_BLACK;
 		break;
 	case 'p':
-		outParsedPiece = PIECETYPE_QUEEN;
+		outParsedPiece = PIECETYPE_PAWN;
 		outParsedPlayer = PLAYER_BLACK;
 		break;
 	case 'K':
-		outParsedPiece = PIECETYPE_PAWN;
+		outParsedPiece = PIECETYPE_KING;
 		outParsedPlayer = PLAYER_WHITE;
 		break;
 	case 'N':

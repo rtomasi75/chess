@@ -38,6 +38,8 @@
 
 #define COUNT_SLIDELOOKUPS 6
 
+#define MOVGEN_LEGALMOVES
+
 typedef std::int8_t MG_OPTIONINDEX;
 
 struct MG_MOVEGEN
@@ -62,12 +64,22 @@ void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen);
 
 MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITBOARD& targets);
 
-void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, MG_MOVELIST* pMoveList);
+void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList);
 
 bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVELIST* pMoveList, const char* pString, const int& len, int& strPos, MG_MOVE& outParsed);
 
 void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDATA* pOutMoveData, MG_POSITION* pPosition);
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition);
+
+void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition);
+
+void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition);
+
+BB_BITBOARD MOVEGEN_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest);
+
+void MOVEGEN_RecomputeAttacks(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PLAYER& player);
+
+void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG_POSITION* pPosition, const MG_MOVE& move);
 
 #endif

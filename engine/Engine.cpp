@@ -10,6 +10,7 @@
 #include "commands/Command_DebugMoveGen.h"
 #include "commands/Command_DebugSlideTargets.h"
 #include "commands/Command_DebugIntrinsics.h"
+#include "commands/Command_DebugAttacks.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_isRunning(false),
@@ -33,6 +34,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_DebugMoveGen>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugSlideTargets>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugIntrinsics>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugAttacks>(this));
 }
 
 Engine::~Engine()

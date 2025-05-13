@@ -1,4 +1,5 @@
 #include "MG_POSITION.h"
+#include "MG_MOVEGEN.h"
 
 void POSITION_Clear(MG_POSITION* pPosition)
 {
@@ -6,9 +7,12 @@ void POSITION_Clear(MG_POSITION* pPosition)
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 		pPosition->OccupancyPlayer[player] = BITBOARD_EMPTY;
+		pPosition->AttacksPlayer[player] = BITBOARD_EMPTY;
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
 			pPosition->OccupancyPlayerPiece[player][piece] = BITBOARD_EMPTY;
+			pPosition->AttacksPlayerPiece[player][piece] = BITBOARD_EMPTY;
+			pPosition->InterestPlayerPiece[player][piece] = BITBOARD_EMPTY;
 		}
 	}
 	pPosition->MovingPlayer = PLAYER_WHITE;
@@ -26,49 +30,51 @@ void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& cast
 }
 
 
-void POSITION_SetPiece(MG_POSITION* pPosition, const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square)
+void POSITION_SetPiece(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& square)
 {
 	pPosition->OccupancyPlayer[player] |= square;
 	pPosition->OccupancyPlayerPiece[player][piece] |= square;
 	pPosition->OccupancyTotal |= square;
 	pPosition->Hash ^= HASH_PlayerPieceSquare(player, piece, square);
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+		MOVEGEN_RecomputeAttacks(pMoveGen, pPosition, player);
 }
 
-void POSITION_Initialize(MG_POSITION* pPosition)
+void POSITION_Initialize(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition)
 {
 	POSITION_Clear(pPosition);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_KING, SQUARE_E1);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_KING, SQUARE_E8);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_ROOK, SQUARE_A1);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_ROOK, SQUARE_H1);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_ROOK, SQUARE_A8);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_ROOK, SQUARE_H8);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_KNIGHT, SQUARE_B1);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_KNIGHT, SQUARE_G1);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_KNIGHT, SQUARE_B8);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_KNIGHT, SQUARE_G8);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_BISHOP, SQUARE_C1);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_BISHOP, SQUARE_F1);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_BISHOP, SQUARE_C8);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_BISHOP, SQUARE_F8);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_QUEEN, SQUARE_D1);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_QUEEN, SQUARE_D8);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_A2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_B2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_C2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_D2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_E2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_F2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_G2);
-	POSITION_SetPiece(pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_H2);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_A7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_B7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_C7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_D7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_E7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_F7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_G7);
-	POSITION_SetPiece(pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_H7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_KING, SQUARE_E1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_KING, SQUARE_E8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_ROOK, SQUARE_A1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_ROOK, SQUARE_H1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_ROOK, SQUARE_A8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_ROOK, SQUARE_H8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_KNIGHT, SQUARE_B1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_KNIGHT, SQUARE_G1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_KNIGHT, SQUARE_B8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_KNIGHT, SQUARE_G8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_BISHOP, SQUARE_C1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_BISHOP, SQUARE_F1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_BISHOP, SQUARE_C8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_BISHOP, SQUARE_F8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_QUEEN, SQUARE_D1);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_QUEEN, SQUARE_D8);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_A2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_B2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_C2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_D2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_E2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_F2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_G2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_WHITE, PIECETYPE_PAWN, SQUARE_H2);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_A7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_B7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_C7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_D7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_E7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_F7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_G7);
+	POSITION_SetPiece(pMoveGen, pPosition, PLAYER_BLACK, PIECETYPE_PAWN, SQUARE_H7);
 	POSITION_SetCastleRights(pPosition, CASTLEFLAGS_BLACK_KINGSIDE | CASTLEFLAGS_BLACK_QUEENSIDE | CASTLEFLAGS_WHITE_KINGSIDE | CASTLEFLAGS_WHITE_QUEENSIDE);
 }
 
@@ -167,5 +173,15 @@ MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
 	}
 	hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
 	return hash;
+}
+
+bool POSITION_IsLegal(const MG_POSITION* pPosition)
+{
+	return !(pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->MovingPlayer]);
+}
+
+bool POSITION_IsCheck(const MG_POSITION* pPosition)
+{
+	return pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->PassivePlayer];
 }
 

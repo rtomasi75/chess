@@ -105,7 +105,7 @@ MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget)
 }
 
 
-void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
+void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
@@ -121,13 +121,12 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION*
 			const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 			const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
 			const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
-			pMoveList->Move[pMoveList->CountMoves++] = move;
+			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 		}
 	}
 }
 
-
-void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
+void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
@@ -136,7 +135,7 @@ void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITIO
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
 		const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
-		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+		for (MG_PIECETYPE capturedPiece = COUNT_ROYALPIECES; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
 			BB_SQUAREINDEX toSquareIndex;
@@ -145,8 +144,24 @@ void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITIO
 				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
 				const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
-				pMoveList->Move[pMoveList->CountMoves++] = move;
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 			}
 		}
 	}
+}
+
+BB_BITBOARD JUMPTABLE_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
+{
+	BB_BITBOARD attacks = BITBOARD_EMPTY;
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[player][piece];
+	BB_SQUAREINDEX fromSquareIndex;
+	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[player][piece].TableIndex[TABLEINDEX_CAPTURE(piece)];
+	const MG_JUMPTABLE& table = pMoveGen->JumpTable[tableIndex];
+	while (SQUARE_Next(pieces, fromSquareIndex))
+	{
+		const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
+		attacks |= targets;
+	}
+	outInterest = pPosition->OccupancyPlayerPiece[player][piece];
+	return attacks;
 }

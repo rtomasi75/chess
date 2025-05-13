@@ -3,6 +3,7 @@
 #define BB_SQUARE_H
 #include "BB_RANK.h"
 #include "BB_FILE.h"
+#include "libCommon.h"
 #include <cstdint>
 
 typedef BB_BITBOARD BB_SQUARE;
@@ -82,26 +83,66 @@ typedef std::int8_t BB_SQUAREINDEX;
 #define SQUARE_H7 (RANK_7&FILE_H)
 #define SQUARE_H8 (RANK_8&FILE_H)
 
-BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file);
-BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index);
-BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile);
-
-BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex);
-
-BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex);
-
-BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square);
-
-bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex);
+#define COUNT_SQUARES (COUNT_FILES*COUNT_RANKS)
 
 bool SQUARE_Parse(const char* pString, const int& len, int& strPos, BB_SQUARE& outParsed);
 
 bool SQUARE_ToString(char* pString, const int& len, int& strPos, const BB_SQUARE& square);
 
-BB_FILE SQUARE_GetFile(const BB_SQUARE& square);
+inline BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file)
+{
+	return rank & file;
+}
 
-BB_RANK SQUARE_GetRank(const BB_SQUARE& square);
+inline BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index)
+{
+	return UINT64_C(1) << index;
+}
 
-#define COUNT_SQUARES (COUNT_FILES*COUNT_RANKS)
+inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile)
+{
+	return SQUARE_FromRankFile(RANK_FromIndex(indexRank), FILE_FromIndex(indexFile));
+}
+
+inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)
+{
+	if (bitboard)
+	{
+		outSquareIndex = CM_BitScanForward(bitboard);
+		bitboard &= ~SQUARE_FromIndex(outSquareIndex);
+		return true;
+	}
+	else
+		return false;
+}
+
+inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)
+{
+	ASSERT(square);
+	return CM_BitScanForward(square);
+}
+
+inline BB_FILE SQUARE_GetFile(const BB_SQUARE& square)
+{
+	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
+	return FILE_FromIndex(idx % COUNT_RANKS);
+}
+
+inline BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
+{
+	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
+	return RANK_FromIndex(idx / COUNT_RANKS);
+}
+
+inline BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex)
+{
+	return squareIndex / COUNT_RANKS;
+}
+
+inline BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex)
+{
+	return squareIndex % COUNT_RANKS;
+}
+
 
 #endif

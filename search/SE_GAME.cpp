@@ -2,7 +2,7 @@
 
 void GAME_Initialize(SE_GAME* pGame, const MG_MOVEGEN* pMoveGen)
 {
-	POSITION_Initialize(&pGame->CurrentPosition);
+	POSITION_Initialize(pMoveGen, &pGame->CurrentPosition);
 	pGame->CurrentMove = 0;
 	MOVEGEN_GenerateMoves(pMoveGen, &pGame->CurrentPosition, &pGame->LegalMoves);
 }

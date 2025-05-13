@@ -17,19 +17,19 @@
 #define CM_HAVE_BMI2 0
 #endif
 #if defined(__BMI__)
-#define CM_HAVE_BMI1 1
+#define CM_HAVE_BMI 1
 #else
-#define CM_HAVE_BMI1 0
+#define CM_HAVE_BMI 0
 #endif
 #elif defined(_MSC_VER)
 #include <intrin.h>
 #define CM_HAVE_POPCNT 1
 #define CM_HAVE_BMI2   1
-#define CM_HAVE_BMI1   1
+#define CM_HAVE_BMI   1
 #else
 #define CM_HAVE_POPCNT 0
 #define CM_HAVE_BMI2   0
-#define CM_HAVE_BMI1   0
+#define CM_HAVE_BMI   0
 #endif
 
 // Detect CPU support at runtime — call during program startup
@@ -38,7 +38,7 @@ void CM_DetectIntrinsics();
 // Runtime feature queries
 bool CM_HasPOPCNT();
 bool CM_HasBMI2();
-bool CM_HasBMI1();
+bool CM_HasBMI();
 
 // Public API — routes to intrinsic or fallback depending on runtime detection
 std::int8_t CM_PopulationCount(std::uint64_t value);

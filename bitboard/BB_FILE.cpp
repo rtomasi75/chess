@@ -1,11 +1,6 @@
 #include "BB_FILE.h"
 #include "libCommon.h"
 
-BB_FILE FILE_FromIndex(const BB_FILEINDEX& index)
-{
-	return UINT64_C(0x0101010101010101) << index;
-}
-
 bool FILE_Parse(const char* pString, const int& len, int& strPos, BB_FILE& outParsed)
 {
 	if (strPos >= len)

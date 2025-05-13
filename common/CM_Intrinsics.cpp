@@ -12,7 +12,7 @@
 // Internal flags (initialized at runtime)
 static std::atomic<bool> g_hasPOPCNT{ false };
 static std::atomic<bool> g_hasBMI2{ false };
-static std::atomic<bool> g_hasBMI1{ false };
+static std::atomic<bool> g_hasBMI{ false };
 
 #define CM_DEBRUIJN64 UINT64_C(0x03f79d71b4cb0a89)
 
@@ -94,7 +94,7 @@ static std::int8_t CM_BitScanForwardFallback(std::uint64_t value)
 	return CM_Index64[((value & (std::uint64_t)-(std::int64_t)value) * CM_DEBRUIJN64) >> 58];
 }
 
-#if CM_HAVE_BMI1
+#if CM_HAVE_BMI
 static std::int8_t CM_BitScanForwardIntrinsic(std::uint64_t value)
 {
 #if defined(_MSC_VER)
@@ -128,8 +128,11 @@ void CM_DetectIntrinsics()
 	g_BitExtDispatch = g_hasBMI2 ? CM_BitExtractIntrinsic : CM_BitExtractFallback;
 #endif
 
+#if CM_HAVE_BMI
 	__cpuid(cpuInfo, 7);
-	g_hasBMI1 = (cpuInfo[1] & (1 << 3)) != 0;
+	g_hasBMI = (cpuInfo[1] & (1 << 3)) != 0;
+	g_BsfDispatch = g_hasBMI ? CM_BitScanForwardIntrinsic : CM_BitScanForwardFallback;
+#endif
 }
 
 bool CM_HasPOPCNT()
@@ -150,10 +153,10 @@ bool CM_HasBMI2()
 #endif
 }
 
-bool CM_HasBMI1()
+bool CM_HasBMI()
 {
-#if CM_HAVE_BMI1
-	return g_hasBMI1.load();
+#if CM_HAVE_BMI
+	return g_hasBMI.load();
 #else
 	return false;
 #endif
@@ -163,7 +166,7 @@ std::string CM_GetIntrinsicInfo()
 {
 	std::string result = "Runtime CPU features:";
 	result += CM_HasPOPCNT() ? " POPCNT" : "";
-	result += CM_HasBMI1() ? " BMI1" : "";
+	result += CM_HasBMI() ? " BMI" : "";
 	result += CM_HasBMI2() ? " BMI2" : "";
 	if (result == "Runtime CPU features:")
 		result += " (none)";

@@ -16,9 +16,51 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 	{
 		std::stringstream sstream;
 		sstream << PositionToString(GetEngine().Position());
+		for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+		{
+			sstream << " " << PlayerToString(player) << "         ";
+			for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+			{
+				sstream << PieceToString(piece, player) << "         ";
+			}
+			sstream << std::endl;
+			for (BB_RANKINDEX rankIdx = COUNT_RANKS - 1; rankIdx >= 0; rankIdx--)
+			{
+				for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_FILES; fileIdx++)
+				{
+					const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
+					if (square & GetEngine().Position().AttacksPlayer[player])
+					{
+						sstream << "#";
+					}
+					else
+					{
+						sstream << ".";
+					}
+				}
+				sstream << "  ";
+				for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+				{
+					for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_FILES; fileIdx++)
+					{
+						const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
+						if (square & GetEngine().Position().AttacksPlayerPiece[player][piece])
+						{
+							sstream << "#";
+						}
+						else
+						{
+							sstream << ".";
+						}
+					}
+					sstream << "  ";
+				}
+				sstream << std::endl;
+			}
+		}
 		if (GetEngine().Position().Hash != POSITION_ComputeHash(&GetEngine().Position()))
 		{
-			sstream << "Position hash does NOT match!" << std::endl;
+			sstream << "WARNING: Position hash does NOT match!" << std::endl;
 		}
 		GetEngine().OutputStream() << sstream.str();
 		return true;

@@ -464,7 +464,7 @@ BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEEN
 
 }
 
-void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
+void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
@@ -484,19 +484,19 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION
 				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
 				const MG_MOVE move = table.MoveBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex] + optionIndex;
-				pMoveList->Move[pMoveList->CountMoves++] = move;
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 			}
 		}
 	}
 }
 
-void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
+void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+		for (MG_PIECETYPE capturedPiece = COUNT_ROYALPIECES; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
 			const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[pPosition->MovingPlayer][piece].TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
 			const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
@@ -511,9 +511,29 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITI
 					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
 					const MG_MOVE move = table.CaptureBase[pPosition->MovingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece] + optionIndex;
-					pMoveList->Move[pMoveList->CountMoves++] = move;
+					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 				}
 			}
 		}
 	}
+}
+
+BB_BITBOARD SLIDEMASKS_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
+{
+	BB_BITBOARD attacks = BITBOARD_EMPTY;
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[player][piece];
+	BB_SQUAREINDEX fromSquareIndex;
+	while (SQUARE_Next(pieces, fromSquareIndex))
+	{
+		const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[player][piece].TableIndex[TABLEINDEX_CAPTURE(piece)];
+		const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
+		for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
+		{
+			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+			const BB_BITBOARD targets = SLIDEMASKS_LookUpTargets(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+			attacks |= targets;
+		}
+	}
+	outInterest = attacks | pPosition->OccupancyPlayerPiece[player][piece];
+	return attacks;
 }

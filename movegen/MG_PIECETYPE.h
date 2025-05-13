@@ -16,6 +16,7 @@ typedef std::int8_t MG_PIECETYPE;
 #define PIECETYPE_PAWN INT8_C(5)
 
 #define COUNT_PIECETYPES 6
+#define COUNT_ROYALPIECES 1
 
 
 bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECETYPE& outParsedPiece, MG_PLAYER& outParsedPlayer);

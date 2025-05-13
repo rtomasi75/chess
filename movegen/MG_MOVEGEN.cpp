@@ -91,7 +91,7 @@ void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen)
 	}
 }
 
-void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, MG_MOVELIST* pMoveList)
+void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList)
 {
 	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
 	MOVELIST_Initialize(pMoveList);
@@ -116,6 +116,9 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosit
 		}
 		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_CAPTURE])
 		{
+		default:
+			ASSERT(false);
+			break;
 		case MOVEMECHANIC_JUMPTABLE:
 			JUMPTABLE_GenerateCaptureMoves(pMoveGen, pPosition, piece, pMoveList);
 			break;
@@ -173,6 +176,7 @@ bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player
 
 void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDATA* pOutMoveData, MG_POSITION* pPosition)
 {
+	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
@@ -180,6 +184,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyTotal ^= moveMap;
 		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
+		interestMap |= moveMap;
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
@@ -187,6 +192,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyTotal ^= killMap;
 		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
+		interestMap |= killMap;
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
@@ -194,6 +200,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyTotal ^= createMap;
 		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
+		interestMap |= createMap;
 	}
 	if (moveInfo.PromoPiece != PIECETYPE_NONE)
 	{
@@ -201,6 +208,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyTotal ^= promoMap;
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
+		interestMap |= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
@@ -217,10 +225,24 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	pPosition->Hash ^= HASH_CastleRights(oldFlags) ^ HASH_CastleRights(newFlags);
 	pPosition->Hash ^= HASH_EnPassantFile(oldEpFile) ^ HASH_EnPassantFile(moveInfo.EnPassantFileIndex);
 	pPosition->CastlingRights = newFlags;
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			{
+				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			}
+			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+		}
+		pPosition->AttacksPlayer[player] = attacks;
+	}
 }
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)
 {
+	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
@@ -228,6 +250,7 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= moveMap;
 		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
+		interestMap |= moveMap;
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
@@ -235,6 +258,7 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= createMap;
 		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
+		interestMap |= createMap;
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
@@ -242,6 +266,7 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= killMap;
 		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
+		interestMap |= killMap;
 	}
 	if (moveInfo.PromoPiece != PIECETYPE_NONE)
 	{
@@ -249,10 +274,177 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= promoMap;
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
+		interestMap |= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
 	pPosition->Hash = pMoveData->OldHash;
 	pPosition->CastlingRights = pMoveData->OldCastlingRights;
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			{
+				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			}
+			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+		}
+		pPosition->AttacksPlayer[player] = attacks;
+	}
+}
+
+void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition)
+{
+	BB_BITBOARD interestMap = BITBOARD_EMPTY;
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
+	if (moveInfo.MovePiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
+		pPosition->OccupancyTotal ^= moveMap;
+		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
+		interestMap |= moveMap;
+	}
+	if (moveInfo.KillPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD killMap = MOVEINFO_GetKillMap(&moveInfo);
+		pPosition->OccupancyTotal ^= killMap;
+		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
+		interestMap |= killMap;
+	}
+	if (moveInfo.CreatePiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD createMap = MOVEINFO_GetCreateMap(&moveInfo);
+		pPosition->OccupancyTotal ^= createMap;
+		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
+		interestMap |= createMap;
+	}
+	if (moveInfo.PromoPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD promoMap = MOVEINFO_GetPromoMap(&moveInfo);
+		pPosition->OccupancyTotal ^= promoMap;
+		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
+		interestMap |= promoMap;
+	}
+	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
+	pPosition->PassivePlayer = pPosition->MovingPlayer;
+	pPosition->MovingPlayer = tempPlayer;
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			{
+				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			}
+			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+		}
+		pPosition->AttacksPlayer[player] = attacks;
+	}
+}
+
+void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition)
+{
+	BB_BITBOARD interestMap = BITBOARD_EMPTY;
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
+	if (moveInfo.MovePiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
+		pPosition->OccupancyTotal ^= moveMap;
+		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
+		interestMap |= moveMap;
+	}
+	if (moveInfo.CreatePiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD createMap = MOVEINFO_GetCreateMap(&moveInfo);
+		pPosition->OccupancyTotal ^= createMap;
+		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
+		interestMap |= createMap;
+	}
+	if (moveInfo.KillPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD killMap = MOVEINFO_GetKillMap(&moveInfo);
+		pPosition->OccupancyTotal ^= killMap;
+		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
+		interestMap |= killMap;
+	}
+	if (moveInfo.PromoPiece != PIECETYPE_NONE)
+	{
+		const BB_BITBOARD promoMap = MOVEINFO_GetPromoMap(&moveInfo);
+		pPosition->OccupancyTotal ^= promoMap;
+		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
+		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
+		interestMap |= promoMap;
+	}
+	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
+	pPosition->PassivePlayer = pPosition->MovingPlayer;
+	pPosition->MovingPlayer = tempPlayer;
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			{
+				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			}
+			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+		}
+		pPosition->AttacksPlayer[player] = attacks;
+	}
+}
+
+BB_BITBOARD MOVEGEN_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
+{
+	switch (pMoveGen->PieceInfo[player][piece].MoveMechanic[MOVETYPE_CAPTURE])
+	{
+	default:
+		ASSERT(false);
+		return BITBOARD_EMPTY;
+	case MOVEMECHANIC_JUMPTABLE:
+		return JUMPTABLE_GetPieceAttacks(pMoveGen, pPosition, piece, player, outInterest);
+	case MOVEMECHANIC_SLIDETABLE:
+		return SLIDEMASKS_GetPieceAttacks(pMoveGen, pPosition, piece, player, outInterest);
+	case MOVEMECHANIC_PAWN:
+		return PAWN_GetPawnAttacks(pMoveGen, pPosition, piece, player, outInterest);
+	case MOVEMECHANIC_NONE:
+		outInterest = BITBOARD_EMPTY;
+		return BITBOARD_EMPTY;
+	}
+}
+
+void MOVEGEN_RecomputeAttacks(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PLAYER& player)
+{
+	BB_BITBOARD totalAttacks = BITBOARD_EMPTY;
+	for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+	{
+		const BB_BITBOARD pieceAttacks = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+		pPosition->AttacksPlayerPiece[player][piece] = pieceAttacks;
+		totalAttacks |= pieceAttacks;
+	}
+	pPosition->AttacksPlayer[player] = totalAttacks;
+}
+
+void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG_POSITION* pPosition, const MG_MOVE& move)
+{
+	ASSERT(pMoveList->CountMoves < MAX_MOVES);
+#ifdef MOVGEN_LEGALMOVES
+	MOVEGEN_MakeTentativeMove(pMoveGen, move, pPosition);
+	const bool bLegal = POSITION_IsLegal(pPosition);
+	MOVEGEN_UnmakeTentativeMove(pMoveGen, move, pPosition);
+	if (bLegal)
+		pMoveList->Move[pMoveList->CountMoves++] = move;
+#else
+	pMoveList->Move[pMoveList->CountMoves++] = move;
+#endif
 }

@@ -16,7 +16,10 @@ typedef std::int8_t BB_RANKINDEX;
 #define RANK_7	UINT64_C(0x00FF000000000000)
 #define RANK_8	UINT64_C(0xFF00000000000000)
 
-BB_RANK RANK_FromIndex(const BB_RANKINDEX& index);
+inline BB_RANK RANK_FromIndex(const BB_RANKINDEX& index)
+{
+	return UINT64_C(0x00000000000000FF) << (8 * index);
+}
 
 bool RANK_Parse(const char* pString, const int& len, int& strPos, BB_RANK& outParsed);
 
