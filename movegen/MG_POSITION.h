@@ -39,9 +39,15 @@ void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& cast
 
 MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition);
 
-bool POSITION_IsLegal(const MG_POSITION* pPosition);
+inline bool POSITION_IsLegal(const MG_POSITION* pPosition)
+{
+	return !(pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->MovingPlayer]);
+}
 
-bool POSITION_IsCheck(const MG_POSITION* pPosition);
+inline bool POSITION_IsCheck(const MG_POSITION* pPosition)
+{
+	return pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->PassivePlayer];
+}
 
 
 #endif

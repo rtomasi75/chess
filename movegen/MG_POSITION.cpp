@@ -175,13 +175,3 @@ MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
 	return hash;
 }
 
-bool POSITION_IsLegal(const MG_POSITION* pPosition)
-{
-	return !(pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->MovingPlayer]);
-}
-
-bool POSITION_IsCheck(const MG_POSITION* pPosition)
-{
-	return pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->PassivePlayer];
-}
-
