@@ -22,4 +22,8 @@ void KING_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETYPE& c
 
 void KING_Initialize_PieceInfo(MG_PIECEINFO* pPieceInfo);
 
+void KING_Initialize_CastleMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove);
+
+void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList);
+
 #endif

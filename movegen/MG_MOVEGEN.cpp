@@ -60,6 +60,7 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		{
 			KING_Initialize_CaptureMoves(movingPlayer, capturedPiece, pMoveGen, nextMove);
 		}
+		KING_Initialize_CastleMoves(movingPlayer, pMoveGen, nextMove);
 		// Knight
 		KNIGHT_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
@@ -99,6 +100,7 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, M
 	{
 		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_QUIET])
 		{
+		case MOVEMECHANIC_CASTLE:
 		default:
 			ASSERT(false);
 			break;
@@ -116,6 +118,7 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, M
 		}
 		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_CAPTURE])
 		{
+		case MOVEMECHANIC_CASTLE:
 		default:
 			ASSERT(false);
 			break;
@@ -129,6 +132,18 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, M
 			PAWN_GenerateCaptureMoves(pMoveGen, pPosition, piece, pMoveList);
 			break;
 		case MOVEMECHANIC_NONE:
+			break;
+		}
+		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_SPECIAL])
+		{
+		default:
+		case MOVEMECHANIC_JUMPTABLE:
+		case MOVEMECHANIC_PAWN:
+		case MOVEMECHANIC_SLIDETABLE:
+			ASSERT(false);
+			break;
+		case MOVEMECHANIC_CASTLE:
+			KING_GenerateCastleMoves(pMoveGen, pPosition, piece, pMoveList);
 			break;
 		}
 	}

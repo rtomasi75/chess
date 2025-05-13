@@ -53,6 +53,7 @@ struct MG_MOVEGEN
 	MG_MOVEINFO* MoveTable[COUNT_PLAYERS];
 	MG_SLIDEENTRY* SlideEntries;
 	MG_MOVE CountMoves[COUNT_PLAYERS];
+	MG_MOVE CastleBase[COUNT_PLAYERS];
 	MG_SLIDEENTRYINDEX CountSlideEntries;
 };
 
