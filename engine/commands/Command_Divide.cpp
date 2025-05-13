@@ -4,11 +4,30 @@
 #include <string>
 #include <sstream>
 #include <chrono>
+#include <vector>
+#include <algorithm>
 
 Command_Divide::Command_Divide(Engine* pEngine) :
 	Command(pEngine)
 {
 
+}
+
+void Command_Divide::SortMoves(MG_MOVELIST& moveList)
+{
+	std::vector<MG_MOVE> moves;
+	for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
+	{
+		moves.emplace_back(moveList.Move[moveIdx]);
+	}
+	std::sort(moves.begin(), moves.end(), [this](MG_MOVE arg1, MG_MOVE arg2)
+		{
+			return MoveToString(arg1) < MoveToString(arg2);
+		});
+	for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
+	{
+		moveList.Move[moveIdx] = moves[moveIdx];
+	}
 }
 
 bool Command_Divide::Try(const std::string& commandString)
@@ -44,6 +63,7 @@ bool Command_Divide::Try(const std::string& commandString)
 				sstream << "Performing divide with depth " << depth << "." << std::endl;
 				MG_MOVELIST moveList;
 				MOVEGEN_GenerateMoves(&GetEngine().MoveGen(), &GetEngine().Position(), &moveList);
+				SortMoves(moveList);
 				std::uint64_t totalNodeCount = 0;
 				for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
 				{
@@ -51,13 +71,14 @@ bool Command_Divide::Try(const std::string& commandString)
 					MG_MOVEDATA moveData;
 					MOVEGEN_MakeMove(&GetEngine().MoveGen(), moveList.Move[moveIdx], &moveData, &GetEngine().Position());
 					std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-					std::uint64_t nodeCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth - 1);
+					std::uint64_t nodeCount = 0;
+					std::uint64_t leafCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth - 1, nodeCount);
 					std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 					std::chrono::high_resolution_clock::duration elapsed = end - start;
 					std::chrono::milliseconds elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
 					MOVEGEN_UnmakeMove(&GetEngine().MoveGen(), moveList.Move[moveIdx], &moveData, &GetEngine().Position());
-					sstream << nodeCount << " nodes in " << elapsedMs.count() << " milliseconds." << std::endl;
-					totalNodeCount += nodeCount;
+					sstream << leafCount << " leafs in " << elapsedMs.count() << " milliseconds with " << 1000.0 * static_cast<double>(nodeCount) / static_cast<double>(elapsedMs.count()) << " Node/s." << std::endl;
+					totalNodeCount += leafCount;
 				}
 				sstream << totalNodeCount << " nodes total." << std::endl;
 				GetEngine().OutputStream() << sstream.str();

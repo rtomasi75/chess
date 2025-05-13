@@ -4,12 +4,34 @@
 
 #include "MG_CASTLEFLAGS.h"
 #include "MG_HASH.h"
+#include "MG_PLAYER.h"
+#include <cstdint>
+
+typedef std::uint8_t MG_DIRTYFLAGS;
+
+//#define MOVEGEN_COMPACT_MOVEDATA
 
 struct MG_MOVEDATA
 {
 	MG_HASH OldHash;
 	MG_CASTLEFLAGS OldCastlingRights;
 	BB_FILEINDEX OldEnPassantFile;
+	MG_DIRTYFLAGS DirtyFlags[COUNT_PLAYERS];
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+	BB_BITBOARD AttacksByPlayer[COUNT_PLAYERS];
+	BB_BITBOARD AttacksByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+	BB_BITBOARD InterestByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+#endif
+};
+
+struct MG_TENTATIVEMOVEDATA
+{
+	MG_DIRTYFLAGS DirtyFlags[COUNT_PLAYERS];
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+	BB_BITBOARD AttacksByPlayer[COUNT_PLAYERS];
+	BB_BITBOARD AttacksByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+	BB_BITBOARD InterestByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+#endif
 };
 
 #endif

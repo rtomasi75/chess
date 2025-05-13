@@ -73,9 +73,9 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition);
 
-void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition);
+void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_TENTATIVEMOVEDATA* pOutMoveData, MG_POSITION* pPosition);
 
-void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition);
+void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_TENTATIVEMOVEDATA* pMoveData, MG_POSITION* pPosition);
 
 BB_BITBOARD MOVEGEN_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest);
 
@@ -83,6 +83,6 @@ void MOVEGEN_RecomputeAttacks(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition
 
 void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG_POSITION* pPosition, const MG_MOVE& move);
 
-std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth);
+std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth, std::uint64_t& nodeCount);
 
 #endif

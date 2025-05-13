@@ -320,8 +320,8 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						const MG_MOVE move = nextMove++;
 						ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
-						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareToLeft;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareToLeft;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -353,8 +353,8 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						const MG_MOVE move = nextMove++;
 						ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
-						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareToRight;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareToRight;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -402,10 +402,10 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							const MG_MOVE move = nextMove++;
 							ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareToLeft;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = BITBOARD_EMPTY;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = squareFrom;
-							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareToLeft;
 #endif
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = SQUAREINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = SQUAREINDEX_NONE;
@@ -440,10 +440,10 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							const MG_MOVE move = nextMove++;
 							ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareToRight;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = BITBOARD_EMPTY;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = squareFrom;
-							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = squareToRight;
 #endif
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveDest = SQUAREINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].MoveSource = SQUAREINDEX_NONE;
@@ -488,7 +488,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 					pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareCapture;
-					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFromLeft ^ squareTo;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -519,7 +519,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 					pMoveGen->MoveTable[PLAYER_WHITE][move].KillMap = squareCapture;
-					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].MoveMap = squareFromRight ^ squareTo;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateMap = BITBOARD_EMPTY;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -567,8 +567,8 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						const MG_MOVE move = nextMove++;
 						ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
-						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareToLeft;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareToLeft;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -601,8 +601,8 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						const MG_MOVE move = nextMove++;
 						ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
-						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareToRight;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareToRight;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -651,10 +651,10 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							const MG_MOVE move = nextMove++;
 							ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareToLeft;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = BITBOARD_EMPTY;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = squareFrom;
-							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareToLeft;
 #endif
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = SQUAREINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = SQUAREINDEX_NONE;
@@ -688,10 +688,10 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							const MG_MOVE move = nextMove++;
 							ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
-							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareToRight;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = BITBOARD_EMPTY;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = squareFrom;
-							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = squareToRight;
 #endif
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveDest = SQUAREINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].MoveSource = SQUAREINDEX_NONE;
@@ -735,7 +735,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 					pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareCapture;
-					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFromLeft ^ squareTo;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -766,7 +766,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
 #ifndef MOVEGEN_COMPACT_MOVEINFO
 					pMoveGen->MoveTable[PLAYER_BLACK][move].KillMap = squareCapture;
-					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFrom ^ squareTo;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].MoveMap = squareFromRight ^ squareTo;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateMap = BITBOARD_EMPTY;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoMap = BITBOARD_EMPTY;
 #endif
@@ -807,32 +807,45 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition,
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const MG_MOVE offset = (fromRankIndex - 1) * COUNT_FILES + fromFileIndex;
-			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset;
-			ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
-			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			const BB_SQUARE squareTo = BITBOARD_UP(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
+			if (!(pPosition->OccupancyTotal & squareTo))
+			{
+				const MG_MOVE offset = (fromRankIndex - 1) * COUNT_FILES + fromFileIndex;
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			}
 		}
 		movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & RANK_7;
 		while (SQUARE_Next(movers, fromSquareIndex))
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
-			for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+			const BB_SQUARE squareTo = BITBOARD_UP(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
+			if (!(pPosition->OccupancyTotal & squareTo))
 			{
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset + promoPieceIndex;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
+				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+				{
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset + promoPieceIndex;
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				}
 			}
 		}
 		movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & RANK_2;
 		while (SQUARE_Next(movers, fromSquareIndex))
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const MG_MOVE offset = fromFileIndex;
-			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].DoublePushBase + offset;
-			ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
-			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			const BB_SQUARE squareOver = BITBOARD_UP(SQUARE_FromIndex(fromSquareIndex));
+			const BB_SQUARE squareTo = BITBOARD_UP(squareOver);
+			if (!(pPosition->OccupancyTotal & (squareTo | squareOver)))
+			{
+				const MG_MOVE offset = fromFileIndex;
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].DoublePushBase + offset;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			}
 		}
 	}
 	else
@@ -843,32 +856,45 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition,
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const MG_MOVE offset = (fromRankIndex - 2) * COUNT_FILES + fromFileIndex;
-			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset;
-			ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			const BB_SQUARE squareTo = BITBOARD_DOWN(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
+			if (!(pPosition->OccupancyTotal & squareTo))
+			{
+				const MG_MOVE offset = (fromRankIndex - 2) * COUNT_FILES + fromFileIndex;
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			}
 		}
 		movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & RANK_2;
 		while (SQUARE_Next(movers, fromSquareIndex))
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
 			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
-			for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+			const BB_SQUARE squareTo = BITBOARD_DOWN(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
+			if (!(pPosition->OccupancyTotal & squareTo))
 			{
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset + promoPieceIndex;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				const MG_MOVE offset = ((fromRankIndex - 1) * COUNT_FILES + fromFileIndex) * MOVEGEN_COUNT_PROMOPIECES;
+				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
+				{
+					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset + promoPieceIndex;
+					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				}
 			}
 		}
 		movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & RANK_7;
 		while (SQUARE_Next(movers, fromSquareIndex))
 		{
 			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const MG_MOVE offset = fromFileIndex;
-			const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].DoublePushBase + offset;
-			ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			const BB_SQUARE squareOver = BITBOARD_DOWN(SQUARE_FromIndex(fromSquareIndex));
+			const BB_SQUARE squareTo = BITBOARD_DOWN(squareOver);
+			if (!(pPosition->OccupancyTotal & (squareTo | squareOver)))
+			{
+				const MG_MOVE offset = fromFileIndex;
+				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].DoublePushBase + offset;
+				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
+				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+			}
 		}
 	}
 }

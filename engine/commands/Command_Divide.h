@@ -6,6 +6,8 @@
 
 class Command_Divide : public Command
 {
+private:
+	void SortMoves(MG_MOVELIST& moveList);
 public:
 	Command_Divide(Engine* pEngine);
 	virtual bool Try(const std::string& commandString) override;

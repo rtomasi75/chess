@@ -175,3 +175,126 @@ MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
 	return hash;
 }
 
+bool POSITION_WriteEmptySpaceCounter(char* pString, const int& len, int& strPos, const int& emptySpaceCounter)
+{
+	switch (emptySpaceCounter)
+	{
+	case 0:
+		return true;
+	case 1:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '1';
+		return true;
+	case 2:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '2';
+		return true;
+	case 3:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '3';
+		return true;
+	case 4:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '4';
+		return true;
+	case 5:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '5';
+		return true;
+	case 6:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '6';
+		return true;
+	case 7:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '7';
+		return true;
+	case 8:
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '8';
+		return true;
+	default:
+		ASSERT(false);
+		return false;
+	}
+}
+
+bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSITION& position)
+{
+	for (BB_RANKINDEX rankIdx = COUNT_RANKS - 1; rankIdx >= 0; rankIdx--)
+	{
+		int emptySpaceCounter = 0;
+		for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_RANKS; fileIdx++)
+		{
+			const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
+			MG_PLAYER player;
+			MG_PIECETYPE piece;
+			if (POSITION_GetPiece(&position, square, player, piece))
+			{
+				if (!POSITION_WriteEmptySpaceCounter(pString, len, strPos, emptySpaceCounter))
+					return false;
+				emptySpaceCounter = 0;
+				if (!PIECETYPE_ToString(pString, len, strPos, piece, player))
+					return false;
+			}
+			else
+				emptySpaceCounter++;
+		}
+		if (!POSITION_WriteEmptySpaceCounter(pString, len, strPos, emptySpaceCounter))
+			return false;
+		if (rankIdx != 0)
+		{
+			if (strPos >= len)
+				return false;
+			pString[strPos++] = '/';
+		}
+	}
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = ' ';
+	if (!PLAYER_ToString(pString, len, strPos, position.MovingPlayer))
+		return false;
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = ' ';
+	if (!CASTLEFLAGS_ToString(pString, len, strPos, position.CastlingRights))
+		return false;
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = ' ';
+	if (position.EpFileIndex == FILEINDEX_NONE)
+	{
+		if (strPos >= len)
+			return false;
+		pString[strPos++] = '-';
+	}
+	else
+	{
+		const BB_FILE epFile = FILE_FromIndex(position.EpFileIndex);
+		const BB_RANK epRank = (position.MovingPlayer == PLAYER_WHITE) ? RANK_3 : RANK_6;
+		const BB_SQUARE epSquare = SQUARE_FromRankFile(epRank, epFile);
+		if (!SQUARE_ToString(pString, len, strPos, epSquare))
+			return false;
+	}
+	pString[strPos++] = ' ';
+	if (strPos >= len)
+		return false;
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = '0';
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = ' ';
+	if (strPos >= len)
+		return false;
+	pString[strPos++] = '1';
+	return true;
+}

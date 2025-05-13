@@ -43,11 +43,13 @@ bool Command_Perft::Try(const std::string& commandString)
 				std::stringstream sstream;
 				sstream << "Performing perft with depth " << depth << "." << std::endl;
 				std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-				std::uint64_t nodeCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth);
+				std::uint64_t nodeCount = 0;
+				std::uint64_t leafCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth, nodeCount);
 				std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 				std::chrono::high_resolution_clock::duration elapsed = end - start;
 				std::chrono::milliseconds elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
-				sstream << "  " << nodeCount << " nodes in " << elapsedMs.count() << " milliseconds at depth " << depth << "." << std::endl;
+				sstream << "  " << leafCount << " leafs in " << elapsedMs.count() << " milliseconds at depth " << depth << "." << std::endl;
+				sstream << "  " << nodeCount << " nodes in " << elapsedMs.count() << " milliseconds at " << 1000.0 * static_cast<double>(nodeCount) / static_cast<double>(elapsedMs.count()) << " Node/s." << std::endl;
 				GetEngine().OutputStream() << sstream.str();
 				return true;
 			}

@@ -49,5 +49,7 @@ inline bool POSITION_IsCheck(const MG_POSITION* pPosition)
 	return pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->PassivePlayer];
 }
 
+bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSITION& position);
+
 
 #endif

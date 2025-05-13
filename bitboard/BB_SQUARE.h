@@ -106,14 +106,7 @@ inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const
 
 inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)
 {
-	if (bitboard)
-	{
-		outSquareIndex = CM_BitScanForward(bitboard);
-		bitboard &= ~SQUARE_FromIndex(outSquareIndex);
-		return true;
-	}
-	else
-		return false;
+	return CM_PopLsb(bitboard, outSquareIndex);
 }
 
 inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)

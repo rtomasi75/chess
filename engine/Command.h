@@ -27,6 +27,7 @@ protected:
 	std::string MoveToString(const MG_MOVE& move) const;
 	std::string MoveToHexString(const MG_MOVE& move) const;
 	std::string PositionToString(const MG_POSITION& position, int indentation = 0) const;
+	std::string PositionToFEN(const MG_POSITION& position) const;
 	std::string SquareToString(const BB_SQUARE& square) const;
 public:
 	virtual ~Command() = default;

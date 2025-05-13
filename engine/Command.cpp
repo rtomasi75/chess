@@ -134,6 +134,18 @@ std::string Command::PlayerToString(const MG_PLAYER& player) const
 	return buffer;
 }
 
+std::string Command::PositionToFEN(const MG_POSITION& position) const
+{
+	char buffer[256];
+	for (int i = 0; i < 256; i++)
+	{
+		buffer[i] = 0;
+	}
+	int pos = 0;
+	POSITION_ToString(buffer, 256, pos, position);
+	return buffer;
+}
+
 std::string Command::PositionToString(const MG_POSITION& position, int indentation) const
 {
 	std::stringstream sstream;
@@ -202,6 +214,7 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 	{
 		sstream << " ";
 	}
-	sstream << StringHelper::ToHexString(GetEngine().Position().Hash) << std::endl;
+	sstream << "Hash: " << StringHelper::ToHexString(GetEngine().Position().Hash) << std::endl;
+	sstream << "FEN: " << PositionToFEN(GetEngine().Position()) << std::endl;
 	return sstream.str();
 }

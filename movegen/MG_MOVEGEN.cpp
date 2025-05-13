@@ -244,22 +244,30 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	pPosition->CastlingRights = newFlags;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
+		pOutMoveData->DirtyFlags[player] = UINT8_C(0);
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
 			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
 			{
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+				pOutMoveData->AttacksByPlayerPiece[player][piece] = pPosition->AttacksPlayerPiece[player][piece];
+				pOutMoveData->InterestByPlayerPiece[player][piece] = pPosition->InterestPlayerPiece[player][piece];
+#endif
 				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+				pOutMoveData->DirtyFlags[player] |= UINT8_C(1) << piece;
 			}
 			attacks |= pPosition->AttacksPlayerPiece[player][piece];
 		}
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+		pOutMoveData->AttacksByPlayer[player] = pPosition->AttacksPlayer[player];
+#endif
 		pPosition->AttacksPlayer[player] = attacks;
 	}
 }
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)
 {
-	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
@@ -267,7 +275,6 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= moveMap;
 		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
-		interestMap |= moveMap;
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
@@ -275,7 +282,6 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= createMap;
 		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
-		interestMap |= createMap;
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
@@ -283,7 +289,6 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= killMap;
 		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
-		interestMap |= killMap;
 	}
 	if (moveInfo.PromoPiece != PIECETYPE_NONE)
 	{
@@ -291,7 +296,6 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyTotal ^= promoMap;
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
-		interestMap |= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
@@ -300,20 +304,33 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	pPosition->CastlingRights = pMoveData->OldCastlingRights;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
+#ifdef MOVEGEN_COMPACT_MOVEDATA
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
+#endif
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			if (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece))
 			{
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+				pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
+				pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
+#else
 				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+#endif
 			}
+#ifdef MOVEGEN_COMPACT_MOVEDATA
 			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+#endif
 		}
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+		pPosition->AttacksPlayer[player] = pMoveData->AttacksByPlayer[player];
+#else
 		pPosition->AttacksPlayer[player] = attacks;
+#endif
 	}
 }
 
-void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition)
+void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_TENTATIVEMOVEDATA* pOutMoveData, MG_POSITION* pPosition)
 {
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
@@ -354,22 +371,30 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 	pPosition->MovingPlayer = tempPlayer;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
+		pOutMoveData->DirtyFlags[player] = UINT8_C(0);
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
 			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
 			{
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+				pOutMoveData->AttacksByPlayerPiece[player][piece] = pPosition->AttacksPlayerPiece[player][piece];
+				pOutMoveData->InterestByPlayerPiece[player][piece] = pPosition->InterestPlayerPiece[player][piece];
+#endif
 				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+				pOutMoveData->DirtyFlags[player] |= UINT8_C(1) << piece;
 			}
 			attacks |= pPosition->AttacksPlayerPiece[player][piece];
 		}
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+		pOutMoveData->AttacksByPlayer[player] = pPosition->AttacksPlayer[player];
+#endif
 		pPosition->AttacksPlayer[player] = attacks;
 	}
 }
 
-void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_POSITION* pPosition)
+void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_TENTATIVEMOVEDATA* pMoveData, MG_POSITION* pPosition)
 {
-	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
@@ -377,7 +402,6 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->OccupancyTotal ^= moveMap;
 		pPosition->OccupancyPlayer[moveInfo.MovePlayer] ^= moveMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.MovePlayer][moveInfo.MovePiece] ^= moveMap;
-		interestMap |= moveMap;
 	}
 	if (moveInfo.CreatePiece != PIECETYPE_NONE)
 	{
@@ -385,7 +409,6 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->OccupancyTotal ^= createMap;
 		pPosition->OccupancyPlayer[moveInfo.CreatePlayer] ^= createMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.CreatePlayer][moveInfo.CreatePiece] ^= createMap;
-		interestMap |= createMap;
 	}
 	if (moveInfo.KillPiece != PIECETYPE_NONE)
 	{
@@ -393,7 +416,6 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->OccupancyTotal ^= killMap;
 		pPosition->OccupancyPlayer[moveInfo.KillPlayer] ^= killMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.KillPlayer][moveInfo.KillPiece] ^= killMap;
-		interestMap |= killMap;
 	}
 	if (moveInfo.PromoPiece != PIECETYPE_NONE)
 	{
@@ -401,23 +423,35 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->OccupancyTotal ^= promoMap;
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
-		interestMap |= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
+#ifdef MOVEGEN_COMPACT_MOVEDATA
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
+#endif
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			if (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece))
 			{
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+				pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
+				pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
+#else
 				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+#endif
 			}
+#ifdef MOVEGEN_COMPACT_MOVEDATA
 			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+#endif
 		}
+#ifndef MOVEGEN_COMPACT_MOVEDATA
+		pPosition->AttacksPlayer[player] = pMoveData->AttacksByPlayer[player];
+#else
 		pPosition->AttacksPlayer[player] = attacks;
+#endif
 	}
 }
 
@@ -456,9 +490,10 @@ void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG
 {
 	ASSERT(pMoveList->CountMoves < MAX_MOVES);
 #ifdef MOVGEN_LEGALMOVES
-	MOVEGEN_MakeTentativeMove(pMoveGen, move, pPosition);
+	MG_TENTATIVEMOVEDATA moveData;
+	MOVEGEN_MakeTentativeMove(pMoveGen, move, &moveData, pPosition);
 	const bool bLegal = POSITION_IsLegal(pPosition);
-	MOVEGEN_UnmakeTentativeMove(pMoveGen, move, pPosition);
+	MOVEGEN_UnmakeTentativeMove(pMoveGen, move, &moveData, pPosition);
 	if (bLegal)
 		pMoveList->Move[pMoveList->CountMoves++] = move;
 #else
@@ -466,7 +501,7 @@ void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG
 #endif
 }
 
-std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth)
+std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth, std::uint64_t& nodeCount)
 {
 	if (depth == 0)
 		return 1;
@@ -474,17 +509,22 @@ std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, 
 	MG_MOVELIST moveList;
 	MOVELIST_Initialize(&moveList);
 	MOVEGEN_GenerateMoves(pMoveGen, pPosition, &moveList);
+#ifdef MOVGEN_LEGALMOVES
+	if (depth == 1)
+		return moveList.CountMoves;
+#endif
 	for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
 	{
 		const MG_MOVE move = moveList.Move[moveIdx];
 		MG_MOVEDATA moveData;
 		MOVEGEN_MakeMove(pMoveGen, move, &moveData, pPosition);
+		nodeCount++;
 #ifdef MOVGEN_LEGALMOVES
-		nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1);
+		nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
 #else
 		if (POSITION_IsLegal(pPosition))
 		{
-			nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1);
+			nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
 		}
 #endif
 		MOVEGEN_UnmakeMove(pMoveGen, move, &moveData, pPosition);
