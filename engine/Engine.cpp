@@ -11,6 +11,8 @@
 #include "commands/Command_DebugSlideTargets.h"
 #include "commands/Command_DebugIntrinsics.h"
 #include "commands/Command_DebugAttacks.h"
+#include "commands/Command_Perft.h"
+#include "commands/Command_Divide.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_isRunning(false),
@@ -35,6 +37,8 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_DebugSlideTargets>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugIntrinsics>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugAttacks>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_Perft>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_Divide>(this));
 }
 
 Engine::~Engine()
@@ -55,6 +59,11 @@ const MG_MOVEGEN& Engine::MoveGen() const
 }
 
 const MG_POSITION& Engine::Position() const
+{
+	return _game.CurrentPosition;
+}
+
+MG_POSITION& Engine::Position()
 {
 	return _game.CurrentPosition;
 }

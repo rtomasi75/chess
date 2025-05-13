@@ -38,6 +38,7 @@ public:
 	bool IsUCI();
 	std::istream& InputStream();
 	std::ostream& OutputStream();
+	MG_POSITION& Position();
 	const MG_POSITION& Position() const;
 	const MG_MOVEGEN& MoveGen() const;
 	const MG_MOVELIST& LegalMoves() const;

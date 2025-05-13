@@ -145,6 +145,8 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, M
 		case MOVEMECHANIC_CASTLE:
 			KING_GenerateCastleMoves(pMoveGen, pPosition, piece, pMoveList);
 			break;
+		case MOVEMECHANIC_NONE:
+			break;
 		}
 	}
 }
@@ -462,4 +464,30 @@ void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG
 #else
 	pMoveList->Move[pMoveList->CountMoves++] = move;
 #endif
+}
+
+std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth)
+{
+	if (depth == 0)
+		return 1;
+	uint64_t nodes = 0;
+	MG_MOVELIST moveList;
+	MOVELIST_Initialize(&moveList);
+	MOVEGEN_GenerateMoves(pMoveGen, pPosition, &moveList);
+	for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
+	{
+		const MG_MOVE move = moveList.Move[moveIdx];
+		MG_MOVEDATA moveData;
+		MOVEGEN_MakeMove(pMoveGen, move, &moveData, pPosition);
+#ifdef MOVGEN_LEGALMOVES
+		nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1);
+#else
+		if (POSITION_IsLegal(pPosition))
+		{
+			nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1);
+		}
+#endif
+		MOVEGEN_UnmakeMove(pMoveGen, move, &moveData, pPosition);
+	}
+	return nodes;
 }
