@@ -47,6 +47,7 @@ public:
 	void WaitForStop();
 	void ErrorMessage(const std::string&);
 	void MakeMove(const MG_MOVE& move);
+	void SetPosition(const MG_POSITION& newPosition);
 	Engine(std::istream& inputStream, std::ostream& outputStream);
 	~Engine();
 };

@@ -51,5 +51,10 @@ inline bool POSITION_IsCheck(const MG_POSITION* pPosition)
 
 bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSITION& position);
 
+void POSITION_SetEnPassantFile(MG_POSITION* pPosition, const BB_FILEINDEX& epFileIdx);
+
+void POSITION_SetMovingPlayer(MG_POSITION* pPosition, const MG_PLAYER& movingPlayer);
+
+bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& len, int& strPos, MG_POSITION& outParsed);
 
 #endif

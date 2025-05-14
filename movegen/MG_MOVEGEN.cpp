@@ -286,6 +286,7 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	pPosition->MovingPlayer = tempPlayer;
 	pPosition->Hash = pMoveData->OldHash;
 	pPosition->CastlingRights = pMoveData->OldCastlingRights;
+	pPosition->EpFileIndex = pMoveData->OldEnPassantFile;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA
@@ -357,6 +358,8 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
+	pOutMoveData->OldEnPassantFile = pPosition->EpFileIndex;
+	pPosition->EpFileIndex = moveInfo.EnPassantFileIndex;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 		pOutMoveData->DirtyFlags[player] = UINT8_C(0);
@@ -415,6 +418,7 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
+	pPosition->EpFileIndex = pMoveData->OldEnPassantFile;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA
@@ -481,7 +485,7 @@ void MOVEGEN_RecomputeAttacks(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition
 void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG_POSITION* pPosition, const MG_MOVE& move)
 {
 	ASSERT(pMoveList->CountMoves < MAX_MOVES);
-#ifdef MOVGEN_LEGALMOVES
+#ifdef MOVEGEN_LEGAL
 	MG_TENTATIVEMOVEDATA moveData;
 	MOVEGEN_MakeTentativeMove(pMoveGen, move, &moveData, pPosition);
 	const bool bLegal = POSITION_IsLegal(pPosition);
@@ -495,28 +499,39 @@ void MOVEGEN_FinalizeMove(const MG_MOVEGEN* pMoveGen, MG_MOVELIST* pMoveList, MG
 
 std::uint64_t MOVEGEN_Perft(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, int depth, std::uint64_t& nodeCount)
 {
-	if (depth == 0)
+	if (depth <= 0)
 		return 1;
 	uint64_t nodes = 0;
 	MG_MOVELIST moveList;
 	MOVELIST_Initialize(&moveList);
 	MOVEGEN_GenerateMoves(pMoveGen, pPosition, &moveList);
-#ifdef MOVGEN_LEGALMOVES
-	if (depth == 1)
-		return moveList.CountMoves;
-#endif
 	for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
 	{
 		const MG_MOVE move = moveList.Move[moveIdx];
 		MG_MOVEDATA moveData;
 		MOVEGEN_MakeMove(pMoveGen, move, &moveData, pPosition);
-		nodeCount++;
-#ifdef MOVGEN_LEGALMOVES
-		nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
+#ifdef MOVEGEN_LEGAL
+		if (depth == 1)
+		{
+			nodeCount++;
+			nodes++;
+		}
+		else
+		{
+			nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
+		}
 #else
 		if (POSITION_IsLegal(pPosition))
 		{
-			nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
+			if (depth == 1)
+			{
+				nodeCount++;
+				nodes++;
+			}
+			else
+			{
+				nodes += MOVEGEN_Perft(pPosition, pMoveGen, depth - 1, nodeCount);
+			}
 		}
 #endif
 		MOVEGEN_UnmakeMove(pMoveGen, move, &moveData, pPosition);

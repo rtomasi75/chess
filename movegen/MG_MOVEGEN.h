@@ -38,7 +38,7 @@
 
 #define COUNT_SLIDELOOKUPS 6
 
-#define MOVGEN_LEGALMOVES
+#define MOVEGEN_LEGAL
 
 typedef std::int8_t MG_OPTIONINDEX;
 

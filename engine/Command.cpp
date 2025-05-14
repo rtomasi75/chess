@@ -146,6 +146,12 @@ std::string Command::PositionToFEN(const MG_POSITION& position) const
 	return buffer;
 }
 
+bool Command::PositionFromFEN(MG_POSITION& position, const std::string& fen) const
+{
+	int strPos = 0;
+	return POSITION_Parse(&GetEngine().MoveGen(), fen.c_str(), static_cast<int>(fen.size()), strPos, position);
+}
+
 std::string Command::PositionToString(const MG_POSITION& position, int indentation) const
 {
 	std::stringstream sstream;

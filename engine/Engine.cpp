@@ -13,6 +13,7 @@
 #include "commands/Command_DebugAttacks.h"
 #include "commands/Command_Perft.h"
 #include "commands/Command_Divide.h"
+#include "commands/Command_SetFen.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_isRunning(false),
@@ -39,6 +40,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_DebugAttacks>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_Perft>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_Divide>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_SetFen>(this));
 }
 
 Engine::~Engine()
@@ -61,6 +63,13 @@ const MG_MOVEGEN& Engine::MoveGen() const
 const MG_POSITION& Engine::Position() const
 {
 	return _game.CurrentPosition;
+}
+
+void Engine::SetPosition(const MG_POSITION& newPosition)
+{
+	_game.CurrentPosition = newPosition;
+	MOVEGEN_GenerateMoves(&_moveGen, &_game.CurrentPosition, &_game.LegalMoves);
+
 }
 
 MG_POSITION& Engine::Position()

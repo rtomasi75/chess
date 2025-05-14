@@ -227,6 +227,23 @@ bool POSITION_WriteEmptySpaceCounter(char* pString, const int& len, int& strPos,
 	}
 }
 
+void POSITION_SetEnPassantFile(MG_POSITION* pPosition, const BB_FILEINDEX& epFileIdx)
+{
+	pPosition->Hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
+	pPosition->EpFileIndex = epFileIdx;
+	pPosition->Hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
+}
+
+void POSITION_SetMovingPlayer(MG_POSITION* pPosition, const MG_PLAYER& movingPlayer)
+{
+	if (pPosition->MovingPlayer != movingPlayer)
+	{
+		pPosition->MovingPlayer = movingPlayer;
+		pPosition->PassivePlayer = (movingPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
+		pPosition->Hash ^= HASH_MOVINGPLAYER_BLACK;
+	}
+}
+
 bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSITION& position)
 {
 	for (BB_RANKINDEX rankIdx = COUNT_RANKS - 1; rankIdx >= 0; rankIdx--)
@@ -296,5 +313,106 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	if (strPos >= len)
 		return false;
 	pString[strPos++] = '1';
+	return true;
+}
+
+bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& len, int& strPos, MG_POSITION& outParsed)
+{
+	POSITION_Clear(&outParsed);
+	BB_RANKINDEX rankIdx = COUNT_RANKS - 1;
+	BB_FILEINDEX fileIdx = 0;
+	MG_PLAYER player;
+	MG_PIECETYPE piece;
+	while (rankIdx >= 0)
+	{
+		if (strPos >= len)
+			return false;
+		switch (pString[strPos])
+		{
+		case '1':
+			fileIdx += 1;
+			strPos++;
+			break;
+		case '2':
+			fileIdx += 2;
+			strPos++;
+			break;
+		case '3':
+			fileIdx += 3;
+			strPos++;
+			break;
+		case '4':
+			fileIdx += 4;
+			strPos++;
+			break;
+		case '5':
+			fileIdx += 5;
+			strPos++;
+			break;
+		case '6':
+			fileIdx += 6;
+			strPos++;
+			break;
+		case '7':
+			fileIdx += 7;
+			strPos++;
+			break;
+		case '8':
+			fileIdx += 8;
+			strPos++;
+			break;
+		default:
+			if (PIECETYPE_Parse(pString, len, strPos, piece, player))
+			{
+				POSITION_SetPiece(pMoveGen, &outParsed, player, piece, SQUARE_FromRankFileIndices(rankIdx, fileIdx));
+				fileIdx++;
+			}
+			else
+				return false;
+		}
+		if (fileIdx >= COUNT_FILES)
+		{
+			if (rankIdx != 0)
+			{
+				if (strPos >= len)
+					return false;
+				if (pString[strPos++] != '/')
+					return false;
+			}
+			fileIdx = 0;
+			rankIdx--;
+		}
+	}
+	if (strPos >= len)
+		return false;
+	if (pString[strPos++] != ' ')
+		return false;
+	if (!PLAYER_Parse(pString, len, strPos, player))
+		return false;
+	POSITION_SetMovingPlayer(&outParsed, player);
+	if (strPos >= len)
+		return false;
+	if (pString[strPos++] != ' ')
+		return false;
+	MG_CASTLEFLAGS castleFlags;
+	if (!CASTLEFLAGS_Parse(pString, len, strPos, castleFlags))
+		return false;
+	POSITION_SetCastleRights(&outParsed, castleFlags);
+	if (strPos >= len)
+		return false;
+	if (pString[strPos++] != ' ')
+		return false;
+	if (strPos >= len)
+		return false;
+	if (pString[strPos] == '-')
+		strPos++;
+	else
+	{
+		BB_SQUARE epSquare;
+		if (!SQUARE_Parse(pString, len, strPos, epSquare))
+			return false;
+		const BB_FILEINDEX epFileIdx = SQUARE_GetFileIndex(SQUARE_GetIndex(epSquare));
+		POSITION_SetEnPassantFile(&outParsed, epFileIdx);
+	}
 	return true;
 }
