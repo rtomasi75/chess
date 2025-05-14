@@ -92,69 +92,53 @@ void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen)
 	}
 }
 
+typedef void(*MG_GenerateMovesFn)(const MG_MOVEGEN*, MG_POSITION*, const MG_PIECETYPE&, MG_MOVELIST*);
+
+static inline void MOVEGEN_GenerateNoMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
+{
+}
+
+static constexpr MG_GenerateMovesFn g_GenerateQuietMovesFn[COUNT_MOVEMECHANICS] =
+{
+	MOVEGEN_GenerateNoMoves,
+	JUMPTABLE_GenerateQuietMoves,
+	SLIDEMASKS_GenerateQuietMoves,
+	PAWN_GenerateQuietMoves,
+	MOVEGEN_GenerateNoMoves
+};
+
+static constexpr MG_GenerateMovesFn g_GenerateCaptureMovesFn[COUNT_MOVEMECHANICS] =
+{
+	MOVEGEN_GenerateNoMoves,
+	JUMPTABLE_GenerateCaptureMoves,
+	SLIDEMASKS_GenerateCaptureMoves,
+	PAWN_GenerateCaptureMoves,
+	MOVEGEN_GenerateNoMoves
+};
+
+static constexpr MG_GenerateMovesFn g_GenerateSpecialMovesFn[COUNT_MOVEMECHANICS] =
+{
+	MOVEGEN_GenerateNoMoves,
+	MOVEGEN_GenerateNoMoves,
+	MOVEGEN_GenerateNoMoves,
+	MOVEGEN_GenerateNoMoves,
+	KING_GenerateCastleMoves
+};
+
+
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList)
 {
 	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
 	MOVELIST_Initialize(pMoveList);
 	for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 	{
-		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_QUIET])
-		{
-		case MOVEMECHANIC_CASTLE:
-		default:
-			ASSERT(false);
-			break;
-		case MOVEMECHANIC_JUMPTABLE:
-			JUMPTABLE_GenerateQuietMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_SLIDETABLE:
-			SLIDEMASKS_GenerateQuietMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_PAWN:
-			PAWN_GenerateQuietMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_NONE:
-			break;
-		}
-		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_CAPTURE])
-		{
-		case MOVEMECHANIC_CASTLE:
-		default:
-			ASSERT(false);
-			break;
-		case MOVEMECHANIC_JUMPTABLE:
-			JUMPTABLE_GenerateCaptureMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_SLIDETABLE:
-			SLIDEMASKS_GenerateCaptureMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_PAWN:
-			PAWN_GenerateCaptureMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_NONE:
-			break;
-		}
-		switch (pMoveGen->PieceInfo[movingPlayer][piece].MoveMechanic[MOVETYPE_SPECIAL])
-		{
-		default:
-		case MOVEMECHANIC_JUMPTABLE:
-		case MOVEMECHANIC_PAWN:
-		case MOVEMECHANIC_SLIDETABLE:
-			ASSERT(false);
-			break;
-		case MOVEMECHANIC_CASTLE:
-			KING_GenerateCastleMoves(pMoveGen, pPosition, piece, pMoveList);
-			break;
-		case MOVEMECHANIC_NONE:
-			break;
-		}
+		if (!(pPosition->OccupancyPlayerPiece[movingPlayer][piece] & BITBOARD_FULL))
+			continue;
+		const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][piece];
+		g_GenerateQuietMovesFn[pieceInfo.MoveMechanic[MOVETYPE_QUIET]](pMoveGen, pPosition, piece, pMoveList);
+		g_GenerateCaptureMovesFn[pieceInfo.MoveMechanic[MOVETYPE_CAPTURE]](pMoveGen, pPosition, piece, pMoveList);
+		g_GenerateSpecialMovesFn[pieceInfo.MoveMechanic[MOVETYPE_SPECIAL]](pMoveGen, pPosition, piece, pMoveList);
 	}
-}
-
-MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITBOARD& targets)
-{
-	const std::uint64_t optionIndex = CM_BitExtract(square, targets);
-	return CM_BitScanForward(optionIndex);
 }
 
 bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVELIST* pMoveList, const char* pString, const int& len, int& strPos, MG_MOVE& outParsed)
@@ -306,22 +290,26 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		BB_BITBOARD pieceAttacks[COUNT_PIECETYPES];
 #endif
-		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		std::uint64_t dirty = pMoveData->DirtyFlags[player];  // Promote to 64-bit
+		std::int8_t piece;
+		while (CM_PopLsb(dirty, piece))
 		{
-			if (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece))
-			{
-#ifndef MOVEGEN_COMPACT_MOVEDATA
-				pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
-				pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
-#else
-				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
-#endif
-			}
 #ifdef MOVEGEN_COMPACT_MOVEDATA
-			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+			pieceAttacks[piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			pPosition->AttacksPlayerPiece[player][piece] = pieceAttacks[piece];
+#else
+			pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
+			pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
 #endif
 		}
+#ifdef MOVEGEN_COMPACT_MOVEDATA
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			attacks |= (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece)) ? pieceAttacks[piece] : pPosition->AttacksPlayerPiece[player][piece];
+		}
+#endif
 #ifndef MOVEGEN_COMPACT_MOVEDATA
 		pPosition->AttacksPlayer[player] = pMoveData->AttacksByPlayer[player];
 #else
@@ -431,22 +419,26 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
+		BB_BITBOARD pieceAttacks[COUNT_PIECETYPES];
 #endif
-		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		std::uint64_t dirty = pMoveData->DirtyFlags[player];  // Promote to 64-bit
+		std::int8_t piece;
+		while (CM_PopLsb(dirty, piece))
 		{
-			if (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece))
-			{
-#ifndef MOVEGEN_COMPACT_MOVEDATA
-				pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
-				pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
-#else
-				pPosition->AttacksPlayerPiece[player][piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
-#endif
-			}
 #ifdef MOVEGEN_COMPACT_MOVEDATA
-			attacks |= pPosition->AttacksPlayerPiece[player][piece];
+			pieceAttacks[piece] = MOVEGEN_GetPieceAttacks(pMoveGen, pPosition, piece, player, pPosition->InterestPlayerPiece[player][piece]);
+			pPosition->AttacksPlayerPiece[player][piece] = pieceAttacks[piece];
+#else
+			pPosition->AttacksPlayerPiece[player][piece] = pMoveData->AttacksByPlayerPiece[player][piece];
+			pPosition->InterestPlayerPiece[player][piece] = pMoveData->InterestByPlayerPiece[player][piece];
 #endif
 		}
+#ifdef MOVEGEN_COMPACT_MOVEDATA
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			attacks |= (pMoveData->DirtyFlags[player] & (UINT8_C(1) << piece)) ? pieceAttacks[piece] : pPosition->AttacksPlayerPiece[player][piece];
+		}
+#endif
 #ifndef MOVEGEN_COMPACT_MOVEDATA
 		pPosition->AttacksPlayer[player] = pMoveData->AttacksByPlayer[player];
 #else

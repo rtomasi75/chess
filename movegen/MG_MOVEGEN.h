@@ -63,7 +63,12 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen);
 
 void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen);
 
-MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITBOARD& targets);
+
+inline MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITBOARD& targets)
+{
+	const std::uint64_t optionIndex = CM_BitExtract(square, targets);
+	return CM_BitScanForward(optionIndex);
+}
 
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList);
 

@@ -107,12 +107,14 @@ MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget)
 
 void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
+	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
-	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[pPosition->MovingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
+	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[movingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
 	const MG_JUMPTABLE& table = pMoveGen->JumpTable[tableIndex];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
+		const MG_MOVE baseMove = table.MovesBaseFrom[fromSquareIndex];
 		const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
 		BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
 		BB_SQUAREINDEX toSquareIndex;
@@ -120,7 +122,7 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosi
 		{
 			const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 			const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
-			const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
+			const MG_MOVE move = baseMove + optionIndex;
 			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 		}
 	}
@@ -128,22 +130,26 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosi
 
 void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][piece];
+	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
+	const MG_PLAYER passivePlayer = pPosition->PassivePlayer;
+	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][piece];
+	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
 		for (MG_PIECETYPE capturedPiece = COUNT_ROYALPIECES; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
-			const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[pPosition->MovingPlayer][piece].TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
+			const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
 			const MG_JUMPTABLE& table = pMoveGen->JumpTable[tableIndex];
 			const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
-			BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][capturedPiece];
+			const MG_MOVE baseMove = table.MovesBaseFrom[fromSquareIndex];
+			BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
 			BB_SQUAREINDEX toSquareIndex;
 			while (SQUARE_Next(destinations, toSquareIndex))
 			{
 				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
 				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, targets);
-				const MG_MOVE move = table.MovesBaseFrom[fromSquareIndex] + optionIndex;
+				const MG_MOVE move = baseMove + optionIndex;
 				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 			}
 		}
@@ -155,11 +161,13 @@ BB_BITBOARD JUMPTABLE_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSIT
 	BB_BITBOARD attacks = BITBOARD_EMPTY;
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[player][piece];
 	BB_SQUAREINDEX fromSquareIndex;
-	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[player][piece].TableIndex[TABLEINDEX_CAPTURE(0)];
+	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[player][piece];
+	const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(0)];
 	const MG_JUMPTABLE& table = pMoveGen->JumpTable[tableIndex];
+	const BB_BITBOARD* pJumpTargets = pMoveGen->JumpTargets[table.TargetIndex];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
+		const BB_BITBOARD targets = pJumpTargets[fromSquareIndex];
 		attacks |= targets;
 	}
 	outInterest = pPosition->OccupancyPlayerPiece[player][piece];
