@@ -316,6 +316,39 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	return true;
 }
 
+bool POSITION_Equals(const MG_POSITION* pPosition1, const MG_POSITION* pPosition2)
+{
+	if (pPosition1->Hash != pPosition2->Hash)
+		return false;
+	if (pPosition1->MovingPlayer != pPosition2->MovingPlayer)
+		return false;
+	if (pPosition1->PassivePlayer != pPosition2->PassivePlayer)
+		return false;
+	if (pPosition1->CastlingRights != pPosition2->CastlingRights)
+		return false;
+	if (pPosition1->EpFileIndex != pPosition2->EpFileIndex)
+		return false;
+	if (pPosition1->OccupancyTotal != pPosition2->OccupancyTotal)
+		return false;
+	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
+	{
+		if (pPosition1->OccupancyPlayer[player] != pPosition2->OccupancyPlayer[player])
+			return false;
+		if (pPosition1->AttacksPlayer[player] != pPosition2->AttacksPlayer[player])
+			return false;
+		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
+		{
+			if (pPosition1->OccupancyPlayerPiece[player][piece] != pPosition2->OccupancyPlayerPiece[player][piece])
+				return false;
+			if (pPosition1->InterestPlayerPiece[player][piece] != pPosition2->InterestPlayerPiece[player][piece])
+				return false;
+			if (pPosition1->InterestPlayerPiece[player][piece] != pPosition2->InterestPlayerPiece[player][piece])
+				return false;
+		}
+	}
+	return true;
+}
+
 bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& len, int& strPos, MG_POSITION& outParsed)
 {
 	POSITION_Clear(&outParsed);

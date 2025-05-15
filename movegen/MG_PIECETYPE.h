@@ -18,6 +18,16 @@ typedef std::int8_t MG_PIECETYPE;
 #define COUNT_PIECETYPES 6
 #define COUNT_ROYALPIECES 1
 
+#define MOVEGEN_COUNT_PROMOPIECES 4
+
+constexpr MG_PIECETYPE PAWN_PromoPieces[MOVEGEN_COUNT_PROMOPIECES]
+{
+	PIECETYPE_KNIGHT,
+	PIECETYPE_BISHOP,
+	PIECETYPE_ROOK,
+	PIECETYPE_QUEEN
+};
+
 
 bool PIECETYPE_Parse(const char* pString, const int& len, int& strPos, MG_PIECETYPE& outParsedPiece, MG_PLAYER& outParsedPlayer);
 

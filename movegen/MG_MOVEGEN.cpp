@@ -54,6 +54,9 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		MG_MOVE nextMove = MOVE_NULLMOVE;
 		MOVE_InitializeNullMove(pMoveGen->MoveTable[movingPlayer], movingPlayer);
 		nextMove++;
+		// Pawn
+		PAWN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
+		PAWN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 		// King
 		KING_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		for (MG_PIECETYPE capturedPiece = 0; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
@@ -76,9 +79,6 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		// Queen
 		QUEEN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
 		QUEEN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
-		// Pawn
-		PAWN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
-		PAWN_Initialize_CaptureMoves(movingPlayer, pMoveGen, nextMove);
 		ASSERT(nextMove == pMoveGen->CountMoves[movingPlayer]);
 	}
 }
@@ -177,6 +177,12 @@ bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player
 
 void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDATA* pOutMoveData, MG_POSITION* pPosition)
 {
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	pOutMoveData->pOldPosition = new MG_POSITION;
+	(*pOutMoveData->pOldPosition) = *pPosition;
+#endif
+#endif
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
@@ -232,7 +238,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			if ((interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((moveInfo.PromoPiece != PIECETYPE_NONE) && (moveInfo.CreatePiece == piece) && (player == moveInfo.CreatePlayer)))
 			{
 #ifndef MOVEGEN_COMPACT_MOVEDATA
 				pOutMoveData->AttacksByPlayerPiece[player][piece] = pPosition->AttacksPlayerPiece[player][piece];
@@ -317,10 +323,22 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->AttacksPlayer[player] = attacks;
 #endif
 	}
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	ASSERT(POSITION_Equals(pPosition, pMoveData->pOldPosition));
+	delete pMoveData->pOldPosition;
+#endif
+#endif
 }
 
 void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_TENTATIVEMOVEDATA* pOutMoveData, MG_POSITION* pPosition)
 {
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	pOutMoveData->pOldPosition = new MG_POSITION;
+	(*pOutMoveData->pOldPosition) = *pPosition;
+#endif
+#endif
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
@@ -366,7 +384,7 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 		BB_BITBOARD attacks = BITBOARD_EMPTY;
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if (interestMap & pPosition->InterestPlayerPiece[player][piece])
+			if ((interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((moveInfo.PromoPiece != PIECETYPE_NONE) && (moveInfo.CreatePiece == piece) && (player == moveInfo.CreatePlayer)))
 			{
 #ifndef MOVEGEN_COMPACT_MOVEDATA
 				pOutMoveData->AttacksByPlayerPiece[player][piece] = pPosition->AttacksPlayerPiece[player][piece];
@@ -449,6 +467,12 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->AttacksPlayer[player] = attacks;
 #endif
 	}
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	ASSERT(POSITION_Equals(pPosition, pMoveData->pOldPosition));
+	delete pMoveData->pOldPosition;
+#endif
+#endif
 }
 
 BB_BITBOARD MOVEGEN_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)

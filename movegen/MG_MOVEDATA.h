@@ -6,10 +6,15 @@
 #include "MG_HASH.h"
 #include "MG_PLAYER.h"
 #include <cstdint>
+#ifndef NDEBUG
+#include "MG_POSITION.h"
+#endif
 
 typedef std::uint8_t MG_DIRTYFLAGS;
 
-//#define MOVEGEN_COMPACT_MOVEDATA
+#define MOVEGEN_COMPACT_MOVEDATA
+
+#define MOVEGEN_DEBUG_POSITION
 
 struct MG_MOVEDATA
 {
@@ -22,6 +27,11 @@ struct MG_MOVEDATA
 	BB_BITBOARD AttacksByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 	BB_BITBOARD InterestByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 #endif
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	MG_POSITION* pOldPosition;
+#endif
+#endif
 };
 
 struct MG_TENTATIVEMOVEDATA
@@ -33,6 +43,11 @@ struct MG_TENTATIVEMOVEDATA
 	BB_BITBOARD InterestByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 #endif
 	BB_FILEINDEX OldEnPassantFile;
+#ifndef NDEBUG
+#ifdef MOVEGEN_DEBUG_POSITION
+	MG_POSITION* pOldPosition;
+#endif
+#endif
 };
 
 #endif

@@ -38,6 +38,11 @@ bool Command_DebugMoves::Try(const std::string& commandString)
 					sstream << "    Kill piece: " << PieceToString(moveInfo.KillPiece, moveInfo.KillPlayer) << std::endl;
 					sstream << BitboardToString(MOVEINFO_GetKillMap(&moveInfo), 6);
 				}
+				if (moveInfo.PromoPiece != PIECETYPE_NONE)
+				{
+					sstream << "    Promo piece: " << PieceToString(moveInfo.PromoPiece, moveInfo.PromoPiece) << std::endl;
+					sstream << BitboardToString(MOVEINFO_GetPromoMap(&moveInfo), 6);
+				}
 			}
 			GetEngine().OutputStream() << sstream.str();
 		}

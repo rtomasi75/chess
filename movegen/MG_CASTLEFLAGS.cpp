@@ -18,22 +18,26 @@ bool CASTLEFLAGS_Parse(const char* pString, const int& len, int& strPos, MG_CAST
 		bool bBreakOut = false;
 		if (strPos >= len)
 			break;
-		switch (pString[strPos++])
+		switch (pString[strPos])
 		{
 		default:
 			bBreakOut = true;
 			break;
 		case 'K':
 			outCastleFlags |= CASTLEFLAGS_WHITE_KINGSIDE;
+			strPos++;
 			break;
 		case 'Q':
 			outCastleFlags |= CASTLEFLAGS_WHITE_QUEENSIDE;
+			strPos++;
 			break;
 		case 'k':
 			outCastleFlags |= CASTLEFLAGS_BLACK_KINGSIDE;
+			strPos++;
 			break;
 		case 'q':
 			outCastleFlags |= CASTLEFLAGS_BLACK_QUEENSIDE;
+			strPos++;
 			break;
 		}
 		if (bBreakOut)
@@ -126,6 +130,34 @@ MG_CASTLEFLAGS CASTLEFLAGS_EliminateFlags_Capture(const MG_PLAYER& movingPlayer,
 			else
 				return CASTLEFLAGS_NONE;
 		}
+	}
+	if (movingPiece == PIECETYPE_ROOK)
+	{
+		if (movingPlayer == PLAYER_WHITE)
+		{
+			if (fromSquare == SQUARE_H1)
+				return CASTLEFLAGS_WHITE_KINGSIDE;
+			else if (fromSquare == SQUARE_A1)
+				return CASTLEFLAGS_WHITE_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+		else
+		{
+			if (fromSquare == SQUARE_H8)
+				return CASTLEFLAGS_BLACK_KINGSIDE;
+			else if (fromSquare == SQUARE_A8)
+				return CASTLEFLAGS_BLACK_QUEENSIDE;
+			else
+				return CASTLEFLAGS_NONE;
+		}
+	}
+	else if (movingPiece == PIECETYPE_KING)
+	{
+		if (movingPlayer == PLAYER_WHITE)
+			return CASTLEFLAGS_WHITE_KINGSIDE | CASTLEFLAGS_WHITE_QUEENSIDE;
+		else
+			return CASTLEFLAGS_BLACK_KINGSIDE | CASTLEFLAGS_BLACK_QUEENSIDE;
 	}
 	else
 		return CASTLEFLAGS_NONE;

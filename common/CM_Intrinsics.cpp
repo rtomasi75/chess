@@ -167,7 +167,9 @@ static CM_PopLsbFn g_PopLsbDispatch = CM_PopLsbFallback;
 
 void CM_DetectIntrinsics()
 {
+#if CM_HAVE_POPCNT || CM_HAVE_BMI2 ||CM_HAVE_BMI
 	int cpuInfo[4]{};
+#endif
 #if CM_HAVE_POPCNT
 	__cpuid(cpuInfo, 1);
 #if CM_HAVE_MSC

@@ -67,20 +67,35 @@ bool Command_Divide::Try(const std::string& commandString)
 				std::uint64_t totalNodeCount = 0;
 				for (MG_MOVEINDEX moveIdx = 0; moveIdx < moveList.CountMoves; moveIdx++)
 				{
-					sstream << "  " << MoveToString(moveList.Move[moveIdx]) << ": ";
 					MG_MOVEDATA moveData;
 					MOVEGEN_MakeMove(&GetEngine().MoveGen(), moveList.Move[moveIdx], &moveData, &GetEngine().Position());
+#ifndef MOVEGEN_LEGAL
+					if (POSITION_IsLegal(&GetEngine().Position()))
+					{
+						sstream << "  " << MoveToString(moveList.Move[moveIdx]) << ": ";
+						std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+						std::uint64_t nodeCount = 0;
+						std::uint64_t leafCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth - 1, nodeCount);
+						std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+						std::chrono::high_resolution_clock::duration elapsed = end - start;
+						std::chrono::milliseconds elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
+						totalNodeCount += leafCount;
+						sstream << leafCount << " leafs in " << elapsedMs.count() << " milliseconds with " << 1000.0 * static_cast<double>(nodeCount) / static_cast<double>(elapsedMs.count()) << " Node/s." << std::endl;
+					}
+#else
+					sstream << "  " << MoveToString(moveList.Move[moveIdx]) << ": ";
 					std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 					std::uint64_t nodeCount = 0;
 					std::uint64_t leafCount = MOVEGEN_Perft(&GetEngine().Position(), &GetEngine().MoveGen(), depth - 1, nodeCount);
 					std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 					std::chrono::high_resolution_clock::duration elapsed = end - start;
 					std::chrono::milliseconds elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
-					MOVEGEN_UnmakeMove(&GetEngine().MoveGen(), moveList.Move[moveIdx], &moveData, &GetEngine().Position());
-					sstream << leafCount << " leafs in " << elapsedMs.count() << " milliseconds with " << 1000.0 * static_cast<double>(nodeCount) / static_cast<double>(elapsedMs.count()) << " Node/s." << std::endl;
 					totalNodeCount += leafCount;
+					sstream << leafCount << " leafs in " << elapsedMs.count() << " milliseconds with " << 1000.0 * static_cast<double>(nodeCount) / static_cast<double>(elapsedMs.count()) << " Node/s." << std::endl;
+#endif
+					MOVEGEN_UnmakeMove(&GetEngine().MoveGen(), moveList.Move[moveIdx], &moveData, &GetEngine().Position());
 				}
-				sstream << totalNodeCount << " nodes total." << std::endl;
+				sstream << totalNodeCount << " nodes total and " << moveList.CountMoves << " moves at root." << std::endl;
 				GetEngine().OutputStream() << sstream.str();
 				return true;
 			}

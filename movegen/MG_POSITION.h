@@ -57,4 +57,6 @@ void POSITION_SetMovingPlayer(MG_POSITION* pPosition, const MG_PLAYER& movingPla
 
 bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& len, int& strPos, MG_POSITION& outParsed);
 
+bool POSITION_Equals(const MG_POSITION* pPosition1, const MG_POSITION* pPosition2);
+
 #endif
