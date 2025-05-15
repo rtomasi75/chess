@@ -38,6 +38,7 @@ void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE
 			pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 			pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+			pMoveGen->MoveTable[player][move].ResetHalfMoveClock = false;
 			pMoveGen->MoveTable[player][move].MovePiece = piece;
 			pMoveGen->MoveTable[player][move].MovePlayer = player;
 			pMoveGen->MoveTable[player][move].EnPassantFileIndex = FILEINDEX_NONE;
@@ -81,6 +82,7 @@ void JUMPTABLE_Initialize_CaptureMoves(const MG_PLAYER& player, const MG_PIECETY
 			pMoveGen->MoveTable[player][move].CreatePiece = PIECETYPE_NONE;
 			pMoveGen->MoveTable[player][move].CreatePlayer = PLAYER_NONE;
 			pMoveGen->MoveTable[player][move].CreateDest = SQUAREINDEX_NONE;
+			pMoveGen->MoveTable[player][move].ResetHalfMoveClock = true;
 			pMoveGen->MoveTable[player][move].PromoPiece = PIECETYPE_NONE;
 			pMoveGen->MoveTable[player][move].PromoPlayer = PLAYER_NONE;
 			pMoveGen->MoveTable[player][move].PromoSource = SQUAREINDEX_NONE;

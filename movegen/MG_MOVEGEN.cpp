@@ -218,6 +218,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		interestMap |= promoMap;
 	}
 	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
+	pPosition->MoveCount = (tempPlayer == PLAYER_WHITE) ? pPosition->MoveCount + 1 : pPosition->MoveCount;
 	pPosition->PassivePlayer = pPosition->MovingPlayer;
 	pPosition->MovingPlayer = tempPlayer;
 	const MG_CASTLEFLAGS oldFlags = pPosition->CastlingRights;
@@ -226,6 +227,8 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	pOutMoveData->OldHash = pPosition->Hash;
 	pOutMoveData->OldCastlingRights = oldFlags;
 	pOutMoveData->OldEnPassantFile = oldEpFile;
+	pOutMoveData->OldHalfMoveClock = pPosition->HalfMoveClock;
+	pPosition->HalfMoveClock = moveInfo.ResetHalfMoveClock ? 0 : pPosition->HalfMoveClock + 1;
 	pPosition->EpFileIndex = moveInfo.EnPassantFileIndex;
 	pPosition->Hash ^= HASH_MOVINGPLAYER_BLACK;
 	pPosition->Hash ^= moveInfo.HashDelta;
@@ -293,6 +296,8 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 	pPosition->Hash = pMoveData->OldHash;
 	pPosition->CastlingRights = pMoveData->OldCastlingRights;
 	pPosition->EpFileIndex = pMoveData->OldEnPassantFile;
+	pPosition->HalfMoveClock = pMoveData->OldHalfMoveClock;
+	pPosition->MoveCount = (tempPlayer == PLAYER_BLACK) ? pPosition->MoveCount - 1 : pPosition->MoveCount;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA

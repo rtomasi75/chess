@@ -3,6 +3,7 @@
 #include "commands/Command_Version.h"
 #include "commands/Command_DebugBoard.h"
 #include "commands/Command_DebugMoves.h"
+#include "commands/Command_DebugUnmove.h"
 #include "commands/Command_ListMoves.h"
 #include "commands/Command_DebugMove.h"
 #include "commands/Command_DebugJumps.h"
@@ -41,6 +42,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_Perft>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_Divide>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_SetFen>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugUnmove>(this));
 }
 
 Engine::~Engine()
@@ -58,6 +60,11 @@ const MG_MOVELIST& Engine::LegalMoves() const
 const MG_MOVEGEN& Engine::MoveGen() const
 {
 	return _moveGen;
+}
+
+const SE_GAME& Engine::Game() const
+{
+	return _game;
 }
 
 const MG_POSITION& Engine::Position() const
@@ -165,6 +172,11 @@ std::string Engine::Version() const
 void Engine::MakeMove(const MG_MOVE& move)
 {
 	GAME_MakeMove(&_game, move, &_moveGen);
+}
+
+void Engine::UnmakeMove()
+{
+	GAME_UnmakeMove(&_game, &_moveGen);
 }
 
 const MG_PLAYER& Engine::MovingPlayer() const

@@ -86,6 +86,7 @@ void KING_Initialize_CastleMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, 
 	pMoveGen->MoveTable[player][moveKingSide].CreatePlayer = player;
 	pMoveGen->MoveTable[player][moveKingSide].CreateDest = SQUARE_GetIndex((player == PLAYER_WHITE) ? SQUARE_F1 : SQUARE_F8);
 	pMoveGen->MoveTable[player][moveKingSide].MovePiece = PIECETYPE_KING;
+	pMoveGen->MoveTable[player][moveKingSide].ResetHalfMoveClock = true;
 	pMoveGen->MoveTable[player][moveKingSide].MovePlayer = player;
 	pMoveGen->MoveTable[player][moveKingSide].EnPassantFileIndex = FILEINDEX_NONE;
 	pMoveGen->MoveTable[player][moveKingSide].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_KING, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_KING, squareToKingSide) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, (player == PLAYER_WHITE) ? SQUARE_H1 : SQUARE_H8) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, (player == PLAYER_WHITE) ? SQUARE_F1 : SQUARE_F8);
@@ -110,6 +111,7 @@ void KING_Initialize_CastleMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, 
 	pMoveGen->MoveTable[player][moveQueenSide].CreatePlayer = player;
 	pMoveGen->MoveTable[player][moveQueenSide].CreateDest = SQUARE_GetIndex((player == PLAYER_WHITE) ? SQUARE_D1 : SQUARE_D8);
 	pMoveGen->MoveTable[player][moveQueenSide].MovePiece = PIECETYPE_KING;
+	pMoveGen->MoveTable[player][moveKingSide].ResetHalfMoveClock = true;
 	pMoveGen->MoveTable[player][moveQueenSide].MovePlayer = player;
 	pMoveGen->MoveTable[player][moveQueenSide].EnPassantFileIndex = FILEINDEX_NONE;
 	pMoveGen->MoveTable[player][moveQueenSide].HashDelta = HASH_PlayerPieceSquare(player, PIECETYPE_KING, squareFrom) ^ HASH_PlayerPieceSquare(player, PIECETYPE_KING, squareToQueenSide) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, (player == PLAYER_WHITE) ? SQUARE_A1 : SQUARE_A8) ^ HASH_PlayerPieceSquare(player, PIECETYPE_ROOK, (player == PLAYER_WHITE) ? SQUARE_D1 : SQUARE_D8);

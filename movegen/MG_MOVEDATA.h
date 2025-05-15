@@ -6,9 +6,7 @@
 #include "MG_HASH.h"
 #include "MG_PLAYER.h"
 #include <cstdint>
-#ifndef NDEBUG
 #include "MG_POSITION.h"
-#endif
 
 typedef std::uint8_t MG_DIRTYFLAGS;
 
@@ -22,6 +20,7 @@ struct MG_MOVEDATA
 	MG_CASTLEFLAGS OldCastlingRights;
 	BB_FILEINDEX OldEnPassantFile;
 	MG_DIRTYFLAGS DirtyFlags[COUNT_PLAYERS];
+	MG_HALFMOVECOUNT OldHalfMoveClock;
 #ifndef MOVEGEN_COMPACT_MOVEDATA
 	BB_BITBOARD AttacksByPlayer[COUNT_PLAYERS];
 	BB_BITBOARD AttacksByPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];

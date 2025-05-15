@@ -75,6 +75,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_PAWN;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
+				pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
@@ -116,6 +117,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareTo);
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
@@ -154,6 +156,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePiece = PIECETYPE_PAWN;
+				pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = fileIndex;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo);
@@ -196,6 +199,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_PAWN;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo);
@@ -236,6 +240,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = promoPiece;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
@@ -275,6 +280,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
+				pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePiece = PIECETYPE_PAWN;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = fileIndex;
@@ -327,6 +333,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToLeft);
@@ -360,6 +367,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
+						pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
@@ -410,6 +418,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_WHITE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_WHITE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = squareIndexFrom;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
@@ -448,6 +457,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_WHITE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = squareIndexTo;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_WHITE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = squareIndexFrom;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
@@ -494,6 +504,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
@@ -525,6 +536,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreatePlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CreateDest = SQUAREINDEX_NONE;
+					pMoveGen->MoveTable[PLAYER_WHITE][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoPlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].PromoSource = SQUAREINDEX_NONE;
@@ -576,6 +588,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToLeft);
@@ -608,6 +621,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
+						pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = SQUAREINDEX_NONE;
@@ -659,6 +673,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_PAWN;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_BLACK;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
@@ -696,6 +711,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = promoPiece;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_BLACK;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = squareIndexTo;
+							pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_PAWN;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_BLACK;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
@@ -742,6 +758,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;
@@ -773,6 +790,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_BLACK][move].MovePlayer = PLAYER_BLACK;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreatePlayer = PLAYER_NONE;
+					pMoveGen->MoveTable[PLAYER_BLACK][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CreateDest = SQUAREINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPiece = PIECETYPE_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].PromoPlayer = PLAYER_NONE;

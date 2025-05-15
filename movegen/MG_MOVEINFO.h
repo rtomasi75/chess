@@ -36,6 +36,7 @@ struct MG_MOVEINFO
 	BB_SQUAREINDEX PromoSource;
 	MG_CASTLEFLAGS CastleRightsMask;
 	BB_FILEINDEX EnPassantFileIndex;
+	bool ResetHalfMoveClock;
 	char MoveString[MOVESTRING_LENGTH];
 };
 

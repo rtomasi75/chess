@@ -1,5 +1,6 @@
 #include "MG_POSITION.h"
 #include "MG_MOVEGEN.h"
+#include <cstdio>
 
 void POSITION_Clear(MG_POSITION* pPosition)
 {
@@ -19,6 +20,8 @@ void POSITION_Clear(MG_POSITION* pPosition)
 	pPosition->PassivePlayer = PLAYER_BLACK;
 	pPosition->CastlingRights = CASTLEFLAGS_NONE;
 	pPosition->EpFileIndex = FILEINDEX_NONE;
+	pPosition->MoveCount = 1;
+	pPosition->HalfMoveClock = 0;
 	pPosition->Hash = HASH_CastleRights(CASTLEFLAGS_NONE);
 }
 
@@ -304,15 +307,22 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	pString[strPos++] = ' ';
 	if (strPos >= len)
 		return false;
-	if (strPos >= len)
+	char buffer[10];
+	int l = sprintf_s(buffer, "%d", position.HalfMoveClock);
+	if ((strPos + l) >= len)
 		return false;
-	pString[strPos++] = '0';
+	memcpy(pString + strPos, buffer, l);
+	strPos += l;
 	if (strPos >= len)
 		return false;
 	pString[strPos++] = ' ';
 	if (strPos >= len)
 		return false;
-	pString[strPos++] = '1';
+	l = sprintf_s(buffer, "%d", position.MoveCount);
+	if ((strPos + l) > len)
+		return false;
+	memcpy(pString + strPos, buffer, l);
+	strPos += l;
 	return true;
 }
 
@@ -447,5 +457,23 @@ bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& 
 		const BB_FILEINDEX epFileIdx = SQUARE_GetFileIndex(SQUARE_GetIndex(epSquare));
 		POSITION_SetEnPassantFile(&outParsed, epFileIdx);
 	}
+	int value = 0;
+	int l = sscanf_s("&d", pString + strPos, value);
+	if (l == 0 || l == EOF)
+	{
+		return false;
+	}
+	strPos += l;
+	outParsed.HalfMoveClock = (MG_HALFMOVECOUNT)value;
+	if (strPos >= len)
+		return false;
+	if (pString[strPos++] != ' ')
+		return false;
+	l = sscanf_s("&d", pString + strPos, value);
+	if (l == 0 || l == EOF)
+	{
+		return false;
+	}
+	outParsed.MoveCount = (MG_FULLMOVECOUNT)value;
 	return true;
 }

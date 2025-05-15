@@ -8,6 +8,9 @@
 #include "MG_CASTLEFLAGS.h"
 #include "MG_HASH.h"
 
+typedef std::uint8_t MG_HALFMOVECOUNT;
+typedef std::uint16_t MG_FULLMOVECOUNT;
+
 struct MG_POSITION
 {
 	BB_BITBOARD AttacksPlayer[COUNT_PLAYERS];
@@ -21,6 +24,8 @@ struct MG_POSITION
 	MG_PLAYER PassivePlayer;
 	MG_CASTLEFLAGS CastlingRights;
 	BB_FILEINDEX EpFileIndex;
+	MG_HALFMOVECOUNT HalfMoveClock;
+	MG_FULLMOVECOUNT MoveCount;
 };
 
 struct MG_MOVEGEN;

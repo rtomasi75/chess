@@ -39,6 +39,7 @@ public:
 	std::istream& InputStream();
 	std::ostream& OutputStream();
 	MG_POSITION& Position();
+	const SE_GAME& Game() const;
 	const MG_POSITION& Position() const;
 	const MG_MOVEGEN& MoveGen() const;
 	const MG_MOVELIST& LegalMoves() const;
@@ -47,6 +48,7 @@ public:
 	void WaitForStop();
 	void ErrorMessage(const std::string&);
 	void MakeMove(const MG_MOVE& move);
+	void UnmakeMove();
 	void SetPosition(const MG_POSITION& newPosition);
 	Engine(std::istream& inputStream, std::ostream& outputStream);
 	~Engine();

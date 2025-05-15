@@ -342,6 +342,7 @@ void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PI
 				pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].MovePiece = movingPiece;
 				pMoveGen->MoveTable[movingPlayer][move].MovePlayer = movingPlayer;
+				pMoveGen->MoveTable[movingPlayer][move].ResetHalfMoveClock = false;
 				pMoveGen->MoveTable[movingPlayer][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo);
 				pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(movingPlayer, movingPiece, squareFrom, squareTo);
@@ -416,6 +417,7 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 					pMoveGen->MoveTable[movingPlayer][move].PromoPlayer = PLAYER_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].PromoSource = SQUAREINDEX_NONE;
 					pMoveGen->MoveTable[movingPlayer][move].EnPassantFileIndex = FILEINDEX_NONE;
+					pMoveGen->MoveTable[movingPlayer][move].ResetHalfMoveClock = true;
 					pMoveGen->MoveTable[movingPlayer][move].HashDelta = HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareFrom) ^ HASH_PlayerPieceSquare(movingPlayer, movingPiece, squareTo) ^ HASH_PlayerPieceSquare(otherPlayer, capturedPiece, squareTo);
 					pMoveGen->MoveTable[movingPlayer][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(movingPlayer, movingPiece, squareFrom, squareTo, capturedPiece);
 					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[movingPlayer][move].MoveString, squareFrom, squareTo);
