@@ -132,9 +132,9 @@ void KING_Initialize_CastleMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, 
 void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	ASSERT(piece == PIECETYPE_KING);
-	if (pPosition->MovingPlayer == PLAYER_WHITE)
+	if (pPosition->Header.MovingPlayer == PLAYER_WHITE)
 	{
-		if (pPosition->CastlingRights & CASTLEFLAGS_WHITE_KINGSIDE)
+		if (pPosition->Header.CastlingRights & CASTLEFLAGS_WHITE_KINGSIDE)
 		{
 			if (!(pPosition->OccupancyTotal & CASTLEWALK_KINGSIDE_WHITE))
 			{
@@ -144,7 +144,7 @@ void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition
 				}
 			}
 		}
-		if (pPosition->CastlingRights & CASTLEFLAGS_WHITE_QUEENSIDE)
+		if (pPosition->Header.CastlingRights & CASTLEFLAGS_WHITE_QUEENSIDE)
 		{
 			if (!(pPosition->OccupancyTotal & CASTLEWALK_QUEENSIDE_WHITE))
 			{
@@ -157,7 +157,7 @@ void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition
 	}
 	else
 	{
-		if (pPosition->CastlingRights & CASTLEFLAGS_BLACK_KINGSIDE)
+		if (pPosition->Header.CastlingRights & CASTLEFLAGS_BLACK_KINGSIDE)
 		{
 			if (!(pPosition->OccupancyTotal & CASTLEWALK_KINGSIDE_BLACK))
 			{
@@ -167,7 +167,7 @@ void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition
 				}
 			}
 		}
-		if (pPosition->CastlingRights & CASTLEFLAGS_BLACK_QUEENSIDE)
+		if (pPosition->Header.CastlingRights & CASTLEFLAGS_BLACK_QUEENSIDE)
 		{
 			if (!(pPosition->OccupancyTotal & CASTLEWALK_QUEENSIDE_BLACK))
 			{

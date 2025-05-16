@@ -8,4 +8,10 @@
 
 #endif
 
+#ifndef CM_ALIGNMENT
+#define CM_ALIGNMENT 64
+#endif
+
+#define CM_ALIGNAS alignas(CM_ALIGNMENT)
+
 #endif

@@ -109,7 +109,7 @@ MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget)
 
 void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[movingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
@@ -132,8 +132,8 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosi
 
 void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
-	const MG_PLAYER passivePlayer = pPosition->PassivePlayer;
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const MG_PLAYER passivePlayer = pPosition->Header.PassivePlayer;
 	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][piece];
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;

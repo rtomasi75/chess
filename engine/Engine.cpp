@@ -181,12 +181,12 @@ void Engine::UnmakeMove()
 
 const MG_PLAYER& Engine::MovingPlayer() const
 {
-	return Position().MovingPlayer;
+	return Position().Header.MovingPlayer;
 }
 
 const MG_PLAYER& Engine::PassivePlayer() const
 {
-	return Position().PassivePlayer;
+	return Position().Header.PassivePlayer;
 }
 
 

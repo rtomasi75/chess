@@ -11,21 +11,26 @@
 typedef std::uint8_t MG_HALFMOVECOUNT;
 typedef std::uint16_t MG_FULLMOVECOUNT;
 
-struct MG_POSITION
+struct MG_POSITIONHEADER
 {
-	BB_BITBOARD AttacksPlayer[COUNT_PLAYERS];
-	BB_BITBOARD AttacksPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
-	BB_BITBOARD InterestPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
-	BB_BITBOARD OccupancyPlayer[COUNT_PLAYERS];
-	BB_BITBOARD OccupancyPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
-	BB_BITBOARD OccupancyTotal;
-	MG_HASH Hash;
+	MG_HALFMOVECOUNT HalfMoveClock;
+	MG_FULLMOVECOUNT MoveCount;
 	MG_PLAYER MovingPlayer;
 	MG_PLAYER PassivePlayer;
 	MG_CASTLEFLAGS CastlingRights;
 	BB_FILEINDEX EpFileIndex;
-	MG_HALFMOVECOUNT HalfMoveClock;
-	MG_FULLMOVECOUNT MoveCount;
+};
+
+struct CM_ALIGNAS MG_POSITION
+{
+	MG_POSITIONHEADER Header;
+	MG_HASH Hash;
+	BB_BITBOARD OccupancyTotal;
+	BB_BITBOARD OccupancyPlayer[COUNT_PLAYERS];
+	BB_BITBOARD AttacksPlayer[COUNT_PLAYERS];
+	BB_BITBOARD OccupancyPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+	BB_BITBOARD AttacksPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+	BB_BITBOARD InterestPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 };
 
 struct MG_MOVEGEN;
@@ -46,12 +51,12 @@ MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition);
 
 inline bool POSITION_IsLegal(const MG_POSITION* pPosition)
 {
-	return !(pPosition->OccupancyPlayerPiece[pPosition->PassivePlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->MovingPlayer]);
+	return !(pPosition->OccupancyPlayerPiece[pPosition->Header.PassivePlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->Header.MovingPlayer]);
 }
 
 inline bool POSITION_IsCheck(const MG_POSITION* pPosition)
 {
-	return pPosition->OccupancyPlayerPiece[pPosition->MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->PassivePlayer];
+	return pPosition->OccupancyPlayerPiece[pPosition->Header.MovingPlayer][PIECETYPE_KING] & pPosition->AttacksPlayer[pPosition->Header.PassivePlayer];
 }
 
 bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSITION& position);

@@ -812,7 +812,7 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition,
 {
 	ASSERT(piece == PIECETYPE_PAWN);
 	const BB_BITBOARD totalOccupancy = pPosition->OccupancyTotal;
-	if (pPosition->MovingPlayer == PLAYER_WHITE)
+	if (pPosition->Header.MovingPlayer == PLAYER_WHITE)
 	{
 		BB_BITBOARD movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & ~RANK_7;
 		BB_SQUAREINDEX fromSquareIndex;
@@ -917,7 +917,7 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPositio
 	ASSERT(piece == PIECETYPE_PAWN);
 	const BB_BITBOARD* pPlayerOccupancyBlack = pPosition->OccupancyPlayerPiece[PLAYER_BLACK];
 	const BB_BITBOARD* pPlayerOccupancyWhite = pPosition->OccupancyPlayerPiece[PLAYER_WHITE];
-	if (pPosition->MovingPlayer == PLAYER_WHITE)
+	if (pPosition->Header.MovingPlayer == PLAYER_WHITE)
 	{
 		BB_BITBOARD movers = pPlayerOccupancyWhite[PIECETYPE_PAWN] & ~RANK_7;
 		BB_SQUAREINDEX fromSquareIndex;
@@ -981,14 +981,14 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPositio
 				}
 			}
 		}
-		if (pPosition->EpFileIndex != FILEINDEX_NONE)
+		if (pPosition->Header.EpFileIndex != FILEINDEX_NONE)
 		{
-			const BB_FILE captureFile = FILE_FromIndex(pPosition->EpFileIndex);
+			const BB_FILE captureFile = FILE_FromIndex(pPosition->Header.EpFileIndex);
 			const BB_SQUARE captureSquare = SQUARE_FromRankFile(RANK_6, captureFile);
 			const BB_SQUARE targetSquare = BITBOARD_DOWN(captureSquare);
 			const BB_SQUARE fromSquareLeft = BITBOARD_LEFT(targetSquare);
 			const BB_SQUARE fromSquareRight = BITBOARD_RIGHT(targetSquare);
-			const MG_MOVE enPassantBase = pMoveGen->PawnTable[PLAYER_WHITE].EnPassantBase + 2 * pPosition->EpFileIndex;
+			const MG_MOVE enPassantBase = pMoveGen->PawnTable[PLAYER_WHITE].EnPassantBase + 2 * pPosition->Header.EpFileIndex;
 			if (fromSquareLeft & pPlayerOccupancyWhite[PIECETYPE_PAWN])
 			{
 				const MG_MOVE move = enPassantBase;
@@ -1067,14 +1067,14 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPositio
 				}
 			}
 		}
-		if (pPosition->EpFileIndex != FILEINDEX_NONE)
+		if (pPosition->Header.EpFileIndex != FILEINDEX_NONE)
 		{
-			const BB_FILE captureFile = FILE_FromIndex(pPosition->EpFileIndex);
+			const BB_FILE captureFile = FILE_FromIndex(pPosition->Header.EpFileIndex);
 			const BB_SQUARE captureSquare = SQUARE_FromRankFile(RANK_3, captureFile);
 			const BB_SQUARE targetSquare = BITBOARD_UP(captureSquare);
 			const BB_SQUARE fromSquareLeft = BITBOARD_LEFT(targetSquare);
 			const BB_SQUARE fromSquareRight = BITBOARD_RIGHT(targetSquare);
-			const MG_MOVE enPassantBase = pMoveGen->PawnTable[PLAYER_BLACK].EnPassantBase + 2 * pPosition->EpFileIndex;
+			const MG_MOVE enPassantBase = pMoveGen->PawnTable[PLAYER_BLACK].EnPassantBase + 2 * pPosition->Header.EpFileIndex;
 			if (fromSquareLeft & pPlayerOccupancyBlack[PIECETYPE_PAWN])
 			{
 				const MG_MOVE move = enPassantBase;

@@ -474,7 +474,7 @@ BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEEN
 
 void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[movingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
@@ -502,8 +502,8 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPos
 
 void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
-	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
-	const MG_PLAYER passivePlayer = pPosition->PassivePlayer;
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const MG_PLAYER passivePlayer = pPosition->Header.PassivePlayer;
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))

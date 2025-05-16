@@ -16,19 +16,19 @@ void POSITION_Clear(MG_POSITION* pPosition)
 			pPosition->InterestPlayerPiece[player][piece] = BITBOARD_EMPTY;
 		}
 	}
-	pPosition->MovingPlayer = PLAYER_WHITE;
-	pPosition->PassivePlayer = PLAYER_BLACK;
-	pPosition->CastlingRights = CASTLEFLAGS_NONE;
-	pPosition->EpFileIndex = FILEINDEX_NONE;
-	pPosition->MoveCount = 1;
-	pPosition->HalfMoveClock = 0;
+	pPosition->Header.MovingPlayer = PLAYER_WHITE;
+	pPosition->Header.PassivePlayer = PLAYER_BLACK;
+	pPosition->Header.CastlingRights = CASTLEFLAGS_NONE;
+	pPosition->Header.EpFileIndex = FILEINDEX_NONE;
+	pPosition->Header.MoveCount = 1;
+	pPosition->Header.HalfMoveClock = 0;
 	pPosition->Hash = HASH_CastleRights(CASTLEFLAGS_NONE);
 }
 
 void POSITION_SetCastleRights(MG_POSITION* pPosition, const MG_CASTLEFLAGS& castlingRights)
 {
-	const MG_CASTLEFLAGS oldFlags = pPosition->CastlingRights;
-	pPosition->CastlingRights = castlingRights;
+	const MG_CASTLEFLAGS oldFlags = pPosition->Header.CastlingRights;
+	pPosition->Header.CastlingRights = castlingRights;
 	pPosition->Hash ^= HASH_CastleRights(oldFlags) ^ HASH_CastleRights(castlingRights);
 }
 
@@ -160,8 +160,8 @@ bool POSITION_CheckConsistency(const MG_POSITION* pPosition, const BB_SQUARE& sq
 
 MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
 {
-	MG_HASH hash = pPosition->MovingPlayer == PLAYER_BLACK ? HASH_MOVINGPLAYER_BLACK : HASH_EMPTY;
-	hash ^= HASH_CastleRights(pPosition->CastlingRights);
+	MG_HASH hash = pPosition->Header.MovingPlayer == PLAYER_BLACK ? HASH_MOVINGPLAYER_BLACK : HASH_EMPTY;
+	hash ^= HASH_CastleRights(pPosition->Header.CastlingRights);
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
@@ -174,7 +174,7 @@ MG_HASH POSITION_ComputeHash(const MG_POSITION* pPosition)
 			}
 		}
 	}
-	hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
+	hash ^= HASH_EnPassantFile(pPosition->Header.EpFileIndex);
 	return hash;
 }
 
@@ -232,17 +232,17 @@ bool POSITION_WriteEmptySpaceCounter(char* pString, const int& len, int& strPos,
 
 void POSITION_SetEnPassantFile(MG_POSITION* pPosition, const BB_FILEINDEX& epFileIdx)
 {
-	pPosition->Hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
-	pPosition->EpFileIndex = epFileIdx;
-	pPosition->Hash ^= HASH_EnPassantFile(pPosition->EpFileIndex);
+	pPosition->Hash ^= HASH_EnPassantFile(pPosition->Header.EpFileIndex);
+	pPosition->Header.EpFileIndex = epFileIdx;
+	pPosition->Hash ^= HASH_EnPassantFile(pPosition->Header.EpFileIndex);
 }
 
 void POSITION_SetMovingPlayer(MG_POSITION* pPosition, const MG_PLAYER& movingPlayer)
 {
-	if (pPosition->MovingPlayer != movingPlayer)
+	if (pPosition->Header.MovingPlayer != movingPlayer)
 	{
-		pPosition->MovingPlayer = movingPlayer;
-		pPosition->PassivePlayer = (movingPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
+		pPosition->Header.MovingPlayer = movingPlayer;
+		pPosition->Header.PassivePlayer = (movingPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
 		pPosition->Hash ^= HASH_MOVINGPLAYER_BLACK;
 	}
 }
@@ -280,17 +280,17 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	if (strPos >= len)
 		return false;
 	pString[strPos++] = ' ';
-	if (!PLAYER_ToString(pString, len, strPos, position.MovingPlayer))
+	if (!PLAYER_ToString(pString, len, strPos, position.Header.MovingPlayer))
 		return false;
 	if (strPos >= len)
 		return false;
 	pString[strPos++] = ' ';
-	if (!CASTLEFLAGS_ToString(pString, len, strPos, position.CastlingRights))
+	if (!CASTLEFLAGS_ToString(pString, len, strPos, position.Header.CastlingRights))
 		return false;
 	if (strPos >= len)
 		return false;
 	pString[strPos++] = ' ';
-	if (position.EpFileIndex == FILEINDEX_NONE)
+	if (position.Header.EpFileIndex == FILEINDEX_NONE)
 	{
 		if (strPos >= len)
 			return false;
@@ -298,8 +298,8 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	}
 	else
 	{
-		const BB_FILE epFile = FILE_FromIndex(position.EpFileIndex);
-		const BB_RANK epRank = (position.MovingPlayer == PLAYER_WHITE) ? RANK_3 : RANK_6;
+		const BB_FILE epFile = FILE_FromIndex(position.Header.EpFileIndex);
+		const BB_RANK epRank = (position.Header.MovingPlayer == PLAYER_WHITE) ? RANK_3 : RANK_6;
 		const BB_SQUARE epSquare = SQUARE_FromRankFile(epRank, epFile);
 		if (!SQUARE_ToString(pString, len, strPos, epSquare))
 			return false;
@@ -308,7 +308,7 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	if (strPos >= len)
 		return false;
 	char buffer[10];
-	int l = sprintf_s(buffer, "%d", position.HalfMoveClock);
+	int l = sprintf_s(buffer, "%d", position.Header.HalfMoveClock);
 	if ((strPos + l) >= len)
 		return false;
 	memcpy(pString + strPos, buffer, l);
@@ -318,7 +318,7 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	pString[strPos++] = ' ';
 	if (strPos >= len)
 		return false;
-	l = sprintf_s(buffer, "%d", position.MoveCount);
+	l = sprintf_s(buffer, "%d", position.Header.MoveCount);
 	if ((strPos + l) > len)
 		return false;
 	memcpy(pString + strPos, buffer, l);
@@ -330,13 +330,13 @@ bool POSITION_Equals(const MG_POSITION* pPosition1, const MG_POSITION* pPosition
 {
 	if (pPosition1->Hash != pPosition2->Hash)
 		return false;
-	if (pPosition1->MovingPlayer != pPosition2->MovingPlayer)
+	if (pPosition1->Header.MovingPlayer != pPosition2->Header.MovingPlayer)
 		return false;
-	if (pPosition1->PassivePlayer != pPosition2->PassivePlayer)
+	if (pPosition1->Header.PassivePlayer != pPosition2->Header.PassivePlayer)
 		return false;
-	if (pPosition1->CastlingRights != pPosition2->CastlingRights)
+	if (pPosition1->Header.CastlingRights != pPosition2->Header.CastlingRights)
 		return false;
-	if (pPosition1->EpFileIndex != pPosition2->EpFileIndex)
+	if (pPosition1->Header.EpFileIndex != pPosition2->Header.EpFileIndex)
 		return false;
 	if (pPosition1->OccupancyTotal != pPosition2->OccupancyTotal)
 		return false;
@@ -464,7 +464,7 @@ bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& 
 		return false;
 	}
 	strPos += l;
-	outParsed.HalfMoveClock = (MG_HALFMOVECOUNT)value;
+	outParsed.Header.HalfMoveClock = (MG_HALFMOVECOUNT)value;
 	if (strPos >= len)
 		return false;
 	if (pString[strPos++] != ' ')
@@ -474,6 +474,6 @@ bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& 
 	{
 		return false;
 	}
-	outParsed.MoveCount = (MG_FULLMOVECOUNT)value;
+	outParsed.Header.MoveCount = (MG_FULLMOVECOUNT)value;
 	return true;
 }

@@ -35,7 +35,7 @@ add_executable(pygmalion ${pygmalion_SRC})
 
 target_link_libraries(pygmalion engine)
 
-if(LTO_SUPPORTED AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(LTO_SUPPORTED AND CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "LTO is supported and enabled.")
     set_target_properties(pygmalion PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()

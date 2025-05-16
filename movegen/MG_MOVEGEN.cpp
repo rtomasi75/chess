@@ -128,7 +128,7 @@ static constexpr MG_GenerateMovesFn g_GenerateSpecialMovesFn[COUNT_MOVEMECHANICS
 
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList)
 {
-	const MG_PLAYER movingPlayer = pPosition->MovingPlayer;
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
 	MOVELIST_Initialize(pMoveList);
 	for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 	{
@@ -184,7 +184,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 #endif
 #endif
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
-	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->Header.MovingPlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
@@ -217,24 +217,24 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
 		interestMap |= promoMap;
 	}
-	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
-	pPosition->MoveCount = (tempPlayer == PLAYER_WHITE) ? pPosition->MoveCount + 1 : pPosition->MoveCount;
-	pPosition->PassivePlayer = pPosition->MovingPlayer;
-	pPosition->MovingPlayer = tempPlayer;
-	const MG_CASTLEFLAGS oldFlags = pPosition->CastlingRights;
+	MG_PLAYER tempPlayer = pPosition->Header.PassivePlayer;
+	pPosition->Header.MoveCount = (tempPlayer == PLAYER_WHITE) ? pPosition->Header.MoveCount + 1 : pPosition->Header.MoveCount;
+	pPosition->Header.PassivePlayer = pPosition->Header.MovingPlayer;
+	pPosition->Header.MovingPlayer = tempPlayer;
+	const MG_CASTLEFLAGS oldFlags = pPosition->Header.CastlingRights;
 	const MG_CASTLEFLAGS newFlags = oldFlags & moveInfo.CastleRightsMask;
-	const BB_FILEINDEX oldEpFile = pPosition->EpFileIndex;
+	const BB_FILEINDEX oldEpFile = pPosition->Header.EpFileIndex;
 	pOutMoveData->OldHash = pPosition->Hash;
 	pOutMoveData->OldCastlingRights = oldFlags;
 	pOutMoveData->OldEnPassantFile = oldEpFile;
-	pOutMoveData->OldHalfMoveClock = pPosition->HalfMoveClock;
-	pPosition->HalfMoveClock = moveInfo.ResetHalfMoveClock ? 0 : pPosition->HalfMoveClock + 1;
-	pPosition->EpFileIndex = moveInfo.EnPassantFileIndex;
+	pOutMoveData->OldHalfMoveClock = pPosition->Header.HalfMoveClock;
+	pPosition->Header.HalfMoveClock = moveInfo.ResetHalfMoveClock ? 0 : pPosition->Header.HalfMoveClock + 1;
+	pPosition->Header.EpFileIndex = moveInfo.EnPassantFileIndex;
 	pPosition->Hash ^= HASH_MOVINGPLAYER_BLACK;
 	pPosition->Hash ^= moveInfo.HashDelta;
 	pPosition->Hash ^= HASH_CastleRights(oldFlags) ^ HASH_CastleRights(newFlags);
 	pPosition->Hash ^= HASH_EnPassantFile(oldEpFile) ^ HASH_EnPassantFile(moveInfo.EnPassantFileIndex);
-	pPosition->CastlingRights = newFlags;
+	pPosition->Header.CastlingRights = newFlags;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 		pOutMoveData->DirtyFlags[player] = UINT8_C(0);
@@ -261,7 +261,7 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)
 {
-	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->Header.PassivePlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
@@ -290,14 +290,14 @@ void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const M
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
 	}
-	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
-	pPosition->PassivePlayer = pPosition->MovingPlayer;
-	pPosition->MovingPlayer = tempPlayer;
+	MG_PLAYER tempPlayer = pPosition->Header.PassivePlayer;
+	pPosition->Header.PassivePlayer = pPosition->Header.MovingPlayer;
+	pPosition->Header.MovingPlayer = tempPlayer;
 	pPosition->Hash = pMoveData->OldHash;
-	pPosition->CastlingRights = pMoveData->OldCastlingRights;
-	pPosition->EpFileIndex = pMoveData->OldEnPassantFile;
-	pPosition->HalfMoveClock = pMoveData->OldHalfMoveClock;
-	pPosition->MoveCount = (tempPlayer == PLAYER_BLACK) ? pPosition->MoveCount - 1 : pPosition->MoveCount;
+	pPosition->Header.CastlingRights = pMoveData->OldCastlingRights;
+	pPosition->Header.EpFileIndex = pMoveData->OldEnPassantFile;
+	pPosition->Header.HalfMoveClock = pMoveData->OldHalfMoveClock;
+	pPosition->Header.MoveCount = (tempPlayer == PLAYER_BLACK) ? pPosition->Header.MoveCount - 1 : pPosition->Header.MoveCount;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA
@@ -345,7 +345,7 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 #endif
 #endif
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
-	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->MovingPlayer][move];
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->Header.MovingPlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
@@ -378,11 +378,11 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
 		interestMap |= promoMap;
 	}
-	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
-	pPosition->PassivePlayer = pPosition->MovingPlayer;
-	pPosition->MovingPlayer = tempPlayer;
-	pOutMoveData->OldEnPassantFile = pPosition->EpFileIndex;
-	pPosition->EpFileIndex = moveInfo.EnPassantFileIndex;
+	MG_PLAYER tempPlayer = pPosition->Header.PassivePlayer;
+	pPosition->Header.PassivePlayer = pPosition->Header.MovingPlayer;
+	pPosition->Header.MovingPlayer = tempPlayer;
+	pOutMoveData->OldEnPassantFile = pPosition->Header.EpFileIndex;
+	pPosition->Header.EpFileIndex = moveInfo.EnPassantFileIndex;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 		pOutMoveData->DirtyFlags[player] = UINT8_C(0);
@@ -409,7 +409,7 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 
 void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_TENTATIVEMOVEDATA* pMoveData, MG_POSITION* pPosition)
 {
-	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->PassivePlayer][move];
+	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[pPosition->Header.PassivePlayer][move];
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
 	{
 		const BB_BITBOARD moveMap = MOVEINFO_GetMoveMap(&moveInfo);
@@ -438,10 +438,10 @@ void MOVEGEN_UnmakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move
 		pPosition->OccupancyPlayer[moveInfo.PromoPlayer] ^= promoMap;
 		pPosition->OccupancyPlayerPiece[moveInfo.PromoPlayer][moveInfo.PromoPiece] ^= promoMap;
 	}
-	MG_PLAYER tempPlayer = pPosition->PassivePlayer;
-	pPosition->PassivePlayer = pPosition->MovingPlayer;
-	pPosition->MovingPlayer = tempPlayer;
-	pPosition->EpFileIndex = pMoveData->OldEnPassantFile;
+	MG_PLAYER tempPlayer = pPosition->Header.PassivePlayer;
+	pPosition->Header.PassivePlayer = pPosition->Header.MovingPlayer;
+	pPosition->Header.MovingPlayer = tempPlayer;
+	pPosition->Header.EpFileIndex = pMoveData->OldEnPassantFile;
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 	{
 #ifdef MOVEGEN_COMPACT_MOVEDATA

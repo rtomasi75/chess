@@ -53,7 +53,7 @@ bool Command::ParseMove(const std::string& moveString, MG_MOVE& parsedMove) cons
 	std::string temp = moveString;
 	std::string normalized = StringHelper::ToLower(StringHelper::Trim(temp));
 	int pos = 0;
-	return MOVEGEN_ParseMoveString(&GetEngine().MoveGen(), GetEngine().Position().MovingPlayer, &GetEngine().LegalMoves(), moveString.c_str(), (int)moveString.size(), pos, parsedMove);
+	return MOVEGEN_ParseMoveString(&GetEngine().MoveGen(), GetEngine().Position().Header.MovingPlayer, &GetEngine().LegalMoves(), moveString.c_str(), (int)moveString.size(), pos, parsedMove);
 }
 
 bool Command::ParseSquare(const std::string& squareString, BB_SQUARE& parsedSquare) const
@@ -66,7 +66,7 @@ bool Command::ParseSquare(const std::string& squareString, BB_SQUARE& parsedSqua
 
 std::string Command::MoveToString(const MG_MOVE& move) const
 {
-	return std::string(GetEngine().MoveGen().MoveTable[GetEngine().Position().MovingPlayer][move].MoveString);
+	return std::string(GetEngine().MoveGen().MoveTable[GetEngine().Position().Header.MovingPlayer][move].MoveString);
 }
 
 std::string Command::MoveToHexString(const MG_MOVE& move) const
@@ -199,7 +199,7 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 	{
 		sstream << " ";
 	}
-	sstream << PlayerToString(GetEngine().Position().MovingPlayer);
+	sstream << PlayerToString(GetEngine().Position().Header.MovingPlayer);
 	sstream << "|";
 	for (BB_FILEINDEX fileIndex = 0; fileIndex < COUNT_FILES; fileIndex++)
 	{
@@ -207,11 +207,11 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 		std::string fileString = FileToString(file);
 		sstream << StringHelper::ToUpper(fileString);
 	}
-	sstream << " " << CastleFlagsToString(GetEngine().Position().CastlingRights);
-	if (GetEngine().Position().EpFileIndex != FILEINDEX_NONE)
+	sstream << " " << CastleFlagsToString(GetEngine().Position().Header.CastlingRights);
+	if (GetEngine().Position().Header.EpFileIndex != FILEINDEX_NONE)
 	{
-		std::string epFileString = FileToString(FILE_FromIndex(GetEngine().Position().EpFileIndex));
-		sstream << " " << StringHelper::ToUpper(epFileString) << (GetEngine().Position().MovingPlayer == PLAYER_WHITE ? "6" : "3");
+		std::string epFileString = FileToString(FILE_FromIndex(GetEngine().Position().Header.EpFileIndex));
+		sstream << " " << StringHelper::ToUpper(epFileString) << (GetEngine().Position().Header.MovingPlayer == PLAYER_WHITE ? "6" : "3");
 	}
 	else
 		sstream << " -";
