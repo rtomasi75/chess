@@ -19,7 +19,7 @@ typedef std::int8_t BB_FILEINDEX;
 #define FILEINDEX_NONE INT8_C(-1)
 
 
-inline BB_FILE FILE_FromIndex(const BB_FILEINDEX& index)
+constexpr inline BB_FILE FILE_FromIndex(const BB_FILEINDEX& index)
 {
 	return UINT64_C(0x0101010101010101) << index;
 }

@@ -89,17 +89,17 @@ bool SQUARE_Parse(const char* pString, const int& len, int& strPos, BB_SQUARE& o
 
 bool SQUARE_ToString(char* pString, const int& len, int& strPos, const BB_SQUARE& square);
 
-inline BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file)
+constexpr inline BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file)
 {
 	return rank & file;
 }
 
-inline BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index)
+constexpr inline BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index)
 {
 	return UINT64_C(1) << index;
 }
 
-inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile)
+constexpr inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile)
 {
 	return SQUARE_FromRankFile(RANK_FromIndex(indexRank), FILE_FromIndex(indexFile));
 }
@@ -109,30 +109,30 @@ inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)
 	return CM_PopLsb(bitboard, outSquareIndex);
 }
 
-inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)
+constexpr inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)
 {
 	ASSERT(square);
 	return CM_BitScanForward(square);
 }
 
-inline BB_FILE SQUARE_GetFile(const BB_SQUARE& square)
+constexpr inline BB_FILE SQUARE_GetFile(const BB_SQUARE& square)
 {
 	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
 	return FILE_FromIndex(idx % COUNT_RANKS);
 }
 
-inline BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
+constexpr inline BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
 {
 	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
 	return RANK_FromIndex(idx / COUNT_RANKS);
 }
 
-inline BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex)
+constexpr inline BB_RANKINDEX SQUARE_GetRankIndex(const BB_SQUAREINDEX& squareIndex)
 {
 	return squareIndex / COUNT_RANKS;
 }
 
-inline BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex)
+constexpr inline BB_FILEINDEX SQUARE_GetFileIndex(const BB_SQUAREINDEX& squareIndex)
 {
 	return squareIndex % COUNT_RANKS;
 }
