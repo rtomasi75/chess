@@ -19,7 +19,8 @@ bool Command_DebugIntrinsics::Try(const std::string& commandString)
 	}
 	std::stringstream sstream;
 	sstream << CM_GetIntrinsicInfo() << std::endl;
-	sstream << "CM_ALIGNMENT: " << CM_ALIGNMENT << " bytes" << std::endl;
+	sstream << "CM_ALIGNMENT_CACHELINE: " << CM_ALIGNMENT_CACHELINE << " bytes" << std::endl;
+	sstream << "CM_ALIGNMENT_PROCWORD: " << CM_ALIGNMENT_PROCWORD << " bytes" << std::endl;
 	sstream << "MG_POSITION alignment: " << alignof(MG_POSITION) << " bytes" << std::endl;
 	GetEngine().OutputStream() << sstream.str();
 	return true;

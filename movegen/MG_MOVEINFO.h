@@ -12,15 +12,11 @@
 
 #define MOVEGEN_COMPACT_MOVEINFO
 
-struct MG_MOVEINFO
+struct CM_ALIGN_CACHELINE MG_MOVEINFO
 {
-	MG_HASH HashDelta;
-#ifndef MOVEGEN_COMPACT_MOVEINFO
-	BB_BITBOARD MoveMap;
-	BB_BITBOARD CreateMap;
-	BB_BITBOARD KillMap;
-	BB_BITBOARD PromoMap;
-#endif
+	MG_HASH HashDelta;              // 8 bytes (high priority)
+
+	// Piece and player identifiers (8 bytes total)
 	MG_PIECETYPE MovePiece;
 	MG_PLAYER MovePlayer;
 	MG_PIECETYPE CreatePiece;
@@ -29,15 +25,29 @@ struct MG_MOVEINFO
 	MG_PLAYER KillPlayer;
 	MG_PIECETYPE PromoPiece;
 	MG_PLAYER PromoPlayer;
+
+	// Square indices (5 bytes total)
 	BB_SQUAREINDEX MoveSource;
 	BB_SQUAREINDEX MoveDest;
 	BB_SQUAREINDEX KillDest;
 	BB_SQUAREINDEX CreateDest;
 	BB_SQUAREINDEX PromoSource;
-	MG_CASTLEFLAGS CastleRightsMask;
-	BB_FILEINDEX EnPassantFileIndex;
-	bool ResetHalfMoveClock;
-	char MoveString[MOVESTRING_LENGTH];
+
+	// Castling, EnPassant, and flags (3 bytes total)
+	MG_CASTLEFLAGS CastleRightsMask; // 1 byte
+	BB_FILEINDEX EnPassantFileIndex; // 1 byte
+	CM_BOOL ResetHalfMoveClock;         // 1 byte
+
+	// Conditional bitboards (64-bit each)
+#ifdef MOVEGEN_COMPACT_MOVEINFO
+	BB_BITBOARD MoveMap;   // 8 bytes
+	BB_BITBOARD CreateMap; // 8 bytes
+	BB_BITBOARD KillMap;   // 8 bytes
+	BB_BITBOARD PromoMap;  // 8 bytes
+#endif
+
+	// Move String (6 bytes) - rarely used, placed at the end
+	char MoveString[MOVESTRING_LENGTH]; // 6 bytes
 };
 
 void MOVEINFO_InitializeMoveString(char* pMoveString, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare);

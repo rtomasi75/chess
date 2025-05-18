@@ -52,3 +52,5 @@ bool CM_PopLsb(std::uint64_t& value, std::int8_t& bit);
 
 // Debug string for displaying detected feature support
 std::string CM_GetIntrinsicInfo();
+
+typedef std::uint8_t CM_BOOL;

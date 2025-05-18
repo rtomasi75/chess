@@ -25,6 +25,7 @@ bool Command_DebugMoveGen::Try(const std::string& commandString)
 		sstream << "  sizeof(MG_MOVEINFO) = " << sizeof(MG_MOVEINFO) << std::endl;
 		sstream << "  sizeof(MG_MOVELIST) = " << sizeof(MG_MOVELIST) << std::endl;
 		sstream << "  sizeof(MG_PIECETYPE) = " << sizeof(MG_PIECETYPE) << std::endl;
+		sstream << "  sizeof(MG_PIECEINFO) = " << sizeof(MG_PIECEINFO) << std::endl;
 		sstream << "  sizeof(MG_PLAYER) = " << sizeof(MG_PLAYER) << std::endl;
 		sstream << "  sizeof(MG_POSITION) = " << sizeof(MG_POSITION) << std::endl;
 		sstream << "  sizeof(MG_SLIDEENTRY) = " << sizeof(MG_SLIDEENTRY) << std::endl;

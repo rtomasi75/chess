@@ -13,10 +13,11 @@ struct MG_MOVELIST;
 
 struct MG_POSITION;
 
-struct MG_JUMPTABLE
+struct CM_ALIGN_CACHELINE MG_JUMPTABLE
 {
 	MG_MOVE MovesBaseFrom[COUNT_SQUARES];
 	MG_JUMPTARGETSINDEX TargetIndex;
+	std::uint8_t Padding[7];
 };
 
 void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE& piece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove, const int& jumptarget, const int& jumptable);

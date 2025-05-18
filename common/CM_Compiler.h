@@ -8,10 +8,24 @@
 
 #endif
 
-#ifndef CM_ALIGNMENT
-#define CM_ALIGNMENT 64
+#ifndef CM_ALIGNMENT_CACHELINE
+#define CM_ALIGNMENT_CACHELINE 64
 #endif
 
-#define CM_ALIGNAS alignas(CM_ALIGNMENT)
+#ifndef CM_ALIGNMENT_PROCWORD
+#define CM_ALIGNMENT_PROCWORD 8
+#endif
+
+#define CM_ALIGN_CACHELINE alignas(CM_ALIGNMENT_CACHELINE)
+#define CM_ALIGN_PROCWORD alignas(CM_ALIGNMENT_PROCWORD)
+
+#if defined(__GNUC__) || defined(__clang__)
+#define CM_PREFETCH(addr) __builtin_prefetch(addr, 0, 3)
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+#include <xmmintrin.h>
+#define CM_PREFETCH(addr) _mm_prefetch((const char*)(addr), _MM_HINT_T0)
+#else
+#define CM_PREFETCH(addr) // No prefetch on unsupported platforms
+#endif
 
 #endif

@@ -5,6 +5,7 @@
 #include "MG_MOVEMECHANIC.h"
 #include "MG_MOVETYPE.h"
 #include "MG_PIECETYPE.h"
+#include "../libCommon.h"
 
 #define COUNT_TABLEINDICES (COUNT_PIECETYPES+2)
 #define TABLEINDEX_QUIET 0
@@ -13,11 +14,12 @@
 
 typedef std::int8_t MG_TABLEINDEX;
 
-struct MG_PIECEINFO
+struct CM_ALIGN_CACHELINE MG_PIECEINFO
 {
-	bool IsRoyal;
-	MG_MOVEMECHANIC MoveMechanic[COUNT_MOVETYPES];
 	MG_TABLEINDEX TableIndex[COUNT_TABLEINDICES];
+	CM_BOOL IsRoyal;
+	std::uint8_t Padding[3];
+	MG_MOVEMECHANIC MoveMechanic[COUNT_MOVETYPES];
 };
 
 #endif

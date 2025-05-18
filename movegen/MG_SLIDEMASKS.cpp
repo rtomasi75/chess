@@ -311,7 +311,7 @@ void SLIDEMASKS_Initialize_QuietMoves(const MG_PLAYER& movingPlayer, const MG_PI
 		const BB_SQUARE squareFrom = SQUARE_FromIndex(squareIndexFrom);
 		for (MG_SLIDEMASKINDEX idx = 0; idx < pMoveGen->SlideLookUp[tableIndex].CountMasks; idx++)
 		{
-			pMoveGen->SlideLookUp[tableIndex].MoveBase[movingPlayer][idx][squareIndexFrom] = nextMove;
+			pMoveGen->SlideLookUpCold[tableIndex].MoveBase[movingPlayer][idx][squareIndexFrom] = nextMove;
 			const MG_SLIDEMASKINDEX maskIndex = pMoveGen->SlideLookUp[tableIndex].MaskIndex[idx];
 			const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
 			const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
@@ -389,7 +389,7 @@ void SLIDEMASKS_Initialize_CaptureMoves(const MG_PLAYER& movingPlayer, const MG_
 				const BB_BITBOARD allTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[squareIndexFrom];
 				const BB_SQUARECOUNT countBits = BITBOARD_PopulationCount(allTargets);
 				ASSERT(countBits == pMoveGen->SlideMasks[maskIndex].CountPotentialTargetsBits[squareIndexFrom]);
-				pMoveGen->SlideLookUp[tableIndex[capturedPiece]].CaptureBase[movingPlayer][idx][squareIndexFrom][capturedPiece] = nextMove;
+				pMoveGen->SlideLookUpCold[tableIndex[capturedPiece]].CaptureBase[movingPlayer][idx][squareIndexFrom][capturedPiece] = nextMove;
 				for (BB_SQUARECOUNT bitIndex = 0; bitIndex < countBits; bitIndex++)
 				{
 					const BB_BITBOARD bit = UINT64_C(1) << bitIndex;
@@ -478,12 +478,13 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPos
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[movingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
+	const MG_SLIDELOOKUP_COLD& table_cold = pMoveGen->SlideLookUpCold[tableIndex];
 	const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
 		for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
 		{
-			const MG_MOVE baseMove = table.MoveBase[movingPlayer][slideMaskIndex][fromSquareIndex];
+			const MG_MOVE baseMove = table_cold.MoveBase[movingPlayer][slideMaskIndex][fromSquareIndex];
 			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
 			const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
 			const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
@@ -512,10 +513,11 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pP
 		{
 			const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][piece];
 			const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
+			const MG_SLIDELOOKUP_COLD& table_cold = pMoveGen->SlideLookUpCold[tableIndex];
 			const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
 			{
-				const MG_MOVE captureBase = table.CaptureBase[movingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece];
+				const MG_MOVE captureBase = table_cold.CaptureBase[movingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece];
 				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
 				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
 				BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
@@ -539,13 +541,14 @@ BB_BITBOARD SLIDEMASKS_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSI
 	const BB_BITBOARD rawPieces = pieces;
 	const MG_PIECEINFO pieceInfo = pMoveGen->PieceInfo[player][piece];
 	const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(piece)];
+	const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 	BB_SQUAREINDEX fromSquareIndex;
+	const MG_SLIDEMASKINDEX* maskIndexPtr = table.MaskIndex;
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 		for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
 		{
-			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+			const MG_SLIDEMASKINDEX maskIndex = maskIndexPtr[slideMaskIndex];
 			const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
 			attacks |= targets;
 		}
