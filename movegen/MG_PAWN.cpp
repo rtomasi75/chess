@@ -79,7 +79,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
-				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareTo);
+				MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFrom, squareTo);
 			}
 		}
 		ASSERT((nextMove - pMoveGen->PawnTable[PLAYER_WHITE].QuietBase) == ((COUNT_RANKS - 3) * COUNT_FILES));
@@ -121,7 +121,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 					pMoveGen->MoveTable[PLAYER_WHITE][move].MovePlayer = PLAYER_WHITE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareTo);
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
-					MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareTo, promoPiece);
+					MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_WHITE, move, squareFrom, squareTo, promoPiece);
 				}
 			}
 		}
@@ -161,7 +161,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = fileIndex;
 				pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareTo);
-				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareTo);
+				MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFrom, squareTo);
 			}
 		}
 		ASSERT((nextMove - pMoveGen->PawnTable[PLAYER_WHITE].DoublePushBase) == COUNT_FILES);
@@ -204,7 +204,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareTo);
-				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareTo);
+				MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFrom, squareTo);
 			}
 		}
 		ASSERT((nextMove - pMoveGen->PawnTable[PLAYER_BLACK].QuietBase) == ((COUNT_RANKS - 3) * COUNT_FILES));
@@ -246,7 +246,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 					pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareTo);
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareTo);
-					MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareTo, promoPiece);
+					MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_BLACK, move, squareFrom, squareTo, promoPiece);
 				}
 			}
 		}
@@ -286,7 +286,7 @@ void PAWN_Initialize_QuietMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, M
 				pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = fileIndex;
 				pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo);
 				pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Move(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareTo);
-				MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareTo);
+				MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFrom, squareTo);
 			}
 		}
 		ASSERT((nextMove - pMoveGen->PawnTable[PLAYER_BLACK].DoublePushBase) == COUNT_FILES);
@@ -338,7 +338,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToLeft);
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
-						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToLeft);
+						MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFrom, squareToLeft);
 					}
 				}
 				else
@@ -373,7 +373,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToRight);
 						pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
-						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToRight);
+						MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFrom, squareToRight);
 					}
 				}
 				else
@@ -424,7 +424,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToLeft);
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
-							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToLeft, promoPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_WHITE, move, squareFrom, squareToLeft, promoPiece);
 						}
 					}
 				}
@@ -463,7 +463,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, promoPiece, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, capturedPiece, squareToRight);
 							pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
-							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFrom, squareToRight, promoPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_WHITE, move, squareFrom, squareToRight, promoPiece);
 						}
 					}
 				}
@@ -511,7 +511,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFromLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareCapture);
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFromLeft, squareTo, PIECETYPE_PAWN);
-					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFromLeft, squareTo);
+					MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFromLeft, squareTo);
 				}
 				else
 					nextMove++;
@@ -543,7 +543,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_WHITE][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_WHITE][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareFromRight) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareTo) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareCapture);
 					pMoveGen->MoveTable[PLAYER_WHITE][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_WHITE, PIECETYPE_PAWN, squareFromRight, squareTo, PIECETYPE_PAWN);
-					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_WHITE][move].MoveString, squareFromRight, squareTo);
+					MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_WHITE, move, squareFromRight, squareTo);
 				}
 				else
 					nextMove++;
@@ -593,7 +593,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToLeft);
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
-						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToLeft);
+						MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFrom, squareToLeft);
 					}
 				}
 				else
@@ -628,7 +628,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 						pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 						pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToRight);
 						pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
-						MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToRight);
+						MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFrom, squareToRight);
 					}
 				}
 				else
@@ -679,7 +679,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_BLACK][move].PromoSource = squareIndexFrom;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareToLeft) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToLeft);
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToLeft, capturedPiece);
-							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToLeft, promoPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_BLACK, move, squareFrom, squareToLeft, promoPiece);
 						}
 					}
 				}
@@ -718,7 +718,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 							pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 							pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, promoPiece, squareToRight) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, capturedPiece, squareToRight);
 							pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFrom, squareToRight, capturedPiece);
-							MOVEINFO_InitializeMoveStringPromotion(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFrom, squareToRight, promoPiece);
+							MOVEINFO_InitializeMoveStringPromotion(pMoveGen, PLAYER_BLACK, move, squareFrom, squareToRight, promoPiece);
 						}
 					}
 				}
@@ -766,7 +766,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFromLeft) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareCapture);
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFromLeft, squareTo, PIECETYPE_PAWN);
-					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFromLeft, squareTo);
+					MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFromLeft, squareTo);
 				}
 				else
 					nextMove++;
@@ -798,7 +798,7 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 					pMoveGen->MoveTable[PLAYER_BLACK][move].EnPassantFileIndex = FILEINDEX_NONE;
 					pMoveGen->MoveTable[PLAYER_BLACK][move].HashDelta = HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareFromRight) ^ HASH_PlayerPieceSquare(PLAYER_BLACK, PIECETYPE_PAWN, squareTo) ^ HASH_PlayerPieceSquare(PLAYER_WHITE, PIECETYPE_PAWN, squareCapture);
 					pMoveGen->MoveTable[PLAYER_BLACK][move].CastleRightsMask = ~CASTLEFLAGS_EliminateFlags_Capture(PLAYER_BLACK, PIECETYPE_PAWN, squareFromRight, squareTo, PIECETYPE_PAWN);
-					MOVEINFO_InitializeMoveString(pMoveGen->MoveTable[PLAYER_BLACK][move].MoveString, squareFromRight, squareTo);
+					MOVEINFO_InitializeMoveString(pMoveGen, PLAYER_BLACK, move, squareFromRight, squareTo);
 				}
 				else
 					nextMove++;

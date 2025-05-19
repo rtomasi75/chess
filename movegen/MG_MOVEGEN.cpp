@@ -47,12 +47,14 @@ void MOVEGEN_Initialize(MG_MOVEGEN* pMoveGen)
 		PAWN_Initialize_PieceInfo(&pMoveGen->PieceInfo[movingPlayer][PIECETYPE_PAWN]);
 		pMoveGen->CountMoves[movingPlayer] = MOVEGEN_CountMoves(pMoveGen, movingPlayer);
 		pMoveGen->MoveTable[movingPlayer] = new MG_MOVEINFO[pMoveGen->CountMoves[movingPlayer]];
+		pMoveGen->MoveString[movingPlayer] = new char[pMoveGen->CountMoves[movingPlayer] * MOVESTRING_LENGTH];
 	}
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
 	{
 		// nullmove
 		MG_MOVE nextMove = MOVE_NULLMOVE;
 		MOVE_InitializeNullMove(pMoveGen->MoveTable[movingPlayer], movingPlayer);
+		MOVE_InitializeNullMoveString(pMoveGen, movingPlayer);
 		nextMove++;
 		// Pawn
 		PAWN_Initialize_QuietMoves(movingPlayer, pMoveGen, nextMove);
@@ -89,6 +91,7 @@ void MOVEGEN_Deinitialize(MG_MOVEGEN* pMoveGen)
 	for (MG_PLAYER movingPlayer = 0; movingPlayer < COUNT_PLAYERS; movingPlayer++)
 	{
 		delete[] pMoveGen->MoveTable[movingPlayer];
+		delete[] pMoveGen->MoveString[movingPlayer];
 	}
 }
 
@@ -141,6 +144,11 @@ void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, M
 	}
 }
 
+const char* MOVEGEN_GetMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVE& move)
+{
+	return pMoveGen->MoveString[player] + ((size_t)move) * MOVESTRING_LENGTH;
+}
+
 bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVELIST* pMoveList, const char* pString, const int& len, int& strPos, MG_MOVE& outParsed)
 {
 	int found = -1;
@@ -151,7 +159,7 @@ bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player
 		found = moveIndex;
 		while (localPos < MOVESTRING_LENGTH)
 		{
-			if (pMoveGen->MoveTable[player][move].MoveString[localPos] == 0)
+			if (MOVEGEN_GetMoveString(pMoveGen, player, move)[localPos] == 0)
 			{
 				break;
 			}
@@ -159,7 +167,7 @@ bool MOVEGEN_ParseMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player
 			{
 				found = -1;
 			}
-			if (pMoveGen->MoveTable[player][move].MoveString[localPos] != pString[localPos + strPos])
+			if (MOVEGEN_GetMoveString(pMoveGen, player, move)[localPos] != pString[localPos + strPos])
 			{
 				found = -1;
 				break;

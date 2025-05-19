@@ -18,8 +18,13 @@ struct CM_ALIGN_CACHELINE MG_PIECEINFO
 {
 	MG_TABLEINDEX TableIndex[COUNT_TABLEINDICES];
 	CM_BOOL IsRoyal;
-	std::uint8_t Padding[3];
-	MG_MOVEMECHANIC MoveMechanic[COUNT_MOVETYPES];
+#if defined(CM_ALIGNMENT_PROCWORD) && (CM_ALIGNMENT_PROCWORD >= 8)
+	std::uint8_t Padding[7];
+#endif
+	CM_ALIGN_PROCWORD MG_MOVEMECHANIC MoveMechanic[COUNT_MOVETYPES];
+#if defined(CM_ALIGNMENT_CACHELINE) && (CM_ALIGNMENT_CACHELINE >= 64)
+	std::uint8_t PaddingOutside[24]; 
+#endif
 };
 
 #endif

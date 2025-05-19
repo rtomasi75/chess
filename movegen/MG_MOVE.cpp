@@ -1,4 +1,6 @@
 #include "MG_MOVE.h"
+#include "MG_MOVEINFO.h"
+#include "MG_MOVEGEN.h"
 
 MG_MOVE MOVE(const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& from, const BB_SQUARE& to, const MG_MOVETYPE& moveType)
 {
@@ -22,12 +24,17 @@ void MOVE_InitializeNullMove(MG_MOVEINFO* pMoveInfo, const MG_PLAYER& movingPlay
 	pMoveInfo[MOVE_NULLMOVE].CreateDest = SQUAREINDEX_NONE;
 	pMoveInfo[MOVE_NULLMOVE].MovePiece = PIECETYPE_NONE;
 	pMoveInfo[MOVE_NULLMOVE].MovePlayer = movingPlayer;
+}
+
+void MOVE_InitializeNullMoveString(MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer)
+{
 	for (int strPos = 0; strPos < MOVESTRING_LENGTH; strPos++)
 	{
-		pMoveInfo[MOVE_NULLMOVE].MoveString[strPos] = 0;
+		pMoveGen->MoveString[movingPlayer][strPos] = 0;
 	}
-	pMoveInfo[MOVE_NULLMOVE].MoveString[0] = 'n';
-	pMoveInfo[MOVE_NULLMOVE].MoveString[1] = 'u';
-	pMoveInfo[MOVE_NULLMOVE].MoveString[2] = 'l';
-	pMoveInfo[MOVE_NULLMOVE].MoveString[3] = 'l';
+	pMoveGen->MoveString[movingPlayer][0] = 'n';
+	pMoveGen->MoveString[movingPlayer][1] = 'u';
+	pMoveGen->MoveString[movingPlayer][2] = 'l';
+	pMoveGen->MoveString[movingPlayer][3] = 'l';
 }
+

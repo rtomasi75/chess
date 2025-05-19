@@ -46,6 +46,10 @@ bool Command_DebugMoveGen::Try(const std::string& commandString)
 		sstream << "Count slide-entries: " << GetEngine().MoveGen().CountSlideEntries << std::endl;
 		sstream << "Memory moves: " << (GetEngine().MoveGen().CountMoves[PLAYER_WHITE] + GetEngine().MoveGen().CountMoves[PLAYER_BLACK]) * sizeof(MG_MOVE) * 2 << std::endl;
 		sstream << "Memory slide-entries: " << GetEngine().MoveGen().CountSlideEntries * sizeof(MG_SLIDEENTRY) << std::endl;
+		sstream << "COUNT_TABLEINDICES: " << (int)COUNT_TABLEINDICES << std::endl;
+		sstream << "COUNT_MOVETYPES: " << (int)COUNT_MOVETYPES << std::endl;
+		sstream << "COUNT_SQUARES: " << (int)COUNT_SQUARES << std::endl;
+		sstream << "COUNT_SLIDEMASKS: " << (int)COUNT_SLIDEMASKS << std::endl;
 		GetEngine().OutputStream() << sstream.str();
 		return true;
 	}

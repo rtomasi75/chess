@@ -56,6 +56,7 @@ struct MG_MOVEGEN
 	MG_MOVE CountMoves[COUNT_PLAYERS];
 	MG_MOVE CastleBase[COUNT_PLAYERS];
 	MG_SLIDEENTRYINDEX CountSlideEntries;
+	char* MoveString[COUNT_PLAYERS]; 
 };
 
 MG_MOVE MOVEGEN_CountMoves(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer);
@@ -70,6 +71,8 @@ inline MG_OPTIONINDEX MOVEGEN_OptionIndex(const BB_SQUARE& square, const BB_BITB
 	const std::uint64_t optionIndex = CM_BitExtract(square, targets);
 	return CM_BitScanForward(optionIndex);
 }
+
+const char* MOVEGEN_GetMoveString(const MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVE& move);
 
 void MOVEGEN_GenerateMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, MG_MOVELIST* pMoveList);
 

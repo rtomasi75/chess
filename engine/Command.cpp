@@ -66,7 +66,7 @@ bool Command::ParseSquare(const std::string& squareString, BB_SQUARE& parsedSqua
 
 std::string Command::MoveToString(const MG_MOVE& move) const
 {
-	return std::string(GetEngine().MoveGen().MoveTable[GetEngine().Position().Header.MovingPlayer][move].MoveString);
+	return std::string(MOVEGEN_GetMoveString(&GetEngine().MoveGen(), GetEngine().Position().Header.MovingPlayer, move));
 }
 
 std::string Command::MoveToHexString(const MG_MOVE& move) const

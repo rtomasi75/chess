@@ -7,7 +7,10 @@
 #include "MG_MOVETYPE.h"
 #include "MG_PIECETYPE.h"
 #include "MG_PLAYER.h"
-#include "MG_MOVEINFO.h"
+
+struct MG_MOVEINFO;
+
+struct MG_MOVEGEN;
 
 typedef std::uint16_t MG_MOVE;
 
@@ -16,5 +19,7 @@ typedef std::uint16_t MG_MOVE;
 MG_MOVE MOVE(const MG_PLAYER& player, const MG_PIECETYPE& piece, const BB_SQUARE& from, const BB_SQUARE& to, const MG_MOVETYPE& moveType);
 
 void MOVE_InitializeNullMove(MG_MOVEINFO* pMoveInfo, const MG_PLAYER& movingPlayer);
+
+void MOVE_InitializeNullMoveString(MG_MOVEGEN* pMoveGen, const MG_PLAYER& movingPlayer);
 
 #endif

@@ -31,6 +31,10 @@ struct CM_ALIGN_CACHELINE MG_POSITION
 	CM_ALIGN_CACHELINE BB_BITBOARD OccupancyPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 	CM_ALIGN_CACHELINE BB_BITBOARD AttacksPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
 	CM_ALIGN_CACHELINE BB_BITBOARD InterestPlayerPiece[COUNT_PLAYERS][COUNT_PIECETYPES];
+	// Explicit padding (conditional, based on alignment)
+#if defined(CM_ALIGNMENT) && (CM_ALIGNMENT >= 64)
+	std::uint8_t Padding[16];                   // 16 bytes (padding to reach 448 bytes)
+#endif
 };
 
 struct MG_MOVEGEN;

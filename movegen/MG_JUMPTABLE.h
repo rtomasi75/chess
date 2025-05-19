@@ -17,7 +17,9 @@ struct CM_ALIGN_CACHELINE MG_JUMPTABLE
 {
 	MG_MOVE MovesBaseFrom[COUNT_SQUARES];
 	MG_JUMPTARGETSINDEX TargetIndex;
-	std::uint8_t Padding[7];
+#if defined(CM_ALIGNMENT_CACHELINE) && (CM_ALIGNMENT_CACHELINE >= 64)
+	std::uint8_t Padding[7];                  
+#endif
 };
 
 void JUMPTABLE_Initialize_QuietMoves(const MG_PLAYER& player, const MG_PIECETYPE& piece, MG_MOVEGEN* pMoveGen, MG_MOVE& nextMove, const int& jumptarget, const int& jumptable);

@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.9)
+﻿cmake_minimum_required(VERSION 3.15)
 
 # Aktivieren Sie Hot Reload für MSVC-Compiler, sofern unterstützt.
 if (POLICY CMP0141)
@@ -18,11 +18,23 @@ file(GLOB pygmalion_SRC
      "*.h"
      "*.cpp"
 )
+
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-        add_compile_options(-march=native)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
+        add_compile_options(-march=native -mtune=native)
+    # MSVC (Visual Studio)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    # Clang/GCC (Standard)
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+        add_compile_options(-O3 -march=native -mtune=native)
     endif()
 endif()
+
+
+# Debugging Output
+message(STATUS "Final Compiler flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "Final Release flags: ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "Final RelWithDebInfo flags: ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 
 # Schließen Sie Unterprojekte ein.
 add_subdirectory ("common")
@@ -35,6 +47,8 @@ add_executable(pygmalion ${pygmalion_SRC})
 
 target_link_libraries(pygmalion engine)
 
+
+# LTO only for Release
 if(LTO_SUPPORTED AND CMAKE_BUILD_TYPE STREQUAL "Release")
     message(STATUS "LTO is supported and enabled.")
     set_target_properties(pygmalion PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)

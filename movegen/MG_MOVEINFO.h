@@ -6,9 +6,8 @@
 #include "MG_PLAYER.h"
 #include "MG_HASH.h"
 #include "MG_CASTLEFLAGS.h"
+#include "MG_MOVE.h"
 #include "libBitboard.h"
-
-#define MOVESTRING_LENGTH 6
 
 #define MOVEGEN_COMPACT_MOVEINFO
 
@@ -40,19 +39,24 @@ struct CM_ALIGN_CACHELINE MG_MOVEINFO
 
 	// Conditional bitboards (64-bit each)
 #ifdef MOVEGEN_COMPACT_MOVEINFO
-	BB_BITBOARD MoveMap;   // 8 bytes
-	BB_BITBOARD CreateMap; // 8 bytes
-	BB_BITBOARD KillMap;   // 8 bytes
-	BB_BITBOARD PromoMap;  // 8 bytes
+	CM_ALIGN_PROCWORD BB_BITBOARD MoveMap;   // 8 bytes
+	CM_ALIGN_PROCWORD BB_BITBOARD CreateMap; // 8 bytes
+	CM_ALIGN_PROCWORD BB_BITBOARD KillMap;   // 8 bytes
+	CM_ALIGN_PROCWORD BB_BITBOARD PromoMap;  // 8 bytes
+#else
+#if defined(CM_ALIGNMENT_CACHELINE) && (CM_ALIGNMENT_CACHELINE >= 64)
+	std::uint8_t Padding[32];
 #endif
-
-	// Move String (6 bytes) - rarely used, placed at the end
-	char MoveString[MOVESTRING_LENGTH]; // 6 bytes
+#endif
 };
 
-void MOVEINFO_InitializeMoveString(char* pMoveString, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare);
+#define MOVESTRING_LENGTH 6
 
-void MOVEINFO_InitializeMoveStringPromotion(char* pMoveString, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare, const MG_PIECETYPE& promoPiece);
+struct MG_MOVEGEN;
+
+void MOVEINFO_InitializeMoveString(MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVE& move, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare);
+
+void MOVEINFO_InitializeMoveStringPromotion(MG_MOVEGEN* pMoveGen, const MG_PLAYER& player, const MG_MOVE& move, const BB_SQUARE& fromSquare, const BB_SQUARE& toSquare, const MG_PIECETYPE& promoPiece);
 
 inline BB_BITBOARD MOVEINFO_GetMoveMap(const MG_MOVEINFO* pMoveInfo)
 {
