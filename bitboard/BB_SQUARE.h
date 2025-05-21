@@ -109,19 +109,19 @@ inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)
 	return CM_PopLsb(bitboard, outSquareIndex);
 }
 
-constexpr inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)
+inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)
 {
 	ASSERT(square);
 	return CM_BitScanForward(square);
 }
 
-constexpr inline BB_FILE SQUARE_GetFile(const BB_SQUARE& square)
+inline BB_FILE SQUARE_GetFile(const BB_SQUARE& square)
 {
 	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
 	return FILE_FromIndex(idx % COUNT_RANKS);
 }
 
-constexpr inline BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
+inline BB_RANK SQUARE_GetRank(const BB_SQUARE& square)
 {
 	const BB_SQUAREINDEX idx = SQUARE_GetIndex(square);
 	return RANK_FromIndex(idx / COUNT_RANKS);
