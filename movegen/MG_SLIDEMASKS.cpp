@@ -595,10 +595,11 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPos
 				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
 				BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
 				BB_SQUAREINDEX toSquareIndex;
+				const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
 				while (SQUARE_Next(destinations, toSquareIndex))
 				{
 					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
 					const MG_MOVE move = baseMove + optionIndex;
 					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 				}
@@ -692,10 +693,11 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pP
 					const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
 					BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
 					BB_SQUAREINDEX toSquareIndex;
+					const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
 					while (SQUARE_Next(destinations, toSquareIndex))
 					{
 						const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-						const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+						const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
 						const MG_MOVE move = captureBase + optionIndex;
 						MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 					}

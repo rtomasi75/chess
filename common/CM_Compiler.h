@@ -29,3 +29,11 @@
 #endif
 
 #endif
+
+// Branchless, ISO-compliant conditional prefetch macro
+#define CM_PREFETCH_COND(cond, ptr)                          \
+    do {                                                    \
+        const uintptr_t _prefetchAddrInt =                  \
+            (uintptr_t)(ptr) * (uintptr_t)(!!(cond));       \
+        CM_PREFETCH((const void*)_prefetchAddrInt);         \
+    } while(0)

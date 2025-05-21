@@ -252,10 +252,10 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 		dirtyFlags[player] = UINT8_C(0);
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if ((interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((promoPiece != PIECETYPE_NONE) && (createPiece == piece) && (player == moveInfo.CreatePlayer)))
-			{
-				dirtyFlags[player] |= UINT8_C(1) << piece;
-			}
+			const bool isDirty = (interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((promoPiece != PIECETYPE_NONE) && (createPiece == piece) && (player == moveInfo.CreatePlayer));
+			const std::uint8_t mask = UINT8_C(1) << piece;
+			dirtyFlags[player] |= isDirty * mask;
+			CM_PREFETCH_COND(isDirty, &pPosition->AttacksPlayerPiece[player][piece]);
 		}
 	}
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
@@ -379,6 +379,7 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 	BB_BITBOARD interestMap = BITBOARD_EMPTY;
 	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
 	const MG_MOVEINFO& moveInfo = pMoveGen->MoveTable[movingPlayer][move];
+	CM_PREFETCH(&moveInfo);
 	const MG_PIECETYPE createPiece = moveInfo.CreatePiece;
 	const MG_PIECETYPE promoPiece = moveInfo.PromoPiece;
 	if (moveInfo.MovePiece != PIECETYPE_NONE)
@@ -424,10 +425,10 @@ void MOVEGEN_MakeTentativeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, 
 		dirtyFlags[player] = UINT8_C(0);
 		for (MG_PIECETYPE piece = 0; piece < COUNT_PIECETYPES; piece++)
 		{
-			if ((interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((promoPiece != PIECETYPE_NONE) && (createPiece == piece) && (player == moveInfo.CreatePlayer)))
-			{
-				dirtyFlags[player] |= UINT8_C(1) << piece;
-			}
+			const bool isDirty = (interestMap & pPosition->InterestPlayerPiece[player][piece]) || ((promoPiece != PIECETYPE_NONE) && (createPiece == piece) && (player == moveInfo.CreatePlayer));
+			const std::uint8_t mask = UINT8_C(1) << piece;
+			dirtyFlags[player] |= isDirty * mask;
+			CM_PREFETCH_COND(isDirty, &pPosition->AttacksPlayerPiece[player][piece]);
 		}
 	}
 	for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
