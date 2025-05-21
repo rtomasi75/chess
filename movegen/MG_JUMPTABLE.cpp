@@ -106,10 +106,12 @@ MG_MOVE JUMPTABLE_CountMoves(const MG_MOVEGEN* pMoveGen, const int& jumptarget)
 	return count;
 }
 
+constexpr int JUMPTABLE_PREFETCH_DISTANCE_GENERATION = (CM_ALIGNMENT_CACHELINE / sizeof(MG_MOVEINFO)) - 1;
 
 void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const MG_MOVE countMoves = pMoveGen->CountMoves[movingPlayer];
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_TABLEINDEX tableIndex = pMoveGen->PieceInfo[movingPlayer][piece].TableIndex[TABLEINDEX_QUIET];
@@ -120,6 +122,9 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosi
 		const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
 		BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
 		BB_SQUAREINDEX toSquareIndex;
+		const MG_MOVE prefetchMove = baseMove + JUMPTABLE_PREFETCH_DISTANCE_GENERATION;
+		const std::uintptr_t prefetchAddrInt = (prefetchMove < countMoves) * (uintptr_t)&pMoveGen->MoveTable[movingPlayer][prefetchMove];
+		CM_PREFETCH((void*)prefetchAddrInt);
 		while (SQUARE_Next(destinations, toSquareIndex))
 		{
 			const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
@@ -133,20 +138,30 @@ void JUMPTABLE_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosi
 void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const MG_MOVE countMoves = pMoveGen->CountMoves[movingPlayer];
 	const MG_PLAYER passivePlayer = pPosition->Header.PassivePlayer;
 	const MG_PIECEINFO& pieceInfo = pMoveGen->PieceInfo[movingPlayer][piece];
 	BB_BITBOARD pieces = pPosition->OccupancyPlayerPiece[movingPlayer][piece];
 	BB_SQUAREINDEX fromSquareIndex;
+	MG_TABLEINDEX tableIndexByPiece[COUNT_PIECETYPES - COUNT_ROYALPIECES];
+#pragma unroll
+	for (MG_PIECETYPE capturedPiece = COUNT_ROYALPIECES; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
+	{
+		tableIndexByPiece[capturedPiece - COUNT_ROYALPIECES] = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
+	}
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
 		for (MG_PIECETYPE capturedPiece = COUNT_ROYALPIECES; capturedPiece < COUNT_PIECETYPES; capturedPiece++)
 		{
-			const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
+			const MG_TABLEINDEX tableIndex = tableIndexByPiece[capturedPiece - COUNT_ROYALPIECES];
 			const MG_JUMPTABLE& table = pMoveGen->JumpTable[tableIndex];
 			const BB_BITBOARD targets = pMoveGen->JumpTargets[table.TargetIndex][fromSquareIndex];
 			const MG_MOVE baseMove = table.MovesBaseFrom[fromSquareIndex];
 			BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
 			BB_SQUAREINDEX toSquareIndex;
+			const MG_MOVE prefetchMove = baseMove + JUMPTABLE_PREFETCH_DISTANCE_GENERATION;
+			const std::uintptr_t prefetchAddrInt = (prefetchMove < countMoves) * (uintptr_t)&pMoveGen->MoveTable[movingPlayer][prefetchMove];
+			CM_PREFETCH((void*)prefetchAddrInt);
 			while (SQUARE_Next(destinations, toSquareIndex))
 			{
 				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
@@ -157,6 +172,8 @@ void JUMPTABLE_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPo
 		}
 	}
 }
+
+constexpr int JUMPTABLE_PREFETCH_DISTANCE_ATTACKS = (CM_ALIGNMENT_CACHELINE / sizeof(BB_BITBOARD)) - 1;
 
 BB_BITBOARD JUMPTABLE_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
 {
@@ -169,6 +186,9 @@ BB_BITBOARD JUMPTABLE_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSIT
 	const BB_BITBOARD* pJumpTargets = pMoveGen->JumpTargets[table.TargetIndex];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
+		const BB_SQUAREINDEX prefetchIndex = fromSquareIndex + JUMPTABLE_PREFETCH_DISTANCE_ATTACKS;
+		const std::uintptr_t prefetchAddrInt = (prefetchIndex < COUNT_SQUARES) * (uintptr_t)&pJumpTargets[prefetchIndex];
+		CM_PREFETCH((void*)prefetchAddrInt);
 		const BB_BITBOARD targets = pJumpTargets[fromSquareIndex];
 		attacks |= targets;
 	}

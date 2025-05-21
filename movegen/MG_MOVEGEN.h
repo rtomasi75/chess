@@ -40,6 +40,8 @@
 
 //#define MOVEGEN_LEGAL
 
+#define MOVEGEN_USE_DYNAMIC_PREFETCH
+
 typedef std::int8_t MG_OPTIONINDEX;
 
 struct MG_MOVEGEN

@@ -471,6 +471,53 @@ BB_BITBOARD SLIDEMASKS_EntryTargets(const MG_MOVEGEN* pMoveGen, const MG_SLIDEEN
 	return SLIDEMASKS_EntryTargetsInline(pMoveGen, entry, maskIndex, fromSquareIndex);
 }
 
+constexpr size_t SLIDEMASKS_PREFETCH_UNIT_GENERATION = sizeof(MG_SLIDEMASKINDEX) + sizeof(MG_MOVE);
+constexpr size_t SLIDEMASKS_PREFETCH_UNIT_ATTACKS = (CM_ALIGNMENT_CACHELINE / sizeof(MG_SLIDEMASKINDEX)) - 1;
+
+#ifdef MOVEGEN_USE_DYNAMIC_PREFETCH
+#define SLIDEMASKS_CONSTEXPR_IF_STATIC const
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION SLIDEMASKS_TunePrefetchDistance_Generation(countMasks,1)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION_UNROLLED SLIDEMASKS_TunePrefetchDistance_Generation(countMasks,SLIDEMASKS_UNROLL_GENERATION)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS SLIDEMASKS_TunePrefetchDistance_Attacks(countMasks,1)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS_UNROLLED SLIDEMASKS_TunePrefetchDistance_Attacks(countMasks,SLIDEMASKS_UNROLL_ATTACKS)
+#else
+#define SLIDEMASKS_CONSTEXPR_IF_STATIC constexpr
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION ((CM_ALIGNMENT_CACHELINE / SLIDEMASKS_PREFETCH_UNIT_GENERATION) - 1)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION_UNROLLED ((CM_ALIGNMENT_CACHELINE / (SLIDEMASKS_PREFETCH_UNIT_GENERATION * SLIDEMASKS_UNROLL_GENERATION)) - 1)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS ((CM_ALIGNMENT_CACHELINE / SLIDEMASKS_PREFETCH_UNIT_ATTACKS) - 1)
+#define SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS_UNROLLED ((CM_ALIGNMENT_CACHELINE / (SLIDEMASKS_PREFETCH_UNIT_ATTACKS * SLIDEMASKS_UNROLL_ATTACKS)) - 1)
+#endif
+
+#define SLIDEMASKS_UNROLL_ATTACKS    4
+#define SLIDEMASKS_UNROLL_GENERATION 2
+
+inline size_t SLIDEMASKS_TunePrefetchDistance_Generation(size_t countMasks, size_t unrollFactor)
+{
+	constexpr size_t stride = SLIDEMASKS_PREFETCH_UNIT_GENERATION;
+	const size_t stridePerIter = stride * unrollFactor;
+	const size_t totalStride = countMasks * stride;
+	const size_t d1 = (totalStride >= CM_ALIGNMENT_CACHELINE) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) - 1);
+	const size_t d2 = ((totalStride >= (CM_ALIGNMENT_CACHELINE / 2)) & (totalStride < CM_ALIGNMENT_CACHELINE)) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) / 2);
+	const size_t d3 = ((totalStride >= (CM_ALIGNMENT_CACHELINE / 4)) & (totalStride < (CM_ALIGNMENT_CACHELINE / 2))) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) / 4);
+	return d1 + d2 + d3;
+}
+
+#define SLIDEMASKS_UNROLL_LOOP_GENERATION(prefetchDistance, countMasks, slideMaskIndex, maskIndexPtr, baseAccess, fromSquareIndex, pieceIndex, body) \
+	for (; (slideMaskIndex + SLIDEMASKS_UNROLL_GENERATION) <= countMasks; slideMaskIndex += SLIDEMASKS_UNROLL_GENERATION) \
+	{ \
+		for (int prefetchSlot = 0; prefetchSlot < SLIDEMASKS_UNROLL_GENERATION; ++prefetchSlot) \
+		{ \
+			const size_t distance = slideMaskIndex + prefetchDistance + prefetchSlot; \
+			const size_t maskedDistance = distance * (distance < countMasks); \
+			CM_PREFETCH((const char*)(&maskIndexPtr[maskedDistance])); \
+			CM_PREFETCH((const char*)(&(baseAccess(maskedDistance, fromSquareIndex, pieceIndex)))); \
+		} \
+		for (int unrollIndex = 0; unrollIndex < SLIDEMASKS_UNROLL_GENERATION; ++unrollIndex) \
+		{ \
+			const size_t idx = slideMaskIndex + unrollIndex; \
+			body; \
+		} \
+	}
 
 void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
@@ -482,20 +529,79 @@ void SLIDEMASKS_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPos
 	const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
-		for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
+		const MG_SLIDEMASKINDEX countMasks = table.CountMasks;
+		if (countMasks < 4)
 		{
-			const MG_MOVE baseMove = table_cold.MoveBase[movingPlayer][slideMaskIndex][fromSquareIndex];
-			const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
-			const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
-			const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
-			BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
-			BB_SQUAREINDEX toSquareIndex;
-			while (SQUARE_Next(destinations, toSquareIndex))
+			SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION;
+			SLIDEMASKS_CONSTEXPR_IF_STATIC MG_SLIDEMASKINDEX prefetchIndex0 = prefetchDistance;
+			const MG_SLIDEMASKINDEX maskedIndex0 = prefetchIndex0 * (prefetchIndex0 < countMasks);
+			CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex0]));
+			CM_PREFETCH((const char*)(&table_cold.MoveBase[movingPlayer][maskedIndex0][fromSquareIndex]));
+			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < countMasks; slideMaskIndex++)
 			{
-				const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-				const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
-				const MG_MOVE move = baseMove + optionIndex;
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				const MG_SLIDEMASKINDEX prefetchIndex = slideMaskIndex + prefetchDistance;
+				const MG_SLIDEMASKINDEX maskedIndex = prefetchIndex * (prefetchIndex < countMasks);
+				CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex]));
+				CM_PREFETCH((const char*)(&table_cold.MoveBase[movingPlayer][maskedIndex][fromSquareIndex]));
+				const MG_MOVE baseMove = table_cold.MoveBase[movingPlayer][slideMaskIndex][fromSquareIndex];
+				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+				const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
+				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+				BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
+				BB_SQUAREINDEX toSquareIndex;
+				while (SQUARE_Next(destinations, toSquareIndex))
+				{
+					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
+					const MG_MOVE move = baseMove + optionIndex;
+					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				}
+			}
+		}
+		else
+		{
+			SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION_UNROLLED;
+			SLIDEMASKS_CONSTEXPR_IF_STATIC MG_SLIDEMASKINDEX prefetchIndex0 = prefetchDistance * 4;
+			const MG_SLIDEMASKINDEX maskedIndex0 = prefetchIndex0 * (prefetchIndex0 < countMasks);
+			CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex0]));
+			CM_PREFETCH((const char*)(&table_cold.MoveBase[movingPlayer][maskedIndex0][fromSquareIndex]));
+			MG_SLIDEMASKINDEX slideMaskIndex = 0;
+			constexpr MG_PIECETYPE unusedPieceType = 0;
+			SLIDEMASKS_UNROLL_LOOP_GENERATION(prefetchDistance, countMasks, slideMaskIndex, table.MaskIndex,
+				[&](size_t i, size_t sq, size_t unused) -> const MG_MOVE&
+				{
+					return table_cold.MoveBase[movingPlayer][i][sq];
+				},
+				fromSquareIndex, unusedPieceType,
+				{
+					const MG_MOVE baseMove = table_cold.MoveBase[movingPlayer][idx][fromSquareIndex];
+					const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[idx];
+					const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
+					const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+					BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
+					BB_SQUAREINDEX toSquareIndex;
+					while (SQUARE_Next(destinations, toSquareIndex))
+					{
+						const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+						const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, potentialTargets);
+						const MG_MOVE move = baseMove + optionIndex;
+						MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+					}
+				});
+			for (; slideMaskIndex < countMasks; slideMaskIndex++)
+			{
+				const MG_MOVE baseMove = table_cold.MoveBase[movingPlayer][slideMaskIndex][fromSquareIndex];
+				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+				BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
+				BB_SQUAREINDEX toSquareIndex;
+				while (SQUARE_Next(destinations, toSquareIndex))
+				{
+					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+					const MG_MOVE move = baseMove + optionIndex;
+					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+				}
 			}
 		}
 	}
@@ -515,27 +621,118 @@ void SLIDEMASKS_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pP
 			const MG_TABLEINDEX tableIndex = pieceInfo.TableIndex[TABLEINDEX_CAPTURE(capturedPiece)];
 			const MG_SLIDELOOKUP_COLD& table_cold = pMoveGen->SlideLookUpCold[tableIndex];
 			const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
-			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
+			const MG_SLIDEMASKINDEX countMasks = table.CountMasks;
+			if (countMasks < 4)
 			{
-				const MG_MOVE captureBase = table_cold.CaptureBase[movingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece];
-				const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
-				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
-				BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
-				BB_SQUAREINDEX toSquareIndex;
-				while (SQUARE_Next(destinations, toSquareIndex))
+				SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION;
+				SLIDEMASKS_CONSTEXPR_IF_STATIC MG_SLIDEMASKINDEX prefetchIndex0 = prefetchDistance;
+				const MG_SLIDEMASKINDEX maskedIndex0 = prefetchIndex0 * (prefetchIndex0 < countMasks);
+				CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex0]));
+				CM_PREFETCH((const char*)(&table_cold.CaptureBase[movingPlayer][maskedIndex0][fromSquareIndex][capturedPiece]));
+				for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < countMasks; slideMaskIndex++)
 				{
-					const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
-					const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
-					const MG_MOVE move = captureBase + optionIndex;
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+					const MG_SLIDEMASKINDEX prefetchIndex = slideMaskIndex + prefetchDistance;
+					const MG_SLIDEMASKINDEX maskedIndex = prefetchIndex * (prefetchIndex < countMasks);
+					CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex]));
+					CM_PREFETCH((const char*)(&table_cold.CaptureBase[movingPlayer][maskedIndex][fromSquareIndex][capturedPiece]));
+					const MG_MOVE captureBase = table_cold.CaptureBase[movingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece];
+					const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+					const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+					BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
+					BB_SQUAREINDEX toSquareIndex;
+					while (SQUARE_Next(destinations, toSquareIndex))
+					{
+						const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+						const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+						const MG_MOVE move = captureBase + optionIndex;
+						MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+					}
+				}
+			}
+			else
+			{
+				MG_SLIDEMASKINDEX slideMaskIndex = 0;
+				SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_GENERATION_UNROLLED;
+				SLIDEMASKS_CONSTEXPR_IF_STATIC MG_SLIDEMASKINDEX prefetchIndex0 = prefetchDistance * 4;
+				const MG_SLIDEMASKINDEX maskedIndex0 = prefetchIndex0 * (prefetchIndex0 < countMasks);
+				CM_PREFETCH((const char*)(&table.MaskIndex[maskedIndex0]));
+				CM_PREFETCH((const char*)(&table_cold.CaptureBase[movingPlayer][maskedIndex0][fromSquareIndex][capturedPiece]));
+				SLIDEMASKS_UNROLL_LOOP_GENERATION(prefetchDistance, countMasks, slideMaskIndex, table.MaskIndex,
+					[&](size_t i, size_t sq, size_t capturedPiece) -> const MG_MOVE&
+					{
+						return table_cold.CaptureBase[movingPlayer][i][sq][capturedPiece];
+					},
+					fromSquareIndex, capturedPiece,
+					{
+						const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[idx];
+						const BB_BITBOARD potentialTargets = pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex];
+						const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+						BB_BITBOARD destinations = targets & ~pPosition->OccupancyTotal;
+						BB_SQUAREINDEX toSquareIndex;
+						while (SQUARE_Next(destinations, toSquareIndex))
+						{
+							const MG_MOVE captureBase = table_cold.CaptureBase[movingPlayer][idx][fromSquareIndex][capturedPiece];
+							const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[idx];
+							const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+							BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
+							BB_SQUAREINDEX toSquareIndex;
+							while (SQUARE_Next(destinations, toSquareIndex))
+							{
+								const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+								const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+								const MG_MOVE move = captureBase + optionIndex;
+								MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+							}
+						}
+					});
+				for (; slideMaskIndex < countMasks; slideMaskIndex++)
+				{
+					const MG_MOVE captureBase = table_cold.CaptureBase[movingPlayer][slideMaskIndex][fromSquareIndex][capturedPiece];
+					const MG_SLIDEMASKINDEX maskIndex = table.MaskIndex[slideMaskIndex];
+					const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
+					BB_BITBOARD destinations = targets & pPosition->OccupancyPlayerPiece[passivePlayer][capturedPiece];
+					BB_SQUAREINDEX toSquareIndex;
+					while (SQUARE_Next(destinations, toSquareIndex))
+					{
+						const BB_SQUARE toSquare = SQUARE_FromIndex(toSquareIndex);
+						const MG_OPTIONINDEX optionIndex = MOVEGEN_OptionIndex(toSquare, pMoveGen->SlideMasks[maskIndex].PotentialTargets[fromSquareIndex]);
+						const MG_MOVE move = captureBase + optionIndex;
+						MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
+					}
 				}
 			}
 		}
 	}
 }
-	
+
 constexpr size_t CACHE_LINE_SIZE = CM_ALIGNMENT_CACHELINE;
 constexpr size_t SLIDEMASKS_StaticPrefetchDistance = (CACHE_LINE_SIZE / sizeof(MG_SLIDEMASKINDEX)) - 1;
+
+inline size_t SLIDEMASKS_TunePrefetchDistance_Attacks(size_t countMasks, size_t unrollFactor)
+{
+	const size_t stride = sizeof(MG_SLIDEMASKINDEX);
+	const size_t stridePerIter = stride * unrollFactor;
+	const size_t totalStride = countMasks * stride;
+	const size_t d1 = (totalStride >= CM_ALIGNMENT_CACHELINE) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) - 1);
+	const size_t d2 = ((totalStride >= (CM_ALIGNMENT_CACHELINE / 2)) & (totalStride < CM_ALIGNMENT_CACHELINE)) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) / 2);
+	const size_t d3 = ((totalStride >= (CM_ALIGNMENT_CACHELINE / 4)) & (totalStride < (CM_ALIGNMENT_CACHELINE / 2))) * ((CM_ALIGNMENT_CACHELINE / stridePerIter) / 4);
+	return d1 + d2 + d3;
+}
+
+#define SLIDEMASKS_UNROLL_LOOP_ATTACKS(prefetchDistance, countMasks, slideMaskIndex, maskIndexPtr, body) \
+	for (; (slideMaskIndex + SLIDEMASKS_UNROLL_ATTACKS) <= countMasks; slideMaskIndex += SLIDEMASKS_UNROLL_ATTACKS) \
+	{ \
+		for (int prefetchSlot = 0; prefetchSlot < SLIDEMASKS_UNROLL_ATTACKS; ++prefetchSlot) \
+		{ \
+			const size_t distance = slideMaskIndex + (prefetchDistance * SLIDEMASKS_UNROLL_ATTACKS) + prefetchSlot; \
+			CM_PREFETCH((const char*)(maskIndexPtr + distance * (distance < countMasks))); \
+		} \
+		for (int unrollIndex = 0; unrollIndex < SLIDEMASKS_UNROLL_ATTACKS; ++unrollIndex) \
+		{ \
+			const size_t idx = slideMaskIndex + unrollIndex; \
+			body; \
+		} \
+	}
 
 BB_BITBOARD SLIDEMASKS_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
 {
@@ -547,16 +744,17 @@ BB_BITBOARD SLIDEMASKS_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSI
 	const MG_SLIDELOOKUP& table = pMoveGen->SlideLookUp[tableIndex];
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_SLIDEMASKINDEX* maskIndexPtr = table.MaskIndex;
-	constexpr size_t prefetchDistance = SLIDEMASKS_StaticPrefetchDistance;
+	const MG_SLIDEMASKINDEX countMasks = table.CountMasks;
 	CM_PREFETCH((const char*)(table.MaskIndex));
 	while (SQUARE_Next(pieces, fromSquareIndex))
 	{
 		if (table.CountMasks < 8)
 		{
-			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < table.CountMasks; slideMaskIndex++)
+			SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS;
+			for (MG_SLIDEMASKINDEX slideMaskIndex = 0; slideMaskIndex < countMasks; slideMaskIndex++)
 			{
 				const size_t prefetchIndex = slideMaskIndex + prefetchDistance;
-				CM_PREFETCH((const char*)(maskIndexPtr + (prefetchIndex < table.CountMasks) * prefetchIndex));
+				CM_PREFETCH((const char*)(maskIndexPtr + (prefetchIndex < countMasks) * prefetchIndex));
 				const MG_SLIDEMASKINDEX maskIndex = maskIndexPtr[slideMaskIndex];
 				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
 				attacks |= targets;
@@ -564,19 +762,10 @@ BB_BITBOARD SLIDEMASKS_GetPieceAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSI
 		}
 		else
 		{
+			SLIDEMASKS_CONSTEXPR_IF_STATIC size_t prefetchDistance = SLIDEMASKS_GENERATION_PREFETCH_DISTANCE_ATTACKS_UNROLLED;
 			size_t slideMaskIndex = 0;
-			for (; slideMaskIndex + 4 <= table.CountMasks; slideMaskIndex += 4)
-			{
-				CM_PREFETCH((const char*)(maskIndexPtr + (slideMaskIndex + prefetchDistance) * (slideMaskIndex + prefetchDistance < table.CountMasks)));
-				CM_PREFETCH((const char*)(maskIndexPtr + (slideMaskIndex + prefetchDistance + 1) * (slideMaskIndex + prefetchDistance + 1 < table.CountMasks)));
-				CM_PREFETCH((const char*)(maskIndexPtr + (slideMaskIndex + prefetchDistance + 2) * (slideMaskIndex + prefetchDistance + 2 < table.CountMasks)));
-				CM_PREFETCH((const char*)(maskIndexPtr + (slideMaskIndex + prefetchDistance + 3) * (slideMaskIndex + prefetchDistance + 3 < table.CountMasks)));
-				attacks |= SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndexPtr[slideMaskIndex], fromSquareIndex);
-				attacks |= SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndexPtr[slideMaskIndex + 1], fromSquareIndex);
-				attacks |= SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndexPtr[slideMaskIndex + 2], fromSquareIndex);
-				attacks |= SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndexPtr[slideMaskIndex + 3], fromSquareIndex);
-			}
-			for (; slideMaskIndex < table.CountMasks; slideMaskIndex++)
+			SLIDEMASKS_UNROLL_LOOP_ATTACKS(prefetchDistance, countMasks, slideMaskIndex, maskIndexPtr, { attacks |= SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndexPtr[idx], fromSquareIndex); });
+			for (; slideMaskIndex < countMasks; slideMaskIndex++)
 			{
 				const MG_SLIDEMASKINDEX maskIndex = maskIndexPtr[slideMaskIndex];
 				const BB_BITBOARD targets = SLIDEMASKS_LookUpTargetsInline(pMoveGen, pPosition, maskIndex, fromSquareIndex);
