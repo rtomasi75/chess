@@ -1,4 +1,4 @@
-﻿#include "main.h"
+#include "main.h"
 #include "libCommon.h"
 #include "libBitboard.h"
 #include "libMovegen.h"
