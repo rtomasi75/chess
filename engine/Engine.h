@@ -15,6 +15,12 @@
 #include <condition_variable>
 #include <mutex>
 
+enum class EngineStartupMode
+{
+	Default,
+	AutoPerft6
+};
+
 class Engine
 {
 private:
@@ -31,6 +37,7 @@ private:
 	bool _UCI;
 	bool TryParse(const std::string& commandString);
 	void MainThread();
+	void AutoPerft(const int& depth);
 public:
 	const MG_PLAYER& MovingPlayer() const;
 	const MG_PLAYER& PassivePlayer() const;
@@ -50,7 +57,7 @@ public:
 	void MakeMove(const MG_MOVE& move);
 	void UnmakeMove();
 	void SetPosition(const MG_POSITION& newPosition);
-	Engine(std::istream& inputStream, std::ostream& outputStream);
+	Engine(std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode = EngineStartupMode::Default);
 	~Engine();
 };
 

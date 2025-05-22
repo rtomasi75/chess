@@ -15,8 +15,9 @@
 #include "commands/Command_Perft.h"
 #include "commands/Command_Divide.h"
 #include "commands/Command_SetFen.h"
+#include <sstream>
 
-Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
+Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode) :
 	_isRunning(false),
 	_inputStream(inputStream),
 	_outputStream(outputStream),
@@ -43,6 +44,24 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream) :
 	_basicCommands.emplace_back(std::make_unique<Command_Divide>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_SetFen>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugUnmove>(this));
+	switch (startupMode)
+	{
+	default: // just break out into interactive mode
+		break; 
+	case EngineStartupMode::AutoPerft6:
+		AutoPerft(6);
+		return;
+	}
+
+}
+
+void Engine::AutoPerft(const int& depth)
+{
+	Command_Perft command(this);
+	std::stringstream sstream;
+	sstream << "perft " << depth;
+	command.Try(sstream.str());
+	Stop();
 }
 
 Engine::~Engine()
