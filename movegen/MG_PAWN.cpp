@@ -812,102 +812,57 @@ void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition,
 {
 	ASSERT(piece == PIECETYPE_PAWN);
 	const BB_BITBOARD totalOccupancy = pPosition->OccupancyTotal;
-	if (pPosition->Header.MovingPlayer == PLAYER_WHITE)
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const bool bIsWhite = movingPlayer == PLAYER_WHITE;
+	const bool bIsBlack = !bIsWhite;
+	const BB_BITBOARD ownPawns = pPosition->OccupancyPlayerPiece[movingPlayer][PIECETYPE_PAWN];
+	BB_BITBOARD movers = ownPawns & ~((bIsWhite * RANK_7) | (bIsBlack * RANK_2));
+	BB_SQUAREINDEX fromSquareIndex;
+	while (SQUARE_Next(movers, fromSquareIndex))
 	{
-		BB_BITBOARD movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & ~RANK_7;
-		BB_SQUAREINDEX fromSquareIndex;
-		while (SQUARE_Next(movers, fromSquareIndex))
+		const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
+		const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
+		const BB_SQUARE squareFrom = SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex);
+		const BB_SQUARE squareTo = (bIsWhite * BITBOARD_UP(squareFrom)) | (bIsBlack * BITBOARD_DOWN(squareFrom));
+		if (!(totalOccupancy & squareTo))
 		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const BB_SQUARE squareTo = BITBOARD_UP(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
-			if (!(totalOccupancy & squareTo))
-			{
-				const MG_MOVE offset = (fromRankIndex - 1) * COUNT_FILES + fromFileIndex;
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].QuietBase + offset;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
-			}
+			const MG_MOVE offset = (fromRankIndex - (1 + bIsBlack)) * COUNT_FILES + fromFileIndex;
+			const MG_MOVE move = pMoveGen->PawnTable[movingPlayer].QuietBase + offset;
+			ASSERT(move < pMoveGen->CountMoves[movingPlayer]);
+			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 		}
-		movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & RANK_7;
-		while (SQUARE_Next(movers, fromSquareIndex))
+	}
+	movers = ownPawns & ((bIsWhite * RANK_7) | (bIsBlack * RANK_2));
+	while (SQUARE_Next(movers, fromSquareIndex))
+	{
+		const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
+		const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
+		const BB_SQUARE squareFrom = SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex);
+		const BB_SQUARE squareTo = (bIsWhite * BITBOARD_UP(squareFrom)) | (bIsBlack * BITBOARD_DOWN(squareFrom));
+		if (!(totalOccupancy & squareTo))
 		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const BB_SQUARE squareTo = BITBOARD_UP(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
-			if (!(totalOccupancy & squareTo))
+			const MG_MOVE offset = fromFileIndex * MOVEGEN_COUNT_PROMOPIECES;
+			for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
 			{
-				const MG_MOVE offset = fromFileIndex * MOVEGEN_COUNT_PROMOPIECES;
-				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
-				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].PromotionBase + offset + promoPieceIndex;
-					ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
-				}
-			}
-		}
-		movers = pPosition->OccupancyPlayerPiece[PLAYER_WHITE][PIECETYPE_PAWN] & RANK_2;
-		while (SQUARE_Next(movers, fromSquareIndex))
-		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_SQUARE squareOver = BITBOARD_UP(SQUARE_FromIndex(fromSquareIndex));
-			const BB_SQUARE squareTo = BITBOARD_UP(squareOver);
-			if (!(totalOccupancy & (squareTo | squareOver)))
-			{
-				const MG_MOVE offset = fromFileIndex;
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_WHITE].DoublePushBase + offset;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_WHITE]);
+				const MG_MOVE move = pMoveGen->PawnTable[movingPlayer].PromotionBase + offset + promoPieceIndex;
+				ASSERT(move < pMoveGen->CountMoves[movingPlayer]);
 				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 			}
 		}
 	}
-	else
+	movers = ownPawns & ((bIsWhite * RANK_2) | (bIsBlack * RANK_7));
+	while (SQUARE_Next(movers, fromSquareIndex))
 	{
-		BB_BITBOARD movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & ~RANK_2;
-		BB_SQUAREINDEX fromSquareIndex;
-		while (SQUARE_Next(movers, fromSquareIndex))
+		const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
+		const BB_SQUARE squareFrom = SQUARE_FromIndex(fromSquareIndex);
+		const BB_SQUARE squareOver = (bIsWhite * BITBOARD_UP(squareFrom)) | (bIsBlack * BITBOARD_DOWN(squareFrom));
+		const BB_SQUARE squareTo = (bIsWhite * BITBOARD_UP(squareOver)) | (bIsBlack * BITBOARD_DOWN(squareOver));
+		if (!(totalOccupancy & (squareTo | squareOver)))
 		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const BB_SQUARE squareTo = BITBOARD_DOWN(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
-			if (!(totalOccupancy & squareTo))
-			{
-				const MG_MOVE offset = (fromRankIndex - 2) * COUNT_FILES + fromFileIndex;
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].QuietBase + offset;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
-			}
-		}
-		movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & RANK_2;
-		while (SQUARE_Next(movers, fromSquareIndex))
-		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_RANKINDEX fromRankIndex = SQUARE_GetRankIndex(fromSquareIndex);
-			const BB_SQUARE squareTo = BITBOARD_DOWN(SQUARE_FromRankFileIndices(fromRankIndex, fromFileIndex));
-			if (!(totalOccupancy & squareTo))
-			{
-				const MG_MOVE offset = fromFileIndex * MOVEGEN_COUNT_PROMOPIECES;
-				for (int promoPieceIndex = 0; promoPieceIndex < MOVEGEN_COUNT_PROMOPIECES; promoPieceIndex++)
-				{
-					const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].PromotionBase + offset + promoPieceIndex;
-					ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
-				}
-			}
-		}
-		movers = pPosition->OccupancyPlayerPiece[PLAYER_BLACK][PIECETYPE_PAWN] & RANK_7;
-		while (SQUARE_Next(movers, fromSquareIndex))
-		{
-			const BB_FILEINDEX fromFileIndex = SQUARE_GetFileIndex(fromSquareIndex);
-			const BB_SQUARE squareOver = BITBOARD_DOWN(SQUARE_FromIndex(fromSquareIndex));
-			const BB_SQUARE squareTo = BITBOARD_DOWN(squareOver);
-			if (!(totalOccupancy & (squareTo | squareOver)))
-			{
-				const MG_MOVE offset = fromFileIndex;
-				const MG_MOVE move = pMoveGen->PawnTable[PLAYER_BLACK].DoublePushBase + offset;
-				ASSERT(move < pMoveGen->CountMoves[PLAYER_BLACK]);
-				MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
-			}
+			const MG_MOVE offset = fromFileIndex;
+			const MG_MOVE move = pMoveGen->PawnTable[movingPlayer].DoublePushBase + offset;
+			ASSERT(move < pMoveGen->CountMoves[movingPlayer]);
+			MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, move);
 		}
 	}
 }
