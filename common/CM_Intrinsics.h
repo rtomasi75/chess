@@ -1,4 +1,7 @@
 #pragma once
+#ifndef CM_INTRINSICS_H
+#define CM_INTRINSICS_H
+
 
 #include <cstdint>
 #include <string>
@@ -54,3 +57,5 @@ bool CM_PopLsb(std::uint64_t& value, std::int8_t& bit);
 std::string CM_GetIntrinsicInfo();
 
 typedef std::uint8_t CM_BOOL;
+
+#endif // CM_INTRINSICS_H

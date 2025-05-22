@@ -299,7 +299,7 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	else
 	{
 		const BB_FILE epFile = FILE_FromIndex(position.Header.EpFileIndex);
-		const BB_RANK epRank = (position.Header.MovingPlayer == PLAYER_WHITE) ? RANK_3 : RANK_6;
+		const BB_RANK epRank = (position.Header.MovingPlayer == PLAYER_WHITE) ? RANK_6 : RANK_3;
 		const BB_SQUARE epSquare = SQUARE_FromRankFile(epRank, epFile);
 		if (!SQUARE_ToString(pString, len, strPos, epSquare))
 			return false;
@@ -458,22 +458,19 @@ bool POSITION_Parse(const MG_MOVEGEN* pMoveGen, const char* pString, const int& 
 		POSITION_SetEnPassantFile(&outParsed, epFileIdx);
 	}
 	int value = 0;
-	int l = sscanf_s("&d", pString + strPos, value);
-	if (l == 0 || l == EOF)
-	{
+	if (strPos >= len)
 		return false;
-	}
-	strPos += l;
+	if (pString[strPos++] != ' ')
+		return false;
+	if (!CM_ParseDecimalInt(pString, len, strPos, value))
+		return false;
 	outParsed.Header.HalfMoveClock = (MG_HALFMOVECOUNT)value;
 	if (strPos >= len)
 		return false;
 	if (pString[strPos++] != ' ')
 		return false;
-	l = sscanf_s("&d", pString + strPos, value);
-	if (l == 0 || l == EOF)
-	{
+	if (!CM_ParseDecimalInt(pString, len, strPos, value))
 		return false;
-	}
 	outParsed.Header.MoveCount = (MG_FULLMOVECOUNT)value;
 	return true;
 }
