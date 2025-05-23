@@ -811,8 +811,9 @@ void PAWN_Initialize_CaptureMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen,
 void PAWN_GenerateQuietMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	ASSERT(piece == PIECETYPE_PAWN);
-	const BB_BITBOARD totalOccupancy = pPosition->OccupancyTotal;
 	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	CM_PREFETCH_L1(&pMoveGen->PawnTable[movingPlayer]);
+	const BB_BITBOARD totalOccupancy = pPosition->OccupancyTotal;
 	const bool bIsWhite = movingPlayer == PLAYER_WHITE;
 	const bool bIsBlack = !bIsWhite;
 	const BB_BITBOARD ownPawns = pPosition->OccupancyPlayerPiece[movingPlayer][PIECETYPE_PAWN];
@@ -871,12 +872,12 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPositio
 {
 	ASSERT(piece == PIECETYPE_PAWN);
 	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	CM_PREFETCH_L1(&pMoveGen->PawnTable[movingPlayer]);
 	const MG_PLAYER passivePlayer = pPosition->Header.PassivePlayer;
 	const bool bIsWhite = movingPlayer == PLAYER_WHITE;
 	const bool bIsBlack = !bIsWhite;
 	const BB_BITBOARD ownPawns = pPosition->OccupancyPlayerPiece[movingPlayer][PIECETYPE_PAWN];
 	const BB_BITBOARD* pPlayerOccupancyOpponent = pPosition->OccupancyPlayerPiece[passivePlayer];
-	const BB_BITBOARD* pPlayerOccupancyOwn = pPosition->OccupancyPlayerPiece[movingPlayer];
 	BB_BITBOARD movers = ownPawns & ~((bIsWhite * RANK_7) | (bIsBlack * RANK_2));
 	BB_SQUAREINDEX fromSquareIndex;
 	const MG_MOVE captureBase = pMoveGen->PawnTable[movingPlayer].CaptureBase;
@@ -968,8 +969,13 @@ void PAWN_GenerateCaptureMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPositio
 BB_BITBOARD PAWN_GetPawnAttacks(const MG_MOVEGEN* pMoveGen, const MG_POSITION* pPosition, const MG_PIECETYPE& piece, const MG_PLAYER& player, BB_BITBOARD& outInterest)
 {
 	ASSERT(piece == PIECETYPE_PAWN);
-	const BB_BITBOARD pawns = pPosition->OccupancyPlayerPiece[player][PIECETYPE_PAWN];
-	const BB_BITBOARD pushed = (player == PLAYER_WHITE) ? BITBOARD_UP(pawns) : BITBOARD_DOWN(pawns);
+	const BB_BITBOARD* pOccupancy = pPosition->OccupancyPlayerPiece[player];
+	CM_PREFETCH(pOccupancy);
+	CM_PREFETCH(&pOccupancy[PIECETYPE_PAWN]);
+	const BB_BITBOARD pawns = pOccupancy[PIECETYPE_PAWN];
+	const bool bIsWhite = (player == PLAYER_WHITE);
+	const bool bIsBlack = !bIsWhite;
+	const BB_BITBOARD pushed = (bIsWhite * BITBOARD_UP(pawns)) | (bIsBlack * BITBOARD_DOWN(pawns));
 	outInterest = pawns;
 	return BITBOARD_LEFT(pushed) | BITBOARD_RIGHT(pushed);
 }
