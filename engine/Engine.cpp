@@ -71,8 +71,9 @@ Engine::~Engine()
 	MOVEGEN_Deinitialize(&_moveGen);
 }
 
-const MG_MOVELIST& Engine::LegalMoves() const
+MG_MOVELIST Engine::LegalMoves() const
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	return _game.LegalMoves;
 }
 
@@ -81,25 +82,23 @@ const MG_MOVEGEN& Engine::MoveGen() const
 	return _moveGen;
 }
 
-const SE_GAME& Engine::Game() const
+SE_GAME Engine::Game() const
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	return _game;
-}
-
-const MG_POSITION& Engine::Position() const
-{
-	return _game.CurrentPosition;
 }
 
 void Engine::SetPosition(const MG_POSITION& newPosition)
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	_game.CurrentPosition = newPosition;
 	MOVEGEN_GenerateMoves(&_moveGen, &_game.CurrentPosition, &_game.LegalMoves);
 
 }
 
-MG_POSITION& Engine::Position()
+MG_POSITION Engine::Position() const
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	return _game.CurrentPosition;
 }
 
@@ -117,7 +116,7 @@ bool Engine::TryParse(const std::string& commandString)
 
 void Engine::Start()
 {
-	std::lock_guard<std::mutex> lock(_stopMutex);
+	std::scoped_lock<std::mutex> lock(_stopMutex);
 	if (!_isStopped)
 		return;
 	_isStopped = false;
@@ -146,7 +145,7 @@ void Engine::MainThread()
 			ErrorMessage("Could not parse command.");
 		}
 	}
-	std::lock_guard<std::mutex> lock(_stopMutex);
+	std::scoped_lock<std::mutex> lock(_stopMutex);
 	_isStopped = true;
 	_signalStop.notify_all();
 }
@@ -190,22 +189,34 @@ std::string Engine::Version() const
 
 void Engine::MakeMove(const MG_MOVE& move)
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	GAME_MakeMove(&_game, move, &_moveGen);
 }
 
 void Engine::UnmakeMove()
 {
+	std::scoped_lock<std::mutex> lock(_gameMutex);
 	GAME_UnmakeMove(&_game, &_moveGen);
 }
 
-const MG_PLAYER& Engine::MovingPlayer() const
+MG_PLAYER Engine::MovingPlayer() const
 {
-	return Position().Header.MovingPlayer;
+	std::scoped_lock<std::mutex> lock(_gameMutex);
+	return _game.CurrentPosition.Header.MovingPlayer;
 }
 
-const MG_PLAYER& Engine::PassivePlayer() const
+MG_PLAYER Engine::PassivePlayer() const
 {
-	return Position().Header.PassivePlayer;
+	std::scoped_lock<std::mutex> lock(_gameMutex);
+	return _game.CurrentPosition.Header.PassivePlayer;
 }
+
+SE_LEAFCOUNT Engine::Perft(const SE_DEPTH& depth, SE_POSITIONCOUNT& nodeCount)
+{
+	MG_POSITION localPosition;
+	memcpy(&localPosition, &_game.CurrentPosition, sizeof(MG_POSITION));
+	return SEARCH_PerftRoot(&localPosition, &_moveGen, depth, nodeCount);
+}
+
 
 

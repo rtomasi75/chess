@@ -53,7 +53,8 @@ bool Command::ParseMove(const std::string& moveString, MG_MOVE& parsedMove) cons
 	std::string temp = moveString;
 	std::string normalized = StringHelper::ToLower(StringHelper::Trim(temp));
 	int pos = 0;
-	return MOVEGEN_ParseMoveString(&GetEngine().MoveGen(), GetEngine().Position().Header.MovingPlayer, &GetEngine().LegalMoves(), moveString.c_str(), (int)moveString.size(), pos, parsedMove);
+	MG_MOVELIST legalMoves = GetEngine().LegalMoves();
+	return MOVEGEN_ParseMoveString(&GetEngine().MoveGen(), GetEngine().MovingPlayer(), &legalMoves, moveString.c_str(), (int)moveString.size(), pos, parsedMove);
 }
 
 bool Command::ParseSquare(const std::string& squareString, BB_SQUARE& parsedSquare) const
@@ -167,11 +168,11 @@ std::string Command::PositionToString(const MG_POSITION& position, int indentati
 		{
 			BB_FILE file = FILE_FromIndex(fileIndex);
 			BB_SQUARE sq = rank & file;
-			if (POSITION_CheckConsistency(&GetEngine().Position(), sq))
+			if (POSITION_CheckConsistency(&position, sq))
 			{
 				MG_PIECETYPE piece;
 				MG_PLAYER player;
-				if (POSITION_GetPiece(&GetEngine().Position(), sq, player, piece))
+				if (POSITION_GetPiece(&position, sq, player, piece))
 				{
 					sstream << PieceToString(piece, player);
 				}

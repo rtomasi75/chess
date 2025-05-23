@@ -25,7 +25,8 @@ bool Command_DebugMove::Try(const std::string& commandString)
 				sstream << "Performing move " + MoveToString(move) + ":" << std::endl;
 				GetEngine().MakeMove(move);
 				sstream << PositionToString(GetEngine().Position());
-				if (GetEngine().Position().Hash != POSITION_ComputeHash(&GetEngine().Position()))
+				MG_POSITION position = GetEngine().Position();
+				if (position.Hash != POSITION_ComputeHash(&position))
 				{
 					sstream << "Position hash does NOT match!" << std::endl;
 				}

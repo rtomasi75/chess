@@ -14,8 +14,9 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 	std::string input = commandString;
 	if (StringHelper::ToLower(StringHelper::Trim(input)) == "debug-board")
 	{
+		const MG_POSITION position = GetEngine().Position();
 		std::stringstream sstream;
-		sstream << PositionToString(GetEngine().Position());
+		sstream << PositionToString(position);
 		sstream << std::endl;
 		for (MG_PLAYER player = 0; player < COUNT_PLAYERS; player++)
 		{
@@ -31,7 +32,7 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 				for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_FILES; fileIdx++)
 				{
 					const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
-					if (square & GetEngine().Position().AttacksPlayer[player])
+					if (square & position.AttacksPlayer[player])
 					{
 						sstream << "#";
 					}
@@ -46,7 +47,7 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 					for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_FILES; fileIdx++)
 					{
 						const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
-						if (square & GetEngine().Position().AttacksPlayerPiece[player][piece])
+						if (square & position.AttacksPlayerPiece[player][piece])
 						{
 							sstream << "#";
 						}
@@ -78,7 +79,7 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 					for (BB_FILEINDEX fileIdx = 0; fileIdx < COUNT_FILES; fileIdx++)
 					{
 						const BB_SQUARE square = SQUARE_FromRankFileIndices(rankIdx, fileIdx);
-						if (square & GetEngine().Position().InterestPlayerPiece[player][piece])
+						if (square & position.InterestPlayerPiece[player][piece])
 						{
 							sstream << "#";
 						}
@@ -93,7 +94,7 @@ bool Command_DebugBoard::Try(const std::string& commandString)
 			}
 			sstream << std::endl;
 		}
-		if (GetEngine().Position().Hash != POSITION_ComputeHash(&GetEngine().Position()))
+		if (position.Hash != POSITION_ComputeHash(&position))
 		{
 			sstream << "WARNING: Position hash does NOT match!" << std::endl;
 		}

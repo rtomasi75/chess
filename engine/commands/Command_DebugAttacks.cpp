@@ -31,7 +31,8 @@ bool Command_DebugAttacks::Try(const std::string& commandString)
 			std::stringstream sstream;
 			BB_BITBOARD interest;
 			sstream << "Attack map for " << PieceToString(piece, player) << std::endl;
-			sstream << BitboardToString(MOVEGEN_GetPieceAttacks(&GetEngine().MoveGen(), &GetEngine().Position(), piece, player, interest), 2) << std::endl;
+			const MG_POSITION position = GetEngine().Position();
+			sstream << BitboardToString(MOVEGEN_GetPieceAttacks(&GetEngine().MoveGen(), &position, piece, player, interest), 2) << std::endl;
 			sstream << "Interest map for " << PieceToString(piece, player) << std::endl;
 			sstream << BitboardToString(interest, 2) << std::endl;
 			GetEngine().OutputStream() << sstream.str();
