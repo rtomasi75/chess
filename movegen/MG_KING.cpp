@@ -132,51 +132,28 @@ void KING_Initialize_CastleMoves(const MG_PLAYER& player, MG_MOVEGEN* pMoveGen, 
 void KING_GenerateCastleMoves(const MG_MOVEGEN* pMoveGen, MG_POSITION* pPosition, const MG_PIECETYPE& piece, MG_MOVELIST* pMoveList)
 {
 	ASSERT(piece == PIECETYPE_KING);
-	if (pPosition->Header.MovingPlayer == PLAYER_WHITE)
+	const MG_PLAYER movingPlayer = pPosition->Header.MovingPlayer;
+	const MG_PLAYER passivePlayer = pPosition->Header.PassivePlayer;
+	const bool bIsWhite = (movingPlayer == PLAYER_WHITE);
+	const bool bIsBlack = !bIsWhite;
+	const MG_CASTLEFLAGS kingSideFlag = (bIsWhite * CASTLEFLAGS_WHITE_KINGSIDE) | (bIsBlack * CASTLEFLAGS_BLACK_KINGSIDE);
+	const BB_BITBOARD kingSideWalk = (bIsWhite * CASTLEWALK_KINGSIDE_WHITE) | (bIsBlack * CASTLEWALK_KINGSIDE_BLACK);
+	const BB_BITBOARD kingSideInterest = (bIsWhite * CASTLEINTEREST_KINGSIDE_WHITE) | (bIsBlack * CASTLEINTEREST_KINGSIDE_BLACK);
+	const BB_BITBOARD occupancyTotal = pPosition->OccupancyTotal;
+	const BB_BITBOARD attacks = pPosition->AttacksPlayer[passivePlayer];
+	const MG_CASTLEFLAGS castlingRights = pPosition->Header.CastlingRights;
+	const bool bCastleKingSide = (castlingRights & kingSideFlag) && !(occupancyTotal & kingSideWalk) && !(attacks & kingSideInterest);
+	if (bCastleKingSide)
 	{
-		if (pPosition->Header.CastlingRights & CASTLEFLAGS_WHITE_KINGSIDE)
-		{
-			if (!(pPosition->OccupancyTotal & CASTLEWALK_KINGSIDE_WHITE))
-			{
-				if (!(pPosition->AttacksPlayer[PLAYER_BLACK] & CASTLEINTEREST_KINGSIDE_WHITE))
-				{
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[PLAYER_WHITE]);
-				}
-			}
-		}
-		if (pPosition->Header.CastlingRights & CASTLEFLAGS_WHITE_QUEENSIDE)
-		{
-			if (!(pPosition->OccupancyTotal & CASTLEWALK_QUEENSIDE_WHITE))
-			{
-				if (!(pPosition->AttacksPlayer[PLAYER_BLACK] & CASTLEINTEREST_QUEENSIDE_WHITE))
-				{
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[PLAYER_WHITE] + 1);
-				}
-			}
-		}
+		MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[movingPlayer]);
 	}
-	else
+	const MG_CASTLEFLAGS queenSideFlag = (bIsWhite * CASTLEFLAGS_WHITE_QUEENSIDE) | (bIsBlack * CASTLEFLAGS_BLACK_QUEENSIDE);
+	const BB_BITBOARD queenSideWalk = (bIsWhite * CASTLEWALK_QUEENSIDE_WHITE) | (bIsBlack * CASTLEWALK_QUEENSIDE_BLACK);
+	const BB_BITBOARD queenSideInterest = (bIsWhite * CASTLEINTEREST_QUEENSIDE_WHITE) | (bIsBlack * CASTLEINTEREST_QUEENSIDE_BLACK);
+	const bool bCastleQueenSide = (castlingRights & queenSideFlag) && !(occupancyTotal & queenSideWalk) && !(attacks & queenSideInterest);
+	if (bCastleQueenSide)
 	{
-		if (pPosition->Header.CastlingRights & CASTLEFLAGS_BLACK_KINGSIDE)
-		{
-			if (!(pPosition->OccupancyTotal & CASTLEWALK_KINGSIDE_BLACK))
-			{
-				if (!(pPosition->AttacksPlayer[PLAYER_WHITE] & CASTLEINTEREST_KINGSIDE_BLACK))
-				{
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[PLAYER_BLACK]);
-				}
-			}
-		}
-		if (pPosition->Header.CastlingRights & CASTLEFLAGS_BLACK_QUEENSIDE)
-		{
-			if (!(pPosition->OccupancyTotal & CASTLEWALK_QUEENSIDE_BLACK))
-			{
-				if (!(pPosition->AttacksPlayer[PLAYER_WHITE] & CASTLEINTEREST_QUEENSIDE_BLACK))
-				{
-					MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[PLAYER_BLACK] + 1);
-				}
-			}
-		}
+		MOVEGEN_FinalizeMove(pMoveGen, pMoveList, pPosition, pMoveGen->CastleBase[movingPlayer] + 1);
 	}
 }
 
