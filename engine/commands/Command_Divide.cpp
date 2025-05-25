@@ -76,7 +76,7 @@ bool Command_Divide::Try(const std::string& commandString)
 						sstream << "  " << MoveToString(moveList.Move[moveIdx]) << ": ";
 						std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 						std::uint64_t nodeCount = 0;
-						std::uint64_t leafCount = MOVEGEN_Perft(&position, &GetEngine().MoveGen(), depth - 1, nodeCount);
+						std::uint64_t leafCount = SEARCH_PerftRoot(&position, &GetEngine().MoveGen(), depth - 1, nodeCount);
 						std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
 						std::chrono::high_resolution_clock::duration elapsed = end - start;
 						std::chrono::milliseconds elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);

@@ -283,6 +283,9 @@ void MOVEGEN_MakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, MG_MOVEDA
 	{
 		pOutMoveData->DirtyFlags[player] = dirtyFlags[player];
 	}
+#ifdef MOVEGEN_LEGAL
+	ASSERT(POSITION_IsLegal(pPosition));
+#endif
 }
 
 void MOVEGEN_UnmakeMove(const MG_MOVEGEN* pMoveGen, const MG_MOVE& move, const MG_MOVEDATA* pMoveData, MG_POSITION* pPosition)

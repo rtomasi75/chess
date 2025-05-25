@@ -7,12 +7,17 @@
 
 struct SE_NODE
 {
-	MG_POSITION Position;
 	SE_DEPTH DistanceToHorizon;
 	SE_POSITIONCOUNT NodeCount;
 	MG_MOVEINDEX MoveIndex;
+	MG_MOVELIST MoveList;
+	MG_MOVEDATA MoveData;
+	SE_NODEFLAGS Flags;
+	SE_NODESTATE State;
 };
 
-void NODE_Initialize(SE_NODE* pNode, const MG_POSITION* pPosition, const SE_DEPTH distanceToHorizon);
+void NODE_Initialize(SE_NODE* pNode);
+
+void NODE_GenerateMoves(SE_NODE* pNode, MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen);
 
 #endif

@@ -5,5 +5,6 @@
 #include "search/SE_GAME.h"
 #include "search/SE_NODE.h"
 #include "search/SE_SEARCH.h"
+#include "search/SE_THREAD.h"
 
 #endif
