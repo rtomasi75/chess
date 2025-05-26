@@ -184,7 +184,7 @@ void Engine::ErrorMessage(const std::string& message)
 
 std::string Engine::Version() const
 {
-	return "Pygmalion ver. 1.0 - by Roland Tomasi";
+	return "DixieKnight ver. 1.0 - by Roland Tomasi";
 }
 
 void Engine::MakeMove(const MG_MOVE& move)

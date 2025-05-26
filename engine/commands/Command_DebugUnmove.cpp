@@ -19,8 +19,9 @@ bool Command_DebugUnmove::Try(const std::string& commandString)
 		if (GetEngine().Game().CurrentMove > 0)
 		{
 			std::stringstream sstream;
-			sstream << "Undoing move " + MoveToString(GetEngine().Game().PlayedMoves[GetEngine().Game().CurrentMove - 1].Move) + ":" << std::endl;
+			const MG_MOVE move = GetEngine().Game().PlayedMoves[GetEngine().Game().CurrentMove - 1].Move;
 			GetEngine().UnmakeMove();
+			sstream << "Undoing move " + MoveToString(move) + ":" << std::endl;
 			sstream << PositionToString(GetEngine().Position());
 			const MG_POSITION position = GetEngine().Position();
 			if (position.Hash != POSITION_ComputeHash(&position))
