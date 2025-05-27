@@ -34,11 +34,11 @@ static const std::int8_t CM_Index64[64] =
 
 #endif
 
-typedef std::int8_t(*CM_PopCountFn)(std::uint64_t);
-typedef std::uint64_t(*CM_BitDepFn)(std::uint64_t, std::uint64_t);
-typedef std::uint64_t(*CM_BitExtFn)(std::uint64_t, std::uint64_t);
-typedef std::int8_t(*CM_BsfFn)(std::uint64_t);
-typedef bool(*CM_PopLsbFn)(std::uint64_t&, std::int8_t&);
+typedef std::int8_t(*CM_FN_POPCNT)(std::uint64_t);
+typedef std::uint64_t(*CM_FN_PDEP)(std::uint64_t, std::uint64_t);
+typedef std::uint64_t(*CM_FN_PEXT)(std::uint64_t, std::uint64_t);
+typedef std::int8_t(*CM_FN_BSF)(std::uint64_t);
+typedef bool(*CM_FN_POPLSB)(std::uint64_t&, std::int8_t&);
 
 #if CM_HAVE_MSC || !CM_HAVE_POPCNT 
 
@@ -123,6 +123,25 @@ static bool CM_PopLsbFallback(std::uint64_t& value, std::int8_t& bit)
 
 #endif
 
+bool CM_PopLsbAtomic(std::atomic<std::uint64_t>& bb, std::int8_t& bit)
+{
+	std::uint64_t current = bb.load(std::memory_order_relaxed);
+	while (current != 0)
+	{
+		std::uint64_t lsb = current & -current;
+		std::uint64_t cleared = current ^ lsb;
+
+		if (bb.compare_exchange_weak(current, cleared,
+			std::memory_order_acquire,
+			std::memory_order_relaxed))
+		{
+			bit = static_cast<std::int8_t>(CM_BitScanForward(lsb)); 
+			return true;
+		}
+	}
+	return false;
+}
+
 #if CM_HAVE_BMI
 static std::int8_t CM_BitScanForwardIntrinsic(std::uint64_t value)
 {
@@ -158,11 +177,11 @@ static bool CM_PopLsbIntrinsic(std::uint64_t& value, std::int8_t& bit)
 #endif
 
 #if CM_HAVE_MSC
-static CM_PopCountFn g_PopCountDispatch = CM_PopulationCountFallback;
-static CM_BitDepFn g_BitDepDispatch = CM_BitDepositFallback;
-static CM_BitExtFn g_BitExtDispatch = CM_BitExtractFallback;
-static CM_BsfFn g_BsfDispatch = CM_BitScanForwardFallback;
-static CM_PopLsbFn g_PopLsbDispatch = CM_PopLsbFallback;
+static CM_FN_POPCNT g_PopCountDispatch = CM_PopulationCountFallback;
+static CM_FN_PDEP g_BitDepDispatch = CM_BitDepositFallback;
+static CM_FN_PEXT g_BitExtDispatch = CM_BitExtractFallback;
+static CM_FN_BSF g_BsfDispatch = CM_BitScanForwardFallback;
+static CM_FN_POPLSB g_PopLsbDispatch = CM_PopLsbFallback;
 #endif
 
 void CM_DetectIntrinsics()
@@ -311,3 +330,4 @@ bool CM_PopLsb(std::uint64_t& value, std::int8_t& bit)
 #endif
 #endif
 }
+

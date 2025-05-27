@@ -1,0 +1,889 @@
+{
+  "module": "mod0",
+  "version": "1.0.0",
+  "description": "High-level awareness of the DixieKnight engine module: command dispatch, UCI integration, and movegen/search interfacing.",
+  "scope": {
+    "folder": "engine/",
+    "structural_components": [
+      "Engine",
+      "Command",
+      "StringHelper",
+      "EngineStartupMode"
+    ]
+  },
+  "contracts": {
+    "classes": [
+      {
+        "name": "Command",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "EngineStartupMode",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Engine",
+        "defined_in": "Engine.h"
+      }
+    ],
+    "engine_methods": [
+      {
+        "name": "TryParse",
+        "args": "const std::string& commandString",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "MainThread",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "AutoPerft",
+        "args": "const int& depth",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Perft",
+        "args": "const SE_DEPTH& depth, SE_POSITIONCOUNT& nodeCount",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "MovingPlayer",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "PassivePlayer",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Version",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "IsUCI",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "InputStream",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "OutputStream",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Position",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Dispatcher",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Game",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "MoveGen",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "LegalMoves",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Start",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Stop",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "WaitForStop",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "ErrorMessage",
+        "args": "const std::string&",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "MakeMove",
+        "args": "const MG_MOVE& move",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "UnmakeMove",
+        "args": "",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "SetPosition",
+        "args": "const MG_POSITION& newPosition",
+        "defined_in": "Engine.h"
+      },
+      {
+        "name": "Engine",
+        "args": "std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode = EngineStartupMode::Default",
+        "defined_in": "Engine.h"
+      }
+    ],
+    "derived_commands": [
+      {
+        "name": "Command_DebugAttacks",
+        "defined_in": "Command_DebugAttacks.h"
+      },
+      {
+        "name": "Command_DebugBoard",
+        "defined_in": "Command_DebugBoard.h"
+      },
+      {
+        "name": "Command_DebugIntrinsics",
+        "defined_in": "Command_DebugIntrinsics.h"
+      },
+      {
+        "name": "Command_DebugJumps",
+        "defined_in": "Command_DebugJumps.h"
+      },
+      {
+        "name": "Command_DebugMove",
+        "defined_in": "Command_DebugMove.h"
+      },
+      {
+        "name": "Command_DebugMoveGen",
+        "defined_in": "Command_DebugMoveGen.h"
+      },
+      {
+        "name": "Command_DebugMoves",
+        "defined_in": "Command_DebugMoves.h"
+      },
+      {
+        "name": "Command_DebugSlideMask",
+        "defined_in": "Command_DebugSlideMask.h"
+      },
+      {
+        "name": "Command_DebugSlideTargets",
+        "defined_in": "Command_DebugSlideTargets.h"
+      },
+      {
+        "name": "Command_DebugUnmove",
+        "defined_in": "Command_DebugUnmove.h"
+      },
+      {
+        "name": "Command_Divide",
+        "defined_in": "Command_Divide.h"
+      },
+      {
+        "name": "Command_ListMoves",
+        "defined_in": "Command_ListMoves.h"
+      },
+      {
+        "name": "Command_Perft",
+        "defined_in": "Command_Perft.h"
+      },
+      {
+        "name": "Command_Quit",
+        "defined_in": "Command_Quit.h"
+      },
+      {
+        "name": "Command_SetFen",
+        "defined_in": "Command_SetFen.h"
+      },
+      {
+        "name": "Command_Version",
+        "defined_in": "Command_Version.h"
+      }
+    ],
+    "all_command_names": [
+      "Command_DebugAttacks",
+      "Command_DebugBoard",
+      "Command_DebugIntrinsics",
+      "Command_DebugJumps",
+      "Command_DebugMove",
+      "Command_DebugMoveGen",
+      "Command_DebugMoves",
+      "Command_DebugSlideMask",
+      "Command_DebugSlideTargets",
+      "Command_DebugUnmove",
+      "Command_Divide",
+      "Command_ListMoves",
+      "Command_Perft",
+      "Command_Quit",
+      "Command_SetFen",
+      "Command_Version"
+    ],
+    "command_registration": {
+      "mechanism": "_basicCommands.emplace_back(std::make_unique<Command_X>(this))",
+      "location": "Engine::Engine(...)",
+      "container": "_basicCommands",
+      "pattern": "Manual registration, one line per command.",
+      "order_matters": true,
+      "type": "std::vector<std::unique_ptr<Command>>"
+    },
+    "command_utilities": [
+      {
+        "name": "Command",
+        "args": "Engine* pEngine",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "GetEngine",
+        "args": "",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "GetEngine",
+        "args": "",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "RankToString",
+        "args": "const BB_RANK& rank",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "CastleFlagsToString",
+        "args": "const MG_CASTLEFLAGS& castleFlags",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "FileToString",
+        "args": "const BB_FILE& file",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "PlayerToString",
+        "args": "const MG_PLAYER& player",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "PieceToString",
+        "args": "const MG_PIECETYPE& piece, const MG_PLAYER& player",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "BitboardToString",
+        "args": "const BB_BITBOARD& bitboard, int indentation = 0",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "ParseMove",
+        "args": "const std::string& moveString, MG_MOVE& parsedMove",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "ParseSquare",
+        "args": "const std::string& squareString, BB_SQUARE& parsedSquare",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "MoveToString",
+        "args": "const MG_MOVE& move",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "MoveToHexString",
+        "args": "const MG_MOVE& move",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "PositionToString",
+        "args": "const MG_POSITION& position, int indentation = 0",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "PositionToFEN",
+        "args": "const MG_POSITION& position",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "PositionFromFEN",
+        "args": "MG_POSITION& position, const std::string& fen",
+        "defined_in": "Command.h"
+      },
+      {
+        "name": "SquareToString",
+        "args": "const BB_SQUARE& square",
+        "defined_in": "Command.h"
+      }
+    ],
+    "expected_command_interface": {
+      "method": "bool Try(const std::string& commandString)",
+      "purpose": "Each Command_* class implements Try(...) to match, parse, and execute engine commands.",
+      "dispatch": "Engine loops through _basicCommands and invokes Try(...) on each until one returns true.",
+      "notes": [
+        "Try(...) parses a tokenized string and performs its associated command logic.",
+        "If the command string does not match, the command returns false \u2014 the next Try(...) is attempted.",
+        "StringHelper is commonly used for trimming, lowercasing, and token parsing."
+      ]
+    },
+    "command_try_samples": [
+      {
+        "class": "Command_DebugAttacks",
+        "args": "const std::string& commandString",
+        "body_preview": " { std::string input = commandString; std::string token; std::string remainder; if (StringHelper::NextToken(input, token, remainder)) { if (StringHelper::ToLower(StringHelper::Trim(token)) == \"debug-attacks\") { std::string pieceString = rem...",
+        "defined_in": "Command_DebugAttacks.cpp"
+      },
+      {
+        "class": "Command_DebugBoard",
+        "args": "const std::string& commandString",
+        "body_preview": " { std::string input = commandString; if (StringHelper::ToLower(StringHelper::Trim(input)) == \"debug-board\") { const MG_POSITION position = GetEngine().Position(); std::stringstream sstream; sstream << PositionToString(position); sstream <<...",
+        "defined_in": "Command_DebugBoard.cpp"
+      },
+      {
+        "class": "Command_DebugIntrinsics",
+        "args": "const std::string& commandString",
+        "body_preview": " { std::string input = commandString; if (StringHelper::ToLower(StringHelper::Trim(input)) != \"debug-intrinsics\") { return false; } std::stringstream sstream; sstream << CM_GetIntrinsicInfo() << std::endl; sstream << \"CM_ALIGNMENT_CACHELINE...",
+        "defined_in": "Command_DebugIntrinsics.cpp"
+      },
+      {
+        "class": "Command_DebugJumps",
+        "args": "const std::string& commandString",
+        "body_preview": " { std::string input = commandString; std::string token; std::string remainder; if (StringHelper::NextToken(input, token, remainder)) { if (StringHelper::ToLower(StringHelper::Trim(token)) == \"debug-jumps\") { std::string tableString;",
+        "defined_in": "Command_DebugJumps.cpp"
+      },
+      {
+        "class": "Command_DebugMove",
+        "args": "const std::string& commandString",
+        "body_preview": " { std::string input = commandString; std::string token; std::string remainder; if (StringHelper::NextToken(input, token, remainder)) { if (StringHelper::ToLower(StringHelper::Trim(token)) == \"debug-move\") { MG_MOVE move;",
+        "defined_in": "Command_DebugMove.cpp"
+      }
+    ],
+    "command_descriptions": [
+      {
+        "name": "debug-attacks",
+        "class": "Command_DebugAttacks",
+        "syntax": "debug-attacks <piecetype>",
+        "arguments": {
+          "piecetype": "Single character FEN-style piece code. Uppercase = white, lowercase = black."
+        },
+        "function": "Displays the combined attack map and interest map for all pieces of the specified type on the current board.",
+        "example": {
+          "input": "debug-attacks p",
+          "output": [
+            "Attack map for p",
+            "  ........",
+            "  ........",
+            "  ########",
+            "  ........",
+            "  ........",
+            "  ........",
+            "  ........",
+            "  ........",
+            "",
+            "Interest map for p",
+            "  ........",
+            "  ########",
+            "  ........",
+            "  ........",
+            "  ........",
+            "  ........",
+            "  ........",
+            "  ........"
+          ]
+        },
+        "notes": [
+          "Bitboard visual output: '#' = active bit, '.' = clear",
+          "FEN-compatible parsing ensures compatibility with external tools"
+        ]
+      },
+      {
+        "name": "debug-board",
+        "class": "Command_DebugBoard",
+        "syntax": "debug-board",
+        "arguments": {},
+        "function": "Displays the current board position, followed by attack and interest maps for each piece type.",
+        "example": {
+          "input": "debug-board",
+          "output": [
+            "8|rnbqkbnr",
+            "7|pppppppp",
+            "6|........",
+            "5|........",
+            "4|........",
+            "3|........",
+            "2|PPPPPPPP",
+            "1|RNBQKBNR",
+            "-+--------",
+            "w|ABCDEFGH KQkq -",
+            "Hash: 0x56d86a41afdde8fd",
+            "FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+            "... [further per-piece attack and interest maps follow] ..."
+          ]
+        },
+        "notes": [
+          "Includes turn, castling rights, and FEN string.",
+          "Outputs a board-view of attacks and interest bitboards for every piece type.",
+          "Used to verify full engine state at a glance."
+        ]
+      },
+      {
+        "name": "debug-intrinsics",
+        "class": "Command_DebugIntrinsics",
+        "syntax": "debug-intrinsics",
+        "arguments": {},
+        "function": "Displays runtime CPU feature detection and alignment constants used by the engine.",
+        "example": {
+          "input": "debug-intrinsics",
+          "output": [
+            "Runtime CPU features: POPCNT BMI BMI2",
+            "CM_ALIGNMENT_CACHELINE: 64 bytes",
+            "CM_ALIGNMENT_PROCWORD: 8 bytes",
+            "MG_POSITION alignment: 64 bytes"
+          ]
+        },
+        "notes": [
+          "Prints detected intrinsics such as POPCNT, BMI, BMI2.",
+          "CM_ALIGNMENT_CACHELINE and CM_ALIGNMENT_PROCWORD reflect architectural constants.",
+          "MG_POSITION alignment reflects its enforced alignment, which is equal to a cache line.",
+          "The label 'MG_POSITION alignment' may eventually be clarified for precision \u2014 it reflects the cache line size used."
+        ]
+      },
+      {
+        "name": "debug-jumps",
+        "class": "Command_DebugJumps",
+        "syntax": "debug-jumps <jumptableindex> <square>",
+        "arguments": {
+          "jumptableindex": "Integer index identifying a jump table (0\u201313). Corresponds to a fixed king/knight jump mask.",
+          "square": "Algebraic square notation (e.g., e4)."
+        },
+        "function": "Displays the jump mask, base move ID, and move list for a jumper piece type starting from the given square.",
+        "example": {
+          "input": "debug-jumps 0 e4",
+          "output": [
+            "JUMPTABLE_KING_QUIET for e4:",
+            "  Target index: 0",
+            "  Mask:",
+            "    ........",
+            "    ........",
+            "    ........",
+            "    ...###..",
+            "    ...#.#..",
+            "    ...###..",
+            "    ........",
+            "    ........",
+            "  BaseMove: 0x0476",
+            "  Moves:",
+            "    0x0476: e4d3",
+            "    0x0477: e4e3",
+            "    0x0478: e4f3",
+            "    0x0479: e4d4",
+            "    0x047a: e4f4",
+            "    0x047b: e4d5",
+            "    0x047c: e4e5",
+            "    0x047d: e4f5"
+          ]
+        },
+        "notes": [
+          "Jump table index selects between quiet/capture tables for king and knight.",
+          "Move generation is decoded directly from precomputed mask entries.",
+          "Useful for verifying JUMPTABLE correctness and debugging jump indexing."
+        ]
+      },
+      {
+        "name": "debug-move",
+        "class": "Command_DebugMove",
+        "syntax": "debug-move <ucimove>",
+        "arguments": {
+          "ucimove": "Move in UCI format (e.g., e2e4, g1f3)."
+        },
+        "function": "Plays the given move on the board and displays the new board state and position info.",
+        "example": {
+          "input": "debug-move e2e4",
+          "output": [
+            "Performing move e2e4:",
+            "8|rnbqkbnr",
+            "7|pppppppp",
+            "6|........",
+            "5|........",
+            "4|....P...",
+            "3|........",
+            "2|PPPP.PPP",
+            "1|RNBQKBNR",
+            "-+--------",
+            "b|ABCDEFGH KQkq E3",
+            "Hash: 0x12efca34663aad25",
+            "FEN: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+          ]
+        },
+        "notes": [
+          "The move is applied and the new position is printed.",
+          "Displays updated board, hash, FEN, and side to move.",
+          "Does not show internal MG_MOVEINFO \u2014 only external position state."
+        ]
+      },
+      {
+        "name": "debug-movegen",
+        "class": "Command_DebugMoveGen",
+        "syntax": "debug-movegen",
+        "arguments": {},
+        "function": "Displays structure sizes, memory usage, and move-related constants used in move generation.",
+        "example": {
+          "input": "debug-movegen",
+          "output": [
+            "Move generation struct sizes:",
+            "  sizeof(MG_CASTLEFLAGS) = 1",
+            "  sizeof(MG_HASH) = 8",
+            "  sizeof(MG_JUMPTABLE) = 192",
+            "  sizeof(MG_MOVE) = 2",
+            "  sizeof(MG_MOVEDATA) = 24",
+            "...",
+            "Memory moves: 213112",
+            "Memory slide-entries: 861184",
+            "COUNT_TABLEINDICES: 8",
+            "COUNT_MOVETYPES: 3",
+            "COUNT_SQUARES: 64",
+            "COUNT_SLIDEMASKS: 2"
+          ]
+        },
+        "notes": [
+          "Used to validate memory and layout assumptions for move generation.",
+          "Outputs actual sizeof() values for key types such as MG_MOVE, MG_POSITION, and MG_SLIDEENTRY.",
+          "Also reports memory footprints and compile-time constants relevant to table sizing."
+        ]
+      },
+      {
+        "name": "debug-moves",
+        "class": "Command_DebugMoves",
+        "syntax": "debug-moves",
+        "arguments": {},
+        "function": "Lists all legal moves in the current position, showing their UCI encoding, hexadecimal ID, piece moved, and per-move bitboard info.",
+        "example": {
+          "input": "debug-moves",
+          "output": [
+            "Found 20 legal moves:",
+            " - b8a6(0x1077):",
+            "    Move piece: n",
+            "      .#......",
+            "      ........",
+            "      #.......",
+            "...",
+            " - h7h5(0x0050):",
+            "    Move piece: p",
+            "      ........",
+            "      .......#",
+            "      ........",
+            "      .......#",
+            "      ........",
+            "      ........",
+            "      ........",
+            "      ........"
+          ]
+        },
+        "notes": [
+          "Displays the legal move count and a breakdown of each MG_MOVEINFO entry.",
+          "Includes hex move index (e.g., 0x1077), UCI string, piece type, and visual per-move bitboard pattern.",
+          "Used to validate correctness of move list and legality filter."
+        ]
+      },
+      {
+        "name": "debug-slidemasks",
+        "class": "Command_DebugSlideMask",
+        "syntax": "debug-slidemasks <tableindex> <square>",
+        "arguments": {
+          "tableindex": "0 = horizontal/vertical sliders, 1 = diagonal/antidiagonal sliders.",
+          "square": "Algebraic square notation (e.g., d4)."
+        },
+        "function": "Displays the full contents of the SLIDEMASKS lookup table for the given square and table index.",
+        "example": {
+          "input": "debug-slidemasks 0 d4",
+          "output": [
+            "entry = 0x00000225",
+            "  occupancy:",
+            "    ........",
+            "    ........",
+            "    ........",
+            "    .#....#.",
+            "    ........",
+            "    ....#...",
+            "    ........",
+            "    ....#...",
+            "  targets:",
+            "    ........",
+            "    ....#...",
+            "    ....#...",
+            "    ...#.###",
+            "    ....#...",
+            "    ........",
+            "    ........",
+            "    ........"
+          ]
+        },
+        "notes": [
+          "Iterates through all entries of the lookup table for the given square.",
+          "Each entry includes occupancy and corresponding target bitboard.",
+          "Useful to validate SLIDEMASKS table generation and indexing.",
+          "Tableindex = 0 (orthogonal) or 1 (diagonal)."
+        ]
+      },
+      {
+        "name": "debug-slidetargets",
+        "class": "Command_DebugSlideTargets",
+        "syntax": "debug-slidetargets <square>",
+        "arguments": {
+          "square": "Algebraic square notation (e.g., e4)."
+        },
+        "function": "Displays the slider attack targets (diagonal and horizontal) for a piece placed on the given square, given the current board occupancy.",
+        "example": {
+          "input": "debug-slidetargets e4",
+          "output": [
+            "Slide-targets for e4:",
+            "  Occupancy:",
+            "    ########",
+            "    ########",
+            "    ........",
+            "    ........",
+            "    ....#...",
+            "    ........",
+            "    ####.###",
+            "    ########",
+            "  Diagonal targets:",
+            "    ........",
+            "    .#.....#",
+            "    ..#...#.",
+            "    ...#.#..",
+            "    ........",
+            "    ...#.#..",
+            "    ..#...#.",
+            "    ........",
+            "  Horizontal targets:",
+            "    ........",
+            "    ....#...",
+            "    ....#...",
+            "    ....#...",
+            "    ####.###",
+            "    ....#...",
+            "    ....#...",
+            "    ....#..."
+          ]
+        },
+        "notes": [
+          "Uses the current board position to calculate which squares are reachable by sliders.",
+          "Displays both diagonal and horizontal attack masks.",
+          "Combines runtime occupancy with precomputed SLIDEMASKS lookup."
+        ]
+      },
+      {
+        "name": "debug-unmove",
+        "class": "Command_DebugUnmove",
+        "syntax": "debug-unmove",
+        "arguments": {},
+        "function": "Undoes the last move played and displays the previous board state.",
+        "example": {
+          "input": "debug-unmove",
+          "output": [
+            "Undoing move e7e5:",
+            "8|rnbqkbnr",
+            "7|pppppppp",
+            "6|........",
+            "5|........",
+            "4|........",
+            "3|........",
+            "2|PPPPPPPP",
+            "1|RNBQKBNR",
+            "-+--------",
+            "w|ABCDEFGH KQkq -",
+            "Hash: 0x56d86a41afdde8fd",
+            "FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+          ]
+        },
+        "notes": [
+          "Relies on the engine's internal game history to restore the previous position.",
+          "Useful for stepping back in test sequences, especially after debug-move.",
+          "Displays updated FEN, hash, board, and side to move."
+        ]
+      },
+      {
+        "name": "divide",
+        "class": "Command_Divide",
+        "syntax": "divide <depth>",
+        "arguments": {
+          "depth": "The search depth at which to perform per-move node count (typically 1\u20136)."
+        },
+        "function": "Performs a perft-style divide at the root, showing how many nodes each legal move generates to the given depth.",
+        "example": {
+          "input": "divide 4",
+          "output": [
+            "Performing divide with depth 4.",
+            "  a2a3: 8457 leafs in 23 milliseconds with 385087 Node/s.",
+            "  a2a4: 9329 leafs in 24 milliseconds with 407042 Node/s.",
+            "  b1a3: 8885 leafs in 23 milliseconds with 404565 Node/s.",
+            "...",
+            "  h2h4: 9329 leafs in 24 milliseconds with 407042 Node/s.",
+            "197281 nodes total and 20 moves at root."
+          ]
+        },
+        "notes": [
+          "Used to verify correctness of search and move generation.",
+          "Each line shows UCI move, leaf node count, elapsed time, and NPS.",
+          "Sum of all leaf counts should match perft(depth) result.",
+          "Helps isolate move-specific bugs by identifying discrepancies."
+        ]
+      },
+      {
+        "name": "listmoves",
+        "class": "Command_ListMoves",
+        "syntax": "listmoves",
+        "arguments": {},
+        "function": "Lists all legal moves in the current position without additional per-move detail.",
+        "example": {
+          "input": "listmoves",
+          "output": [
+            "Found 20 legal moves:",
+            "  0x0f42: b1a3",
+            "  0x0f43: b1c3",
+            "  0x0f55: g1f3",
+            "  0x0f56: g1h3",
+            "  0x0001: a2a3",
+            "  0x0002: b2b3",
+            "  0x0003: c2c3",
+            "...",
+            "  0x004f: g2g4",
+            "  0x0050: h2h4"
+          ]
+        },
+        "notes": [
+          "Useful for debugging and lightweight verification of move generation.",
+          "Hexadecimal move IDs match internal MG_MOVE encoding.",
+          "Provides an uncluttered view of legal move enumeration."
+        ]
+      },
+      {
+        "name": "perft",
+        "class": "Command_Perft",
+        "syntax": "perft <depth>",
+        "arguments": {
+          "depth": "Search depth for perft. Typical range is 1\u20136 for quick checks."
+        },
+        "function": "Performs a full perft count at the given depth and prints total leaf nodes, time taken, and total nodes visited.",
+        "example": {
+          "input": "perft 4",
+          "output": [
+            "Performing perft with depth 4.",
+            "  197281 leafs in 533 milliseconds at depth 4.",
+            "  206603 nodes in 533 milliseconds at 387623 Node/s."
+          ]
+        },
+        "notes": [
+          "Used to validate search correctness across all legal move paths.",
+          "Reports both leaf nodes and internal nodes visited.",
+          "Node count may differ from leafs due to full node traversal."
+        ]
+      },
+      {
+        "name": "quit",
+        "class": "Command_Quit",
+        "syntax": "quit",
+        "arguments": {},
+        "function": "Gracefully terminates the engine and exits the application.",
+        "example": {
+          "input": "quit",
+          "output": []
+        },
+        "notes": [
+          "Typically used at the end of a session or from a driver script.",
+          "Ensures cleanup and proper termination of the engine loop.",
+          "Part of standard UCI protocol compliance."
+        ]
+      },
+      {
+        "name": "set-fen",
+        "class": "Command_SetFen",
+        "syntax": "set-fen <FEN>",
+        "arguments": {
+          "FEN": "Full FEN string representing the position to load."
+        },
+        "function": "Parses and loads a new position from the given FEN string. Updates board, hash, and internal state accordingly.",
+        "example": {
+          "input": "set-fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          "output": [
+            "New Position:",
+            "8|rnbqkbnr",
+            "7|pppppppp",
+            "6|........",
+            "5|........",
+            "4|........",
+            "3|........",
+            "2|PPPPPPPP",
+            "1|RNBQKBNR",
+            "-+--------",
+            "w|ABCDEFGH KQkq -",
+            "Hash: 0x56d86a41afdde8fd",
+            "FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+          ]
+        },
+        "notes": [
+          "Updates the board state immediately to match the FEN string.",
+          "Supports full FEN syntax including side to move, castling rights, en passant, and half/full move counters.",
+          "Useful for test positions, debugging, or manual setup."
+        ]
+      },
+      {
+        "name": "version",
+        "class": "Command_Version",
+        "syntax": "version",
+        "arguments": {},
+        "function": "Displays the current engine version and author information.",
+        "example": {
+          "input": "version",
+          "output": [
+            "DixieKnight ver. 1.0 - by Roland Tomasi"
+          ]
+        },
+        "notes": [
+          "Simple identity check for the engine.",
+          "Useful for scripts, diagnostics, or compliance testing.",
+          "Hardcoded version and author message."
+        ]
+      }
+    ],
+    "command_prefix_notes": {
+      "debug_prefix": {
+        "pattern": "All debug-related commands use the prefix 'debug-' in their syntax.",
+        "purpose": "Helps group introspective commands used for engine verification, profiling, and inspection.",
+        "examples": [
+          "debug-board",
+          "debug-attacks",
+          "debug-slidetargets",
+          "debug-intrinsics"
+        ]
+      }
+    }
+  },
+  "philosophy": {
+    "responsibilities": [
+      "High-level control and glue code — not hot path",
+      "Manages orchestration of search and reporting",
+      "Interfaces with human-level commands (UCI, CLI)"
+    ],
+    "style": [
+      "STL permitted (string, vector, etc)",
+      "Explicit memory management when interfacing with low-level subsystems",
+      "Minimal logic — mostly routing and delegation"
+    ],
+    "callback_usage": {
+      "Engine::Initialize()": "Calls CALLBACKS_Initialize(&_callbacks, ...) with function pointer to OnFsmComplete",
+      "Thread FSM callback": "OnFsmComplete sets final node count and resumes Engine control"
+    },
+    "data_flow": {
+      "MG_POSITION": "Snapshot passed to SE_THREAD via memcpy in Engine::Perft",
+      "SE_THREAD": "Initialized via THREAD_PrepareRoot",
+      "SE_SEARCH": "Holds dispatcher and thread pool; kicked off by Engine"
+    }
+  }
+}

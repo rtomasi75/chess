@@ -3,32 +3,33 @@
 #define SE_CONTROLFLAGSFLAGS_H
 
 #include <cstdint>
+#include <atomic>
 
 typedef std::uint32_t SE_CONTROLFLAGS;
+typedef std::atomic<SE_CONTROLFLAGS> SE_ATOMICCONTROLFLAGS;
 
 #define CONTROLFLAGS_NONE			UINT32_C(0x00000000)
-#define CONTROLFLAGS_WORKERID		UINT32_C(0x000000FF)
-#define CONTROLFLAGS_PARENTID		UINT32_C(0x0000FF00)
 #define CONTROLFLAGS_ACTIVE			UINT32_C(0x40000000)
 #define CONTROLFLAGS_ROOT			UINT32_C(0x80000000)
 #define CONTROLFLAGS_INITIALIZED	UINT32_C(0x20000000)
+#define CONTROLFLAGS_READY      	UINT32_C(0x10000000)
 
-#define CONTROLFLAGS_SHIFT_WORKERID 8
-#define CONTROLFLAGS_SHIFT_PARENTID 8
+#define CONTROLFLAGS_IS_READY(flags) (((flags).load(std::memory_order_acquire) & CONTROLFLAGS_READY) != 0)
+#define CONTROLFLAGS_IS_ACTIVE(flags) (((flags).load(std::memory_order_acquire) & CONTROLFLAGS_ACTIVE) != 0)
+#define CONTROLFLAGS_IS_ROOT(flags) (((flags).load(std::memory_order_acquire) & CONTROLFLAGS_ROOT) != 0)
+#define CONTROLFLAGS_IS_INITIALIZED(flags) (((flags).load(std::memory_order_acquire) & CONTROLFLAGS_INITIALIZED) != 0)
 
-#define CONTROLFLAGS_GET_WORKERID(flags)		((flags) & CONTROLFLAGS_WORKERID)
-#define CONTROLFLAGS_GET_PARENTID(flags)		(((flags) & CONTROLFLAGS_PARENTID) >> 8)
-#define CONTROLFLAGS_IS_ACTIVE(flags)			(((flags) & CONTROLFLAGS_ACTIVE) != 0)
-#define CONTROLFLAGS_IS_ROOT(flags)				(((flags) & CONTROLFLAGS_ROOT) != 0)
-#define CONTROLFLAGS_IS_INITIALIZED(flags)		(((flags) & CONTROLFLAGS_INITIALIZED) != 0)
+#define CONTROLFLAGS_SET_READY(flags) (void)((flags).fetch_or(CONTROLFLAGS_READY, std::memory_order_release))
+#define CONTROLFLAGS_SET_ACTIVE(flags) (void)((flags).fetch_or(CONTROLFLAGS_ACTIVE, std::memory_order_release))
+#define CONTROLFLAGS_SET_ROOT(flags) (void)((flags).fetch_or(CONTROLFLAGS_ROOT, std::memory_order_release))
+#define CONTROLFLAGS_SET_INITIALIZED(flags) (void)((flags).fetch_or(CONTROLFLAGS_INITIALIZED, std::memory_order_release))
 
-#define CONTROLFLAGS_SET_WORKERID(flags, id)	do{ flags&=~CONTROLFLAGS_WORKERID; flags|=(id)<<CONTROLFLAGS_SHIFT_WORKERID;} while(false)
-#define CONTROLFLAGS_SET_PARENTID(flags, id)	do{ flags&=~CONTROLFLAGS_PARENTID; flags|=(id)<<CONTROLFLAGS_SHIFT_PARENTID;} while(false)
-#define CONTROLFLAGS_SET_ACTIVE(flags)			do{ flags|=CONTROLFLAGS_ACTIVE; } while(false)
-#define CONTROLFLAGS_SET_ROOT(flags)			do{ flags|=CONTROLFLAGS_ROOT; } while(false)
-#define CONTROLFLAGS_SET_INITIALIZED(flags)		do{ flags|=CONTROLFLAGS_INITIALIZED; } while(false)
+#define CONTROLFLAGS_CLEAR(flags) (void)((flags).store(CONTROLFLAGS_NONE, std::memory_order_release))
 
-#define CONTROLFLAGS_CLEAR(flags)	do { flags = CONTROLFLAGS_NONE; } while(false)
-
+#define CONTROLFLAGS_CLEAR_READY(flags) (void)((flags).fetch_and(~CONTROLFLAGS_READY, std::memory_order_acquire))
+#define CONTROLFLAGS_CLEAR_ACTIVE(flags) (void)((flags).fetch_and(~CONTROLFLAGS_ACTIVE, std::memory_order_acquire))
+#define CONTROLFLAGS_CLEAR_ROOT(flags) (void)((flags).fetch_and(~CONTROLFLAGS_ROOT, std::memory_order_acquire))
+#define CONTROLFLAGS_CLEAR_INITIALIZED(flags) (void)((flags).fetch_and(~CONTROLFLAGS_INITIALIZED, std::memory_order_acquire))
 
 #endif // SE_CONTROLFLAGSFLAGS_H
+

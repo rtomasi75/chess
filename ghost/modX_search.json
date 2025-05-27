@@ -1,0 +1,99 @@
+{
+  "module": "mod1",
+  "version": "0.3.0",
+  "description": "FSM-based search module: threaded execution, dispatcher, node stack, and fork logic.",
+  "scope": {
+    "folder": "search/",
+    "structural_components": [
+      "SE_NODE",
+      "SE_THREAD",
+      "SE_FORK",
+      "SE_DISPATCHER",
+      "SE_SEARCH",
+      "SE_GAME",
+      "SE_NODEFLAGS",
+      "SE_CONTROLFLAGS",
+      "SE_NODESTATE",
+      "SE_HOSTCONTEXT",
+      "SE_CALLBACKS",
+      "SE_PLAYEDMOVE"
+    ]
+  },
+  "contracts": {
+    "core_structs": [
+      "SE_NODE",
+      "SE_THREAD",
+      "SE_FORK",
+      "SE_SEARCH",
+      "SE_DISPATCHER",
+      "SE_GAME"
+    ],
+    "enums": [
+      "SE_NODEFLAGS",
+      "SE_CONTROLFLAGS",
+      "SE_NODESTATE"
+    ],
+    "support": [
+      "SE_HOSTCONTEXT",
+      "SE_CALLBACKS",
+      "SE_PLAYEDMOVE"
+    ],
+    "typedefs": [
+      {
+        "name": "SE_DEPTH",
+        "type": "std::int8_t"
+      },
+      {
+        "name": "SE_POSITIONCOUNT",
+        "type": "std::uint64_t"
+      },
+      {
+        "name": "SE_NODETYPE",
+        "type": "uint8_t"
+      },
+      {
+        "name": "SE_MOVETYPE",
+        "type": "uint8_t"
+      },
+      {
+        "name": "SE_FSM",
+        "type": "void(*)(SE_THREAD*, void*, const MG_MOVEGEN*)"
+      }
+    ],
+    "fsm_cycle": {
+      "entry_state": "NODESTATE_GENERATE",
+      "control_flag": "CONTROLFLAGS_IS_ACTIVE",
+      "function_pointer": "SE_FSM StateMachine",
+      "invocation": "StateMachine(pThread, pThread->pHostContext->pSearchContext, pMoveGen)",
+      "lifecycle": "Thread invokes FSM when ACTIVE. FSM walks one SE_NODE stack frame. Clears ACTIVE, sets READY."
+    },
+    "fsm_invocation": {
+      "thread_entry": "THREAD_MainLoop (static loop)",
+      "setup_function": "THREAD_PrepareRoot / THREAD_PrepareFork",
+      "initialization": "NODE_Initialize sets pNode->State = NODESTATE_GENERATE",
+      "execution": "FSM pointer is stored in SE_THREAD and invoked in main loop.",
+      "yielding": "FSM completes when thread clears ACTIVE and yields to dispatcher."
+    },
+    "nodestates": [
+      "NODESTATE_GENERATE",
+      "NODESTATE_PLAY",
+      "NODESTATE_EVALUATE",
+      "NODESTATE_BACKTRACK",
+      "NODESTATE_COMPLETE"
+    ]
+  },
+  "philosophy": {
+    "execution": [
+      "Each SE_THREAD walks its own FSM stack of SE_NODEs.",
+      "Dispatch is controlled by SE_DISPATCHER using a fork-pull strategy.",
+      "Search is deterministic: no random behavior, no floating point."
+    ],
+    "constraints": [
+      "No STL in hot paths.",
+      "No polymorphism.",
+      "Struct alignment and memory predictability are enforced.",
+      "FSM logic is explicit, pointer-driven, and flag-gated."
+    ]
+  },
+  "status": "FSM wiring verified. SE_THREAD executes FSM via function pointer when ACTIVE. Entry state is NODESTATE_GENERATE. Dispatcher and thread setup confirmed. GCC and MSVC compatible."
+}

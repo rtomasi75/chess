@@ -39,17 +39,13 @@
 #define CM_PREFETCH(addr) CM_PREFETCH_L1(addr)
 
 // Branchless, hint-level specific conditional prefetch
-#define CM_PREFETCH_COND_L1(cond, ptr) \
-    do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L1((const void*)_prefetchAddrInt); } while (0)
+#define CM_PREFETCH_COND_L1(cond, ptr) do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L1((const void*)_prefetchAddrInt); } while (0)
 
-#define CM_PREFETCH_COND_L2(cond, ptr) \
-    do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L2((const void*)_prefetchAddrInt); } while (0)
+#define CM_PREFETCH_COND_L2(cond, ptr) do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L2((const void*)_prefetchAddrInt); } while (0)
 
-#define CM_PREFETCH_COND_L3(cond, ptr) \
-    do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L3((const void*)_prefetchAddrInt); } while (0)
+#define CM_PREFETCH_COND_L3(cond, ptr) do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH_L3((const void*)_prefetchAddrInt); } while (0)
 
 // Backwards compatibility — prefer CM_PREFETCH_COND_Lx instead for control, this will stay supported
-#define CM_PREFETCH_COND(cond, ptr) \
-    do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH((const void*)_prefetchAddrInt); } while (0)
+#define CM_PREFETCH_COND(cond, ptr) do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH((const void*)_prefetchAddrInt); } while (0)
 
 #endif

@@ -16,6 +16,7 @@
 #include "commands/Command_Divide.h"
 #include "commands/Command_SetFen.h"
 #include <sstream>
+#include <cstring>
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode) :
 	_isRunning(false),
@@ -28,6 +29,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStar
 	CM_DetectIntrinsics();
 	MOVEGEN_Initialize(&_moveGen);
 	GAME_Initialize(&_game, &_moveGen);
+	DISPATCHER_Initialize(&_dispatcher, &_moveGen);
 	_basicCommands.emplace_back(std::make_unique<Command_Quit>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_Version>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugBoard>(this));
@@ -47,7 +49,7 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStar
 	switch (startupMode)
 	{
 	default: // just break out into interactive mode
-		break; 
+		break;
 	case EngineStartupMode::AutoPerft6:
 		AutoPerft(6);
 		return;
@@ -68,6 +70,7 @@ Engine::~Engine()
 {
 	Stop();
 	WaitForStop();
+	DISPATCHER_Deinitialize(&_dispatcher);
 	MOVEGEN_Deinitialize(&_moveGen);
 }
 
@@ -94,6 +97,11 @@ void Engine::SetPosition(const MG_POSITION& newPosition)
 	_game.CurrentPosition = newPosition;
 	MOVEGEN_GenerateMoves(&_moveGen, &_game.CurrentPosition, &_game.LegalMoves);
 
+}
+
+SE_DISPATCHER& Engine::Dispatcher()
+{
+	return _dispatcher;
 }
 
 MG_POSITION Engine::Position() const
@@ -211,12 +219,28 @@ MG_PLAYER Engine::PassivePlayer() const
 	return _game.CurrentPosition.Header.PassivePlayer;
 }
 
-SE_LEAFCOUNT Engine::Perft(const SE_DEPTH& depth, SE_POSITIONCOUNT& nodeCount)
+void Engine::SignalExecutionToken(SE_EXECUTIONTOKEN token)
+{
+	static_cast<ExecutionToken*>(token)->Signal();
+}
+
+SE_LEAFCOUNT Engine::Perft(const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& nodeCount)
 {
 	MG_POSITION localPosition;
 	memcpy(&localPosition, &_game.CurrentPosition, sizeof(MG_POSITION));
-	return SEARCH_PerftRoot(&localPosition, &_moveGen, depth, nodeCount);
+	SE_CONTEXT_PERFT searchContext;
+	searchContext.LeafCount = 0;
+	SE_HOSTCONTEXT hostContext;
+	std::shared_ptr<ExecutionToken> pToken = std::make_shared<ExecutionToken>(&searchContext);
+	SE_CALLBACKS callbacks;
+	CALLBACKS_Initialize(&callbacks, Engine::SignalExecutionToken);
+	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pToken.get());
+	SEARCH_PerftRoot(&_dispatcher, &callbacks, &localPosition, distanceToHorizon, &hostContext);
+	pToken->Wait();
+	nodeCount = _dispatcher.pThreadPool[0].NodeCount;
+	return searchContext.LeafCount;
 }
+
 
 
 

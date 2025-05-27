@@ -1,4 +1,5 @@
 #include "SE_SEARCH.h"
+#include "SE_DISPATCHER.h"
 
 static SE_LEAFCOUNT SEARCH_Perft_Recursive(SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
 {
@@ -51,7 +52,6 @@ static inline void SEARCH_GenerateMoves(SE_NODE* pNode, MG_POSITION* pPosition, 
 
 static inline void SEARCH_Explore(SE_THREAD* pThread, SE_NODE* pNode)
 {
-	pNode->State = NODESTATE_RESUME;
 	if (pThread->DistanceToHorizon > 0)
 	{
 		pThread->DistanceToHorizon--;
@@ -107,9 +107,10 @@ static SE_NODESTATE SEARCH_Iterate(SE_THREAD* pThread, SE_NODE* pNode)
 	}
 }
 
-static void SEARCH_Perft_FSM(SE_THREAD* pThread, SE_CONTEXT_PERFT* pSearchContext, const MG_MOVEGEN* pMoveGen)
+static void SEARCH_Perft_FSM(SE_THREAD* pThread, void* pContext, const MG_MOVEGEN* pMoveGen)
 {
 	ASSERT(CONTROLFLAGS_IS_INITIALIZED(pThread->ControlFlags));
+	SE_CONTEXT_PERFT* pSearchContext = (SE_CONTEXT_PERFT*)pContext;
 	while (pThread->DistanceToHorizon <= pThread->RootDistanceToHorizon)
 	{
 		SE_NODE* pNode = &pThread->Stack[pThread->DistanceToHorizon];
@@ -121,6 +122,7 @@ static void SEARCH_Perft_FSM(SE_THREAD* pThread, SE_CONTEXT_PERFT* pSearchContex
 			break;
 		case NODESTATE_EXPLORE:
 			SEARCH_Explore(pThread, pNode);
+			pNode->State = NODESTATE_RESUME;
 			break;
 		case NODESTATE_GENERATE:
 			SEARCH_GenerateMoves(pNode, &pThread->SharedPosition, pMoveGen);
@@ -144,14 +146,8 @@ static void SEARCH_Perft_FSM(SE_THREAD* pThread, SE_CONTEXT_PERFT* pSearchContex
 	}
 }
 
-SE_LEAFCOUNT SEARCH_PerftRoot(MG_POSITION* pPosition, const MG_MOVEGEN* pMoveGen, const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& nodeCount)
+void SEARCH_PerftRoot(SE_DISPATCHER* pDispatcher, const SE_CALLBACKS* pCallbacks, MG_POSITION* pPosition, const SE_DEPTH distanceToHorizon, SE_HOSTCONTEXT* pHostContext)
 {
 	ASSERT(distanceToHorizon < SEARCH_MAX_DEPTH);
-	SE_CONTEXT_PERFT context;
-	context.LeafCount = 0;
-	SE_THREAD thread;
-	THREAD_InitializeRoot(&thread, pPosition, distanceToHorizon - 1, 0); // TODO: replace 0 with actual thread-index once threadpool is up and running
-	SEARCH_Perft_FSM(&thread, &context, pMoveGen);
-	nodeCount = thread.NodeCount;
-	return context.LeafCount;
+	DISPATCHER_Dispatch(pDispatcher, pPosition, distanceToHorizon - 1, &SEARCH_Perft_FSM, pHostContext);
 }

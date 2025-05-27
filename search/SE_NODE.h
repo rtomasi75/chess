@@ -7,8 +7,6 @@
 
 struct SE_NODE
 {
-	SE_DEPTH DistanceToHorizon;
-	SE_POSITIONCOUNT NodeCount;
 	MG_MOVEINDEX MoveIndex;
 	MG_MOVELIST MoveList;
 	MG_MOVEDATA MoveData;

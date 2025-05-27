@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <atomic>
 
 // Compile-time feature macros (defined by compiler flags or intrinsics headers)
 #if defined(__GNUC__) || defined(__clang__)
@@ -53,9 +54,12 @@ std::uint64_t CM_BitExtract(std::uint64_t value, std::uint64_t mask);
 std::int8_t CM_BitScanForward(std::uint64_t value);
 bool CM_PopLsb(std::uint64_t& value, std::int8_t& bit);
 
+bool CM_PopLsbAtomic(std::atomic<std::uint64_t>& bb, std::int8_t& bit);
+
 // Debug string for displaying detected feature support
 std::string CM_GetIntrinsicInfo();
 
 typedef std::uint8_t CM_BOOL;
+typedef std::atomic_bool CM_ATOMICBOOL;
 
 #endif // CM_INTRINSICS_H

@@ -14,6 +14,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include "ExecutionToken.h"
 
 enum class EngineStartupMode
 {
@@ -30,6 +31,7 @@ private:
 	bool _isStopped;
 	MG_MOVEGEN _moveGen;
 	SE_GAME _game;
+	SE_DISPATCHER _dispatcher;
 	std::vector<std::unique_ptr<Command>> _basicCommands;
 	std::condition_variable _signalStop;
 	std::mutex _stopMutex;
@@ -39,8 +41,9 @@ private:
 	bool TryParse(const std::string& commandString);
 	void MainThread();
 	void AutoPerft(const int& depth);
+	static void SignalExecutionToken(SE_EXECUTIONTOKEN token);
 public:
-	SE_LEAFCOUNT Perft(const SE_DEPTH& depth, SE_POSITIONCOUNT& nodeCount);
+	SE_LEAFCOUNT Perft(const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& nodeCount);
 	MG_PLAYER MovingPlayer() const;
 	MG_PLAYER PassivePlayer() const;
 	std::string Version() const;
@@ -48,6 +51,7 @@ public:
 	std::istream& InputStream();
 	std::ostream& OutputStream();
 	MG_POSITION Position() const;
+	SE_DISPATCHER& Dispatcher();
 	SE_GAME Game() const;
 	const MG_MOVEGEN& MoveGen() const;
 	MG_MOVELIST LegalMoves() const;

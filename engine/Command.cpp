@@ -2,6 +2,7 @@
 #include "StringHelper.h"
 #include "Engine.h"
 #include <sstream>
+#include <cstring>
 
 Command::Command(Engine* pEngine) :
 	_pEngine(pEngine)

@@ -1,0 +1,76 @@
+{
+  "module": "mod0",
+  "version": "1.0.0",
+  "description": "Deep memory of the DixieKnight move generation system, including all core structs, table structures, and move application logic.",
+  "scope": {
+    "folder": "movegen/",
+    "structural_components": [
+      "MG_POSITION",
+      "MG_MOVEINFO",
+      "MG_MOVELIST",
+      "MG_MOVEGEN",
+      "MG_JUMPTABLE",
+      "MG_SLIDEMASKS",
+      "MG_SLIDEENTRY",
+      "MG_MOVETYPE",
+      "MG_MOVEMECHANIC",
+      "MG_CASTLEFLAGS",
+      "MG_PLAYER",
+      "MG_MOVE"
+    ]
+  },
+  "contracts": {
+    "position": {
+      "struct": "MG_POSITION",
+      "alignment": "64-byte aligned",
+      "fields": ["Header", "Pieces", "AllPieces", "Occupied", "Attacks", "Interests"],
+      "notes": ["Incrementally updated", "Bitboard-based state"]
+    },
+    "moveinfo": {
+      "struct": "MG_MOVEINFO",
+      "size": "32B (compact mode)",
+      "fields": ["MoveType", "MoveMechanic", "PieceMoved", "PieceCaptured", "From", "To", "HashDelta"],
+      "notes": ["No UCI strings", "Zobrist-integrated", "Prefetchable"]
+    },
+    "jumper_tables": {
+      "struct": "MG_JUMPTABLE",
+      "lookup": "MovesBaseFrom + OffsetX/Y",
+      "design": "Dense, 64-byte aligned"
+    },
+    "slider_tables": {
+      "structs": ["MG_SLIDEMASKINDEX", "MG_SLIDEENTRY"],
+      "notes": ["Uses pext indexing", "Prefetched if CountMasks >= 8", "8-byte aligned entries"]
+    },
+    "move_types": {
+      "classification": "MG_MOVETYPE",
+      "mechanics": "MG_MOVEMECHANIC",
+      "castling_bits": "MG_CASTLEFLAGS"
+    },
+    "player": {
+      "enum": "MG_PLAYER",
+      "flip": "MG_OTHERPLAYER(P) = P ^ 1"
+    },
+    "movegen": {
+      "functions": [
+        "MOVEGEN_GenerateAllMoves",
+        "MOVEGEN_GenerateLegalMoves",
+        "MOVEGEN_MakeMove",
+        "MOVEGEN_UnmakeMove"
+      ],
+      "notes": [
+        "Stateless generation into MG_MOVELIST",
+        "MakeMove/UnmakeMove are hash-aware and incrementally update all bitboards",
+        "Tentative versions exist but are structurally similar"
+      ]
+    }
+  },
+  "philosophy": {
+    "design": [
+      "No STL, no exceptions, no RTTI",
+      "All fields aligned and ordered by access hotness",
+      "Prefetching used only where gain is proven",
+      "No speculative abstraction: all logic is earned"
+    ],
+    "status": "Mature and performance-hardened. Used as core substrate for both search and perft."
+  }
+}

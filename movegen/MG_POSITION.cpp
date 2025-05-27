@@ -1,6 +1,7 @@
 #include "MG_POSITION.h"
 #include "MG_MOVEGEN.h"
 #include <cstdio>
+#include <cstring>
 
 void POSITION_Clear(MG_POSITION* pPosition)
 {
@@ -307,8 +308,8 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	pString[strPos++] = ' ';
 	if (strPos >= len)
 		return false;
-	char buffer[10];
-	int l = sprintf_s(buffer, "%d", position.Header.HalfMoveClock);
+	char buffer[16];
+	int l = std::snprintf(buffer, sizeof(buffer), "%d", position.Header.HalfMoveClock);
 	if ((strPos + l) >= len)
 		return false;
 	memcpy(pString + strPos, buffer, l);
@@ -318,7 +319,7 @@ bool POSITION_ToString(char* pString, const int& len, int& strPos, const MG_POSI
 	pString[strPos++] = ' ';
 	if (strPos >= len)
 		return false;
-	l = sprintf_s(buffer, "%d", position.Header.MoveCount);
+	l = std::snprintf(buffer, sizeof(buffer), "%d", position.Header.HalfMoveClock);
 	if ((strPos + l) > len)
 		return false;
 	memcpy(pString + strPos, buffer, l);
