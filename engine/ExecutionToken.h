@@ -4,6 +4,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include "libSearch.h"
 
 class ExecutionToken
 {
@@ -12,6 +13,7 @@ private:
 	std::mutex mtx;
 	bool _bIsDone;
 	void* _pExecutionContext;
+	SE_SEARCHCONTEXTSTORAGE _searchContext;
 public:
 	ExecutionToken(void* pExecutionContext) :
 		_bIsDone(false),
@@ -37,9 +39,17 @@ public:
 		std::unique_lock<std::mutex> lock(mtx);
 		cv.wait(lock, [&]() { return _bIsDone; });
 	}
-	const void* Context() const
+	const void* ExecutionContext() const
 	{
 		return _pExecutionContext;
+	}
+	const SE_SEARCHCONTEXTSTORAGE* SearchContext() const
+	{
+		return &_searchContext;
+	}
+	void SetSearchContext(SE_SEARCHCONTEXTSTORAGE* pSearchContext)
+	{
+		memcpy(&_searchContext, pSearchContext, sizeof(SE_SEARCHCONTEXTSTORAGE));
 	}
 };
 

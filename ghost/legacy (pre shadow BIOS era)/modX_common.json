@@ -1,0 +1,76 @@
+{
+  "module": "mod0",
+  "version": "1.0.0",
+  "description": "Deep awareness of the DixieKnight engine's common utilities: intrinsics, compiler features, helpers, and assertions.",
+  "scope": {
+    "folder": "common/",
+    "exposed_via": "libCommon.h",
+    "structural_components": [
+      "CM_Intrinsics",
+      "CM_Compiler",
+      "CM_Assert",
+      "CM_Helpers"
+    ]
+  },
+  "contracts": {
+    "intrinsics": {
+      "functions": [
+        "CM_PopCount64",
+        "CM_BitScanForward",
+        "CM_BitScanReverse",
+        "CM_PopLsb"
+      ],
+      "macros": [
+        "CM_PREFETCH"
+      ],
+      "design_notes": [
+        "All intrinsics must be portable between Clang, GCC, and MSVC.",
+        "All behavior is deterministic: no UB, no inline assembly.",
+        "Fallbacks are defined where necessary."
+      ]
+    },
+    "compiler": {
+      "functions": [],
+      "macros": [
+        "CM_INLINE",
+        "CM_ALIGN_CACHELINE",
+        "CM_ALIGN_PROCWORD",
+        "CM_ASSUME",
+        "CM_UNREACHABLE"
+      ],
+      "design_notes": [
+        "Compiler detection is macro-based and resolved statically.",
+        "Alignment macros are critical for struct layout in movegen."
+      ]
+    },
+    "helpers": {
+      "functions": [
+        "CM_ParseDecimalInt"
+      ],
+      "design_notes": [
+        "All helpers are bounds-safe, zero-allocation, STL-free.",
+        "CM_Helpers may grow but only via verified need."
+      ]
+    },
+    "assert": {
+      "macros": ["CM_ASSERT"],
+      "design_notes": [
+        "Debug-mode only.",
+        "Aborts on failure — no exception system used."
+      ]
+    }
+  },
+  "philosophy": {
+    "constraints": [
+      "No STL, no RTTI, no exceptions.",
+      "All logic must be constexpr-safe or inline where feasible.",
+      "Headers must compile standalone."
+    ],
+    "role": "The common module forms the deterministic substrate for all other systems. It does not drift, it does not generalize early."
+  },
+  "integration": {
+    "used_by": ["movegen", "bitboard", "search", "engine"],
+    "included_via": "#include \"libCommon.h\""
+  },
+  "status": "Stable. Only expands with new verified primitives."
+}

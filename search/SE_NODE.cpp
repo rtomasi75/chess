@@ -2,12 +2,17 @@
 #include "SE_THREAD.h"
 
 
-void NODE_Initialize(SE_NODE* pNode)
+void NODE_Initialize(SE_THREAD* pThread, SE_NODE* pNode)
 {
+	ASSERT(pThread);
+	ASSERT(pNode);
 	NODEFLAGS_CLEAR(pNode->Flags);
 	MOVELIST_Initialize(&pNode->MoveList);
 	pNode->MoveIndex = 0;
 	pNode->State = NODESTATE_GENERATE;
+	pNode->CountLiveForks = 0;
+	pNode->pThread = pThread;
+	FORKMASK_Initialize(&pNode->ForkMask);
 	NODEFLAGS_SET_INITIALIZED(pNode->Flags);
 }
 

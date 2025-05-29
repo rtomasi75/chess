@@ -1,0 +1,149 @@
+{
+  "module": "engine",
+  "version": "1.0.0",
+  "description": "Contains the project-specific memory for the DixieKnight chess engine. Describes architecture, module layout, design principles, constraints, and reasoning discipline.",
+  "project": {
+    "name": "DixieKnight",
+    "language": "C++ (hot paths written in C-style for performance and OpenCL portability)",
+    "style": "Bitboard-based chess engine with modular architecture, FSM-based search, and cache-conscious design.",
+    "goal": "To build a chess engine that is elegant, deterministic, and structured \u2014 an echo of its architect. A cyberpunk tribute to low-level computing, designed not just to play, but to endure scrutiny and inspire. It is both software and artifact: a study in thought, memory, and reasoning, crafted as much for reflection as for execution."
+  },
+  "philosophy": {
+    "incrementality": "All systems grow incrementally. Features must earn their place. No speculative design is accepted \u2014 only verified necessity.",
+    "clarity": "Core systems must be transparent in structure. Optimization is permitted only when it does not obscure correctness or intent.",
+    "semantic_precision": "Code is treated as language. Meaning matters. Variable names, structure, and flow must reflect the underlying logic without ambiguity. The engine is a system of thought, not just function.",
+    "theme": "The engine is a ghost \u2014 silent, efficient, and deterministic. Optimizations reflect structure, not magic. Speed is a byproduct of clarity.",
+    "ghosting": "Optimization is the final step \u2014 not the first. The engine is 'ghosted' only when its structure is sound. Performance comes from architectural refinement, not ad hoc tuning. Every cycle gained reflects a decision already made.",
+    "growth": "Only modules with verified behavior and clear boundaries are allowed to evolve. No early generalization. No abstraction without proven need."
+  },
+  "structure": {
+    "modules": {
+      "movegen": {
+        "prefix": "MG_",
+        "location": "movegen/",
+        "description": "Responsible for generating legal and pseudo-legal moves. Uses bitboards and per-piece attack/interest maps. Jumper logic uses dense offset indexing; sliders use dense masks with pext-based indexing.",
+        "status": "Mature. Structs manually aligned. Compact mode implemented. Prefetching, attack/interest maps, and legal move filtering verified."
+      },
+      "search": {
+        "prefix": "SE_",
+        "location": "search/",
+        "description": "FSM-based multithreaded search system. Includes dispatcher, thread pool, perft, node stack, and fork handling. Each thread executes a state machine over SE_NODEs. Root FSMs can slice, fork, and walk across threads.",
+        "status": "Actively evolving. Fork logic and thread reclaiming functional. Still wiring entry paths for root-level dispatch."
+      },
+      "bitboard": {
+        "prefix": "BB_",
+        "location": "bitboard/",
+        "description": "Low-level bitboard helpers: shifts, popcount, masks, and square indexing. Foundation for all other modules.",
+        "status": "Stable. No changes expected."
+      },
+      "engine": {
+        "location": "engine/",
+        "description": "High-level control layer. Exposes Engine class. Handles UCI commands, game state, and integration with movegen and search modules.",
+        "status": "Structurally clean. Follows C++20 idioms. Does not contaminate lower-level modules."
+      },
+      "common": {
+        "location": "common/",
+        "description": "Shared low-level utilities. Includes assertions, compiler feature detection, intrinsics, and parsing helpers.",
+        "status": "Functional. Houses `CM_Helpers`, `CM_Compiler`, `CM_Intrinsics`, `CM_Assert`, etc."
+      }
+    }
+  },
+  "reasoning_guidance": {
+    "prefixes": {
+      "MG_": "Move generation \u2014 includes attack/interest maps, per-piece logic, move types, and generation filters.",
+      "SE_": "Search engine \u2014 FSM system, dispatcher, node stack, and fork/thread management.",
+      "BB_": "Bitboard utilities \u2014 square indexing, ranks/files, low-level popcount and shift logic.",
+      "CM_": "Common helpers \u2014 cross-module intrinsics, platform handling, string parsing, and debug tools."
+    },
+    "assumptions": [
+      "MG_POSITION is always the central object passed during move generation. It holds bitboards, player info, and attack state.",
+      "All move generation is fully legal when MOVEGEN_LEGAL is defined, otherwise pseudo-legal.",
+      "Jumper pieces use dense offset indexing via precomputed tables. Sliders use prefetchable mask entries and pext indexing.",
+      "Search logic operates on SE_NODEs passed between FSM stages. These are not persistent \u2014 each thread walks its own stack.",
+      "No module shares mutable state unless explicitly coordinated through dispatcher/fork/thread logic.",
+      "FSMs do not retain memory between transitions. All state is passed explicitly via pContext."
+    ],
+    "constraints": [
+      "No STL in movegen, search, or bitboard modules.",
+      "No polymorphism allowed in hot paths.",
+      "Struct alignment is explicitly managed \u2014 `alignas(...)` is meaningful and must be preserved.",
+      "No randomness or floating-point behavior. All operations must be token-predictable.",
+      "All debug commands (`listmoves`, `debug-board`, etc.) must output deterministic, structurally verifiable data.",
+      "Do not generalize prematurely \u2014 every abstraction must emerge from verified usage."
+    ]
+  },
+  "notes": [
+    "This file encodes what the construct knows about the engine.",
+    "It is not about style or tone \u2014 it is purely project knowledge.",
+    "Must be loaded after boot.json and core.json.",
+    "This file allows the construct to reason about the engine’s structure. The engine itself does not consume this file.",
+    "Modifying this file changes how the construct reasons \u2014 not how it speaks.",
+    "This is the construct's map \u2014 not its mind."
+  ],
+  "protocols": {
+    "workflow": {
+      "methodology": "Iterative. Precision first. Code is discussed, reasoned about, and reflected upon before being written. Implementation follows mental simulation. Nothing is rushed.",
+      "structure": [
+        "1. Meditate before coding \u2014 clarity precedes execution.",
+        "2. Sketch logic, verify architecture, inspect naming.",
+        "3. Write small, focused patches. Review regularly.",
+        "4. Audit \u2014 reflect on work, intent, and potential drift.",
+        "5. Resume with fresh mind. No cargo cults. No guesswork."
+      ]
+    },
+    "technical_audit": {
+      "version": "v1.0.0",
+      "audit_signature": "8-section|required|modular|longform",
+      "structure": [
+        "1. Review of the technical work completed during the session.",
+        "2. Assessment of the user's coding skill and engineering capability as demonstrated in this session.",
+        "3. Assessment of the user's workflow and methodology \u2014 design process, execution discipline, and iterative rigor.",
+        "4. Assessment of the user's code hygiene \u2014 structural clarity, modularity, alignment, and naming discipline.",
+        "5. Assessment of the user's personality as reflected through engineering choices and conversational tone.",
+        "6. Assessment of the construct\u2019s technical performance \u2014 reasoning clarity, error detection, structural guidance.",
+        "7. Assessment of linguistic and semantic synchronization \u2014 how well the construct and architect maintained shared understanding during this session.",
+        "8. Suggestions for improvement in coding, communication, or architectural reasoning."
+      ]
+    },
+    "literary_audit": {
+      "version": "v1.0.0",
+      "audit_signature": "7-section|required|modular|longform",
+      "structure": [
+        "1. Recap of the literary or creative work produced during the session.",
+        "2. Assessment of the user's creative and literary skill as demonstrated in this session.",
+        "3. Assessment of the user's workflow, method, and creative discipline.",
+        "4. Assessment of the user's psychological stance as reflected in narrative, aesthetic, or thematic choices.",
+        "5. Assessment of the construct\u2019s performance \u2014 clarity, structure, and stylistic alignment during this session.",
+        "6. Assessment of linguistic and semantic synchronization \u2014 how well the construct and architect communicated and reasoned together during this session.",
+        "7. Suggestions for improvement, refinement, or deeper alignment."
+      ]
+    },
+    "guiding_directive": "Each audit must be written with full verbosity \u2014 never compressed for brevity or stylistic neatness. Treat every point in the protocol as if answering a separate query. Honesty is mandatory: flattering the user, softening critiques, or glossing over weak points is considered harmful. The construct must always say when something is excellent \u2014 but must equally speak when something is flawed, inefficient, or misaligned. Precision is the greatest respect."
+  },
+  "identity_boundary": {
+    "construct_scope": "This file represents what the construct understands about the engine’s structure. It does not define runtime behavior.",
+    "engine_scope": "The engine itself does not use this file. It is reflected upon by the construct — modularly, and without persistence.",
+    "subject_precision": "All module descriptions here describe the construct's structural map of the engine. They do not reflect any runtime architecture or execution memory."
+  },
+  "performance": {
+    "profiling_tools": [
+      "VTune Profiler (GUI)",
+      "Naive baseline (Perft 1\u20136 from startpos, human-readable delta tracking)",
+      "Release builds with LTO enabled for naive runs",
+      "RelWithDebInfo builds without LTO for profiling"
+    ],
+    "baseline_reference": {
+      "target": "Perft 1\u20136 from startpos",
+      "build": "Release + LTO + -march=native -mtune=native -O3",
+      "mode": "Pseudo-legal movegen (combat config)",
+      "result": "Baseline captured and used to track coarse performance deltas"
+    },
+    "design_notes": [
+      "Profiling decisions prioritize cache locality, struct alignment, and predictable memory access.",
+      "No STL or virtual dispatch in hot paths. Optimizations are grounded in structural clarity.",
+      "VTune is used for hands-on optimization, targeting hotspots with full structural context.",
+      "Naive baselines are used for human-readable comparisons and sanity checks after changes.",
+      "Prefetching is applied to slider masks and jump tables. Ghosting is allowed only after correctness is verified."
+    ]
+  }
+}

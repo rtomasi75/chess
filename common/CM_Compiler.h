@@ -49,3 +49,9 @@
 #define CM_PREFETCH_COND(cond, ptr) do { const uintptr_t _prefetchAddrInt = (uintptr_t)(ptr) * (uintptr_t)(!!(cond)); CM_PREFETCH((const void*)_prefetchAddrInt); } while (0)
 
 #endif
+
+#ifdef _DEBUG
+#define CM_TRACE(fmt, ...) do { std::fprintf(stderr, fmt "\n", ##__VA_ARGS__); std::fflush(stderr); } while (0)
+#else
+#define CM_TRACE(fmt, ...) do { } while (0)
+#endif

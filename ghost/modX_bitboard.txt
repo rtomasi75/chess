@@ -1,7 +1,7 @@
 {
   "module": "mod0",
   "version": "2.0.0",
-  "description": "Shadow BIOS refactor of the DixieKnight bitboard module. Contains low-level ops, index utilities, and compile-time macros. No runtime state.",
+  "description": "Reconstructed bitboard_core module from engine source. Contains typedefs, macros, inline functions, and indexing utilities used in the bitboard layer.",
   "role": "bitboard_core",
   "path": "bitboard/",
   "scope": {
@@ -9,8 +9,7 @@
       "BB_BITBOARD",
       "BB_SQUARE",
       "BB_FILE",
-      "BB_RANK",
-      "PlayerPieces"
+      "BB_RANK"
     ],
     "contracts": {
       "bit_ops": [
@@ -68,20 +67,54 @@
         "COUNT_RANKS": "INT8_C(8)"
       },
       "squares": {
-        "SQUAREINDEX_NONE": "INT8_C(-1)",
-        "SQUARE_A1": "(RANK_1 & FILE_A)",
-        "SQUARE_A2": "(RANK_2 & FILE_A)",
-        "SQUARE_A3": "(RANK_3 & FILE_A)",
-        "SQUARE_A4": "(RANK_4 & FILE_A)"
+        "SQUARE_A1": "(RANK_1&FILE_A)",
+        "...": "...",
+        "SQUARE_H8": "(RANK_8&FILE_H)",
+        "SQUAREINDEX_NONE": "INT8_C(-1)"
       }
     }
   },
+  "typedefs": [
+    "typedef std::uint64_t BB_BITBOARD;",
+    "typedef BB_BITBOARD BB_SQUARE;",
+    "typedef BB_BITBOARD BB_FILE;",
+    "typedef BB_BITBOARD BB_RANK;",
+    "typedef std::int8_t BB_SQUAREINDEX;",
+    "typedef std::int8_t BB_FILEINDEX;",
+    "typedef std::int8_t BB_RANKINDEX;",
+    "typedef std::int8_t BB_SQUARECOUNT;"
+  ],
+  "functions": [
+    "void BITBOARD_Dump(const BB_BITBOARD& bitboard, const char* pStr = nullptr);",
+    "bool FILE_Parse(const char* pString, const int& len, int& strPos, BB_FILE& outParsed);",
+    "bool FILE_ToString(char* pString, const int& len, int& strPos, const BB_FILE& file);",
+    "bool RANK_Parse(const char* pString, const int& len, int& strPos, BB_RANK& outParsed);",
+    "bool RANK_ToString(char* pString, const int& len, int& strPos, const BB_RANK& rank);",
+    "bool SQUARE_Parse(const char* pString, const int& len, int& strPos, BB_SQUARE& outParsed);",
+    "inline BB_SQUARECOUNT BITBOARD_PopulationCount(const BB_BITBOARD& bitboard)",
+    "inline BB_BITBOARD BITBOARD_BitDeposit(const BB_BITBOARD& bitboard, const BB_BITBOARD& mask)",
+    "inline BB_BITBOARD BITBOARD_BitExtract(const BB_BITBOARD& bitboard, const BB_BITBOARD& mask)",
+    "inline BB_FILE FILE_FromIndex(const BB_FILEINDEX& index)",
+    "inline BB_RANK RANK_FromIndex(const BB_RANKINDEX& index)",
+    "inline BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file)",
+    "inline BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index)",
+    "inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile)",
+    "inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)",
+    "inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)"
+  ],
   "philosophy": {
     "design": [
       "Bitboard ops must be branchless and deterministic.",
       "Indexing uses enum-based logic — dense and compile-time safe.",
       "No STL or RTTI. Inline or constexpr preferred.",
-      "All macros alignment-safe and structurally traceable."
+      "All macros alignment-safe and structurally traceable.",
+      "BB_SQUARE is a BB_BITBOARD with one bit set — it *is* a square.",
+      "BB_FILE is a BB_BITBOARD with 8 vertically aligned bits set — it *is* a file.",
+      "BB_RANK is a BB_BITBOARD with 8 horizontally aligned bits set — it *is* a rank.",
+      "BB_SQUAREINDEX is the bit index (0–63) — matches popcount logic.",
+      "BB_FILEINDEX and BB_RANKINDEX are *ordinal*: FILE_A = 0, RANK_1 = 0, etc.",
+      "This allows all positionally meaningful operations to act directly on bitboards without casting.",
+      "Indexing and semantics are cleanly separated: logic operates on values, indexing on structure."
     ],
     "status": "Stable, foundational, non-speculative. Used by all modules including movegen and search."
   },

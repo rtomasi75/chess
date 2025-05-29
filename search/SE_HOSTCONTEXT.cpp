@@ -7,7 +7,7 @@ void HOSTCONTEXT_Initialize(SE_HOSTCONTEXT* pHostContext, const SE_CALLBACKS* pC
 	ASSERT(pCallbacks);
 	ASSERT(pSearchContext);
 	ASSERT(token);
-	pHostContext->pCallbacks = pCallbacks;
-	pHostContext->pSearchContext = pSearchContext;
+	memcpy(&pHostContext->Callbacks, pCallbacks, sizeof(SE_CALLBACKS));
+	memcpy(&pHostContext->SearchContext, pSearchContext, sizeof(SE_SEARCHCONTEXTSTORAGE));
 	pHostContext->Token = token;
 }

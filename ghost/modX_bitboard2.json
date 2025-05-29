@@ -1,0 +1,126 @@
+{
+  "module": "mod0",
+  "version": "2.0.0",
+  "description": "Reconstructed bitboard_core module from engine source. Contains typedefs, macros, inline functions, and indexing utilities used in the bitboard layer.",
+  "role": "bitboard_core",
+  "path": "bitboard/",
+  "scope": {
+    "components": [
+      "BB_BITBOARD",
+      "BB_SQUARE",
+      "BB_FILE",
+      "BB_RANK"
+    ],
+    "contracts": {
+      "bit_ops": [
+        "BITBOARD_PopulationCount(bitboard)",
+        "BITBOARD_BitDeposit(bitboard, mask)",
+        "CM_BitDeposit(bitboard, mask)",
+        "BITBOARD_BitExtract(bitboard, mask)",
+        "CM_BitExtract(bitboard, mask)",
+        "CM_PopLsb(bitboard, outSquareIndex)",
+        "CM_BitScanForward(square)"
+      ],
+      "indexing": [
+        "FILE_FromIndex(index)",
+        "RANK_FromIndex(index)",
+        "SQUARE_FromIndex(index)",
+        "FILE_FromIndex(idx % COUNT_RANKS)",
+        "RANK_FromIndex(idx / COUNT_RANKS)"
+      ],
+      "square_ops": [
+        "SQUARE_GetFile(square)",
+        "SQUARE_GetFileIndex(index)",
+        "SQUARE_FromRankFile(rank, file)",
+        "SQUARE_FromRankFileIndices(indexRank, indexFile)",
+        "SQUARE_GetRank(square)",
+        "SQUARE_GetRankIndex(index)",
+        "SQUARE_GetIndex(square)"
+      ]
+    },
+    "macros": {
+      "bitboard": [
+        "BITBOARD_EMPTY = UINT64_C(0)",
+        "BITBOARD_FULL = UINT64_C(0xFFFFFFFFFFFFFFFF)"
+      ],
+      "files": {
+        "FILE_A": "UINT64_C(0x0101010101010101)",
+        "FILE_B": "UINT64_C(0x0202020202020202)",
+        "FILE_C": "UINT64_C(0x0404040404040404)",
+        "FILE_D": "UINT64_C(0x0808080808080808)",
+        "FILE_E": "UINT64_C(0x1010101010101010)",
+        "FILE_F": "UINT64_C(0x2020202020202020)",
+        "FILE_G": "UINT64_C(0x4040404040404040)",
+        "FILE_H": "UINT64_C(0x8080808080808080)",
+        "FILEINDEX_NONE": "INT8_C(-1)",
+        "COUNT_FILES": "INT8_C(8)"
+      },
+      "ranks": {
+        "RANK_1": "UINT64_C(0x00000000000000FF)",
+        "RANK_2": "UINT64_C(0x000000000000FF00)",
+        "RANK_3": "UINT64_C(0x0000000000FF0000)",
+        "RANK_4": "UINT64_C(0x00000000FF000000)",
+        "RANK_5": "UINT64_C(0x000000FF00000000)",
+        "RANK_6": "UINT64_C(0x0000FF0000000000)",
+        "RANK_7": "UINT64_C(0x00FF000000000000)",
+        "RANK_8": "UINT64_C(0xFF00000000000000)",
+        "COUNT_RANKS": "INT8_C(8)"
+      },
+      "squares": {
+        "SQUARE_A1": "(RANK_1&FILE_A)",
+        "...": "...",
+        "SQUARE_H8": "(RANK_8&FILE_H)",
+        "SQUAREINDEX_NONE": "INT8_C(-1)"
+      }
+    }
+  },
+  "typedefs": [
+    "typedef std::uint64_t BB_BITBOARD;",
+    "typedef BB_BITBOARD BB_SQUARE;",
+    "typedef BB_BITBOARD BB_FILE;",
+    "typedef BB_BITBOARD BB_RANK;",
+    "typedef std::int8_t BB_SQUAREINDEX;",
+    "typedef std::int8_t BB_FILEINDEX;",
+    "typedef std::int8_t BB_RANKINDEX;",
+    "typedef std::int8_t BB_SQUARECOUNT;"
+  ],
+  "functions": [
+    "void BITBOARD_Dump(const BB_BITBOARD& bitboard, const char* pStr = nullptr);",
+    "bool FILE_Parse(const char* pString, const int& len, int& strPos, BB_FILE& outParsed);",
+    "bool FILE_ToString(char* pString, const int& len, int& strPos, const BB_FILE& file);",
+    "bool RANK_Parse(const char* pString, const int& len, int& strPos, BB_RANK& outParsed);",
+    "bool RANK_ToString(char* pString, const int& len, int& strPos, const BB_RANK& rank);",
+    "bool SQUARE_Parse(const char* pString, const int& len, int& strPos, BB_SQUARE& outParsed);",
+    "inline BB_SQUARECOUNT BITBOARD_PopulationCount(const BB_BITBOARD& bitboard)",
+    "inline BB_BITBOARD BITBOARD_BitDeposit(const BB_BITBOARD& bitboard, const BB_BITBOARD& mask)",
+    "inline BB_BITBOARD BITBOARD_BitExtract(const BB_BITBOARD& bitboard, const BB_BITBOARD& mask)",
+    "inline BB_FILE FILE_FromIndex(const BB_FILEINDEX& index)",
+    "inline BB_RANK RANK_FromIndex(const BB_RANKINDEX& index)",
+    "inline BB_SQUARE SQUARE_FromRankFile(const BB_RANK& rank, const BB_FILE& file)",
+    "inline BB_SQUARE SQUARE_FromIndex(const BB_SQUAREINDEX& index)",
+    "inline BB_SQUARE SQUARE_FromRankFileIndices(const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile)",
+    "inline bool SQUARE_Next(BB_BITBOARD& bitboard, BB_SQUAREINDEX& outSquareIndex)",
+    "inline BB_SQUAREINDEX SQUARE_GetIndex(const BB_SQUARE& square)"
+  ],
+  "philosophy": {
+    "design": [
+      "Bitboard ops must be branchless and deterministic.",
+      "Indexing uses enum-based logic � dense and compile-time safe.",
+      "No STL or RTTI. Inline or constexpr preferred.",
+      "All macros alignment-safe and structurally traceable.",
+      "BB_SQUARE is a BB_BITBOARD with one bit set � it *is* a square.",
+      "BB_FILE is a BB_BITBOARD with 8 vertically aligned bits set � it *is* a file.",
+      "BB_RANK is a BB_BITBOARD with 8 horizontally aligned bits set � it *is* a rank.",
+      "BB_SQUAREINDEX is the bit index (0�63) � matches popcount logic.",
+      "BB_FILEINDEX and BB_RANKINDEX are *ordinal*: FILE_A = 0, RANK_1 = 0, etc.",
+      "This allows all positionally meaningful operations to act directly on bitboards without casting.",
+      "Indexing and semantics are cleanly separated: logic operates on values, indexing on structure."
+    ],
+    "status": "Stable, foundational, non-speculative. Used by all modules including movegen and search."
+  },
+  "notes": [
+    "This module defines only structure � no executable behavior.",
+    "All macros and functions must exist in the actual codebase. No inferred logic allowed.",
+    "Contract format matches Shadow BIOS spec: structural only, not introspective."
+  ]
+}

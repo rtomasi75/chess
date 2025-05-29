@@ -1,0 +1,387 @@
+{
+  "module": "mod0",
+  "version": "1.1.0",
+  "description": "Expanded structural awareness of the DixieKnight bitboard module: bit-level ops, square/rank/file indexing, and macros.",
+  "scope": {
+    "folder": "bitboard/",
+    "structural_components": [
+      "BB_BITBOARD",
+      "BB_SQUARE",
+      "BB_FILE",
+      "BB_RANK",
+      "PlayerPieces"
+    ]
+  },
+  "contracts": {
+    "bitboard_core": [
+      {
+        "name": "BITBOARD_PopulationCount",
+        "args": "const BB_BITBOARD& bitboard",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_BitDeposit",
+        "args": "const BB_BITBOARD& bitboard, const BB_BITBOARD& mask",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "CM_BitDeposit",
+        "args": "bitboard, mask",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_BitExtract",
+        "args": "const BB_BITBOARD& bitboard, const BB_BITBOARD& mask",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "CM_BitExtract",
+        "args": "bitboard, mask",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "CM_PopLsb",
+        "args": "bitboard, outSquareIndex",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "CM_BitScanForward",
+        "args": "square",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "square_indexing": [
+      {
+        "name": "FILE_FromIndex",
+        "args": "const BB_FILEINDEX& index",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "RANK_FromIndex",
+        "args": "const BB_RANKINDEX& index",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "SQUARE_FromIndex",
+        "args": "const BB_SQUAREINDEX& index",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "FILE_FromIndex",
+        "args": "idx % COUNT_RANKS",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "RANK_FromIndex",
+        "args": "idx / COUNT_RANKS",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "file_logic": [
+      {
+        "name": "SQUARE_GetFile",
+        "args": "const BB_SQUARE& square",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_GetFileIndex",
+        "args": "const BB_SQUAREINDEX& squareIndex",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "rank_logic": [
+      {
+        "name": "SQUARE_FromRankFile",
+        "args": "const BB_RANK& rank, const BB_FILE& file",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_FromRankFileIndices",
+        "args": "const BB_RANKINDEX& indexRank, const BB_FILEINDEX& indexFile",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_GetRank",
+        "args": "const BB_SQUARE& square",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_GetRankIndex",
+        "args": "const BB_SQUAREINDEX& squareIndex",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "macros": [
+      {
+        "name": "BB_BITBOARD_H",
+        "definition": "#include <cstdint>",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_EMPTY",
+        "definition": "UINT64_C(0)",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_FULL",
+        "definition": "UINT64_C(0xFFFFFFFFFFFFFFFF)",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BB_FILE_H",
+        "definition": "#include \"BB_BITBOARD.h\"",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_A",
+        "definition": "UINT64_C(0x0101010101010101)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_B",
+        "definition": "UINT64_C(0x0202020202020202)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_C",
+        "definition": "UINT64_C(0x0404040404040404)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_D",
+        "definition": "UINT64_C(0x0808080808080808)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_E",
+        "definition": "UINT64_C(0x1010101010101010)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_F",
+        "definition": "UINT64_C(0x2020202020202020)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_G",
+        "definition": "UINT64_C(0x4040404040404040)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_H",
+        "definition": "UINT64_C(0x8080808080808080)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILEINDEX_NONE",
+        "definition": "INT8_C(-1)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "COUNT_FILES",
+        "definition": "INT8_C(8)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "BB_RANK_H",
+        "definition": "#include \"BB_BITBOARD.h\"",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_1",
+        "definition": "UINT64_C(0x00000000000000FF)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_2",
+        "definition": "UINT64_C(0x000000000000FF00)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_3",
+        "definition": "UINT64_C(0x0000000000FF0000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_4",
+        "definition": "UINT64_C(0x00000000FF000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_5",
+        "definition": "UINT64_C(0x000000FF00000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_6",
+        "definition": "UINT64_C(0x0000FF0000000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_7",
+        "definition": "UINT64_C(0x00FF000000000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_8",
+        "definition": "UINT64_C(0xFF00000000000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "COUNT_RANKS",
+        "definition": "INT8_C(8)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "BB_SQUARE_H",
+        "definition": "#include \"BB_RANK.h\"",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUAREINDEX_NONE",
+        "definition": "INT8_C(-1)",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_A1",
+        "definition": "(RANK_1&FILE_A)",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_A2",
+        "definition": "(RANK_2&FILE_A)",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_A3",
+        "definition": "(RANK_3&FILE_A)",
+        "defined_in": "BB_SQUARE.h"
+      },
+      {
+        "name": "SQUARE_A4",
+        "definition": "(RANK_4&FILE_A)",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "extended_functions": [
+      {
+        "name": "SQUARE_GetIndex",
+        "args": "const BB_SQUARE& square",
+        "defined_in": "BB_SQUARE.h"
+      }
+    ],
+    "mask_macros": [],
+    "general_macros": [
+      {
+        "name": "BB_BITBOARD_H",
+        "definition": "#include <cstdint>",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_EMPTY",
+        "definition": "UINT64_C(0)",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BITBOARD_FULL",
+        "definition": "UINT64_C(0xFFFFFFFFFFFFFFFF)",
+        "defined_in": "BB_BITBOARD.h"
+      },
+      {
+        "name": "BB_FILE_H",
+        "definition": "#include \"BB_BITBOARD.h\"",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_A",
+        "definition": "UINT64_C(0x0101010101010101)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_B",
+        "definition": "UINT64_C(0x0202020202020202)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_C",
+        "definition": "UINT64_C(0x0404040404040404)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_D",
+        "definition": "UINT64_C(0x0808080808080808)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_E",
+        "definition": "UINT64_C(0x1010101010101010)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_F",
+        "definition": "UINT64_C(0x2020202020202020)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_G",
+        "definition": "UINT64_C(0x4040404040404040)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILE_H",
+        "definition": "UINT64_C(0x8080808080808080)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "FILEINDEX_NONE",
+        "definition": "INT8_C(-1)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "COUNT_FILES",
+        "definition": "INT8_C(8)",
+        "defined_in": "BB_FILE.h"
+      },
+      {
+        "name": "BB_RANK_H",
+        "definition": "#include \"BB_BITBOARD.h\"",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_1",
+        "definition": "UINT64_C(0x00000000000000FF)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_2",
+        "definition": "UINT64_C(0x000000000000FF00)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_3",
+        "definition": "UINT64_C(0x0000000000FF0000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_4",
+        "definition": "UINT64_C(0x00000000FF000000)",
+        "defined_in": "BB_RANK.h"
+      },
+      {
+        "name": "RANK_5",
+        "definition": "UINT64_C(0x000000FF00000000)",
+        "defined_in": "BB_RANK.h"
+      }
+    ],
+    "inline_helpers": []
+  },
+  "philosophy": {
+    "design": [
+      "Bitboard operations must be deterministic and branchless where possible.",
+      "No STL or RTTI. Inline or constexpr logic preferred.",
+      "Indexing logic is dense, enum-based, and used by sliders/jumpers.",
+      "All macros are compile-time and alignment-safe."
+    ],
+    "status": "Stable and foundational. No speculative logic allowed. Used by all modules including movegen and search."
+  }
+}

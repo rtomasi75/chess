@@ -4,9 +4,9 @@
 SE_THREADINDEX DISPATCHER_DetectThreadCount()
 {
 #ifdef _DEBUG
-	return 2;
+	return 3;
 #else
-	return 1;
+	return 3;
 #endif
 }
 
@@ -25,6 +25,7 @@ void DISPATCHER_Initialize(SE_DISPATCHER* pDispatcher, const MG_MOVEGEN* pMoveGe
 		THREAD_Initialize(pDispatcher, pDispatcher->pThreadPool + threadIndex, threadIndex, pMoveGen);
 	}
 	pDispatcher->InExecution = false;
+	DISPATCH_TRACE("DISPATCHER: Initialized with %u threads.", pDispatcher->CountThreads);
 }
 
 void DISPATCHER_Deinitialize(SE_DISPATCHER* pDispatcher)
@@ -34,6 +35,7 @@ void DISPATCHER_Deinitialize(SE_DISPATCHER* pDispatcher)
 		THREAD_Deinitialize(pDispatcher->pThreadPool + threadIndex);
 	}
 	delete pDispatcher->pThreadPool;
+	DISPATCH_TRACE("DISPATCHER: Deinitialized.");
 }
 
 static inline bool DISPATCHER_FetchFork(SE_DISPATCHER* pDispatcher, SE_FORKINDEX& forkIndex)
@@ -41,17 +43,32 @@ static inline bool DISPATCHER_FetchFork(SE_DISPATCHER* pDispatcher, SE_FORKINDEX
 	std::int8_t bit;
 	const bool returnValue = CM_PopLsbAtomic(pDispatcher->AvailableForks, bit);
 	forkIndex = (SE_FORKINDEX)bit;
+	if (returnValue)
+	{
+		DISPATCH_TRACE("DISPATCHER: Fetched fork with ID %u.", forkIndex);
+	}
+	else
+	{
+		DISPATCH_TRACE("DISPATCHER: Fork request failed - all forks in use.", forkIndex);
+	}
 	return returnValue;
 }
 
 static inline void DISPATCHER_RecycleFork(SE_DISPATCHER* pDispatcher, const SE_FORKINDEX forkIndex)
 {
+	DISPATCH_TRACE("DISPATCHER: Recycling fork with ID %u.", forkIndex);
 	pDispatcher->AvailableForks.fetch_or(UINT64_C(1) << forkIndex, std::memory_order_release);
 }
 
-bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const MG_MOVELIST* pMoveList, const MG_MOVEINDEX moveIndex, const MG_MOVEINDEX countMoves, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext)
+bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext)
 {
 	ASSERT(pDispatcher->InExecution);
+	if (distanceToHorizon <= 0)
+	{
+		DISPATCH_TRACE("DISPATCHER: Fork request at horizon refused for thread with ID %u", parentId);
+		return false;
+	}
+	DISPATCH_TRACE("DISPATCHER: Trying to fork parent thread with ID %u", parentId);
 	SE_FORKINDEX forkIndex;
 	if (!DISPATCHER_FetchFork(pDispatcher, forkIndex))
 		return false;
@@ -67,16 +84,16 @@ bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition
 	}
 	if (!pTargetThread)
 	{
+		DISPATCH_TRACE("DISPATCHER: All thraeds busy - forking rejected.");
 		DISPATCHER_RecycleFork(pDispatcher, forkIndex);
 		return false;
 	}
-	SE_FORK* pFork = &pDispatcher->Forks[forkIndex];
-	FORK_Initialize(pFork, pPosition, pMoveList->Move + moveIndex, countMoves, distanceToHorizon, stateMachine, parentId);
+	memcpy(&pDispatcher->Forks[forkIndex], pFork, sizeof(SE_FORK));
 	CONTROLFLAGS_CLEAR_READY(pTargetThread->ControlFlags);
 	CONTROLFLAGS_CLEAR_ROOT(pTargetThread->ControlFlags);
-	THREAD_PrepareFork(pTargetThread, pPosition, distanceToHorizon, parentId, stateMachine, pHostContext);
+	THREAD_PrepareFork(pTargetThread, pPosition, distanceToHorizon, parentId, stateMachine, pHostContext, pFork, forkIndex);
+	DISPATCH_TRACE("DISPATCHER: Scheduling fork with ID %u on thread with ID %u.", forkIndex, pTargetThread->ThreadId);
 	CONTROLFLAGS_SET_ACTIVE(pTargetThread->ControlFlags);
-	DISPATCHER_RecycleFork(pDispatcher, forkIndex);
 	return true;
 }
 
@@ -89,5 +106,29 @@ void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPositio
 	CONTROLFLAGS_CLEAR_READY(pTargetThread->ControlFlags);
 	CONTROLFLAGS_SET_ROOT(pTargetThread->ControlFlags);
 	THREAD_PrepareRoot(pTargetThread, pPosition, distanceToHorizon, stateMachine, pHostContext);
+	DISPATCH_TRACE("DISPATCHER: Scheduling root FSM on thread with ID %u.", pTargetThread->ThreadId);
 	CONTROLFLAGS_SET_ACTIVE(pTargetThread->ControlFlags);
+}
+
+void DISPATCHER_HandleFsmCompletion(SE_THREAD* pThread)
+{
+	if (pThread->ThreadId == 0)
+	{
+		pThread->pDispatcher->InExecution = false;
+	}
+	DISPATCH_TRACE("DISPATCHER: Thread with ID %u has signaled completion.", pThread->ThreadId);
+	pThread->HostContext.Callbacks.OnFsmComplete(pThread->HostContext.Token, &pThread->HostContext.SearchContext, pThread);
+}
+
+void DISPATCHER_SignalRunning(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread)
+{
+	ASSERT(CONTROLFLAGS_IS_ACTIVE(pThread->ControlFlags));
+	ASSERT(CONTROLFLAGS_IS_RUNNING(pThread->ControlFlags));
+	DISPATCH_TRACE("DISPATCHER: Thread with ID %u has signaled that it is running.", pThread->ThreadId);
+	if (pThread->ThreadId != 0)
+	{
+		ASSERT(pThread->ActiveFork != FORKINDEX_NONE);
+		DISPATCHER_RecycleFork(pDispatcher, pThread->ActiveFork);
+		pThread->ActiveFork = FORKINDEX_NONE;
+	}
 }

@@ -1,0 +1,16 @@
+#pragma once
+#ifndef SE_DISPATCHCONTEXT_H
+#define SE_DISPATCHCONTEXT_H
+
+#include "SE_Types.h"
+
+struct SE_DISPATCHER;
+
+struct SE_HOSTCONTEXT;
+
+struct SE_DISPATCHCONTEXT
+{
+	SE_DISPATCHER
+};
+
+#endif // SE_DISPATCHCONTEXT_H

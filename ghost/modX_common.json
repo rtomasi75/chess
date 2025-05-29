@@ -1,76 +1,118 @@
 {
   "module": "mod0",
-  "version": "1.0.0",
-  "description": "Deep awareness of the DixieKnight engine's common utilities: intrinsics, compiler features, helpers, and assertions.",
+  "version": "2.3.0",
+  "description": "Engine common module: platform intrinsics, compiler macros, and utility functions. Also serves as a reusable foundation shared across all engine components.",
+  "design_remarks": {
+    "dispatch_strategy": "Currently uses runtime dispatch based on processor feature detection (e.g. POPCNT, BMI2). In the future, may switch to compile-time dispatch based on -march compiler flag, especially on Clang/GCC.",
+    "module_purpose": "This module (common/) is designed to hold reusable logic across all engine subsystems. It must remain agnostic to specific engine components like movegen, eval, or search."
+  },
   "scope": {
-    "folder": "common/",
-    "exposed_via": "libCommon.h",
-    "structural_components": [
-      "CM_Intrinsics",
-      "CM_Compiler",
-      "CM_Assert",
-      "CM_Helpers"
-    ]
-  },
-  "contracts": {
-    "intrinsics": {
-      "functions": [
-        "CM_PopCount64",
-        "CM_BitScanForward",
-        "CM_BitScanReverse",
-        "CM_PopLsb"
-      ],
-      "macros": [
-        "CM_PREFETCH"
-      ],
-      "design_notes": [
-        "All intrinsics must be portable between Clang, GCC, and MSVC.",
-        "All behavior is deterministic: no UB, no inline assembly.",
-        "Fallbacks are defined where necessary."
-      ]
-    },
-    "compiler": {
-      "functions": [],
-      "macros": [
-        "CM_INLINE",
-        "CM_ALIGN_CACHELINE",
-        "CM_ALIGN_PROCWORD",
-        "CM_ASSUME",
-        "CM_UNREACHABLE"
-      ],
-      "design_notes": [
-        "Compiler detection is macro-based and resolved statically.",
-        "Alignment macros are critical for struct layout in movegen."
-      ]
-    },
-    "helpers": {
-      "functions": [
-        "CM_ParseDecimalInt"
-      ],
-      "design_notes": [
-        "All helpers are bounds-safe, zero-allocation, STL-free.",
-        "CM_Helpers may grow but only via verified need."
-      ]
-    },
-    "assert": {
-      "macros": ["CM_ASSERT"],
-      "design_notes": [
-        "Debug-mode only.",
-        "Aborts on failure — no exception system used."
-      ]
-    }
-  },
-  "philosophy": {
-    "constraints": [
-      "No STL, no RTTI, no exceptions.",
-      "All logic must be constexpr-safe or inline where feasible.",
-      "Headers must compile standalone."
+    "folders": [
+      "common/"
     ],
-    "role": "The common module forms the deterministic substrate for all other systems. It does not drift, it does not generalize early."
-  },
-  "integration": {
-    "used_by": ["movegen", "bitboard", "search", "engine"],
-    "included_via": "#include \"libCommon.h\""
-  },
-  "status": "Stable. Only expands with new verified primitives."
+    "typedefs": [
+      "typedef std::int8_t (*CM_FN_POPCNT)(std::uint64_t);",
+      "typedef std::uint64_t (*CM_FN_PDEP)(std::uint64_t, std::uint64_t);",
+      "typedef std::uint64_t (*CM_FN_PEXT)(std::uint64_t, std::uint64_t);",
+      "typedef std::int8_t (*CM_FN_BSF)(std::uint64_t);",
+      "typedef bool (*CM_FN_POPLSB)(std::uint64_t&, std::int8_t&);"
+    ],
+    "functions": [
+      "bool CM_ParseDecimalInt(const char* pString, const int len, int& strPos, int& outValue);",
+      "void CM_DetectIntrinsics();",
+      "bool CM_HasPOPCNT();",
+      "bool CM_HasBMI2();",
+      "bool CM_HasBMI();",
+      "std::int8_t CM_PopulationCount(std::uint64_t value);",
+      "std::uint64_t CM_BitDeposit(std::uint64_t value, std::uint64_t mask);",
+      "std::uint64_t CM_BitExtract(std::uint64_t value, std::uint64_t mask);",
+      "std::int8_t CM_BitScanForward(std::uint64_t value);",
+      "bool CM_PopLsb(std::uint64_t& value, std::int8_t& bit);",
+      "bool CM_PopLsbAtomic(std::atomic<std::uint64_t>& bb, std::int8_t& bit);",
+      "std::string CM_GetIntrinsicInfo();"
+    ],
+    "macros": {
+      "CM_ALIGNMENT": "64",
+      "CM_ALIGN_CACHELINE": "__declspec(align(64))",
+      "CM_PREFETCH_L1(addr)": "_mm_prefetch((const char*)(addr), _MM_HINT_T0)"
+    },
+    "macros_by_condition": {
+      "_DEBUG": {
+        "ASSERT(_X_)": "assert(_X_)"
+      },
+      "__GNUC__": {
+        "ASSERT(_X_)": "do { if (!(_X_)) __builtin_unreachable(); } while (0)"
+      },
+      "_MSC_VER": {
+        "CM_HAVE_POPCNT": "1",
+        "CM_HAVE_BMI2": "1",
+        "CM_PREFETCH_L1(addr)": "_mm_prefetch((const char*)(addr), _MM_HINT_T0)"
+      },
+      "[else]": {
+        "ASSERT(_X_)": "((void)0)",
+        "CM_HAVE_POPCNT": "0"
+      }
+    },
+    "intrinsics_dispatch": {
+      "runtime_dispatch_enabled": true,
+      "fallback_safe": true,
+      "dispatch_table": {
+        "CM_FN_POPCNT": {
+          "typedef": "std::int8_t (*CM_FN_POPCNT)(std::uint64_t)",
+          "pointer": "g_PopCountDispatch",
+          "runtime_select": "CM_DetectIntrinsics",
+          "fallback": "CM_PopulationCountFallback",
+          "intrinsic": "CM_PopulationCountIntrinsic",
+          "query_function": "CM_HasPOPCNT"
+        },
+        "CM_FN_PDEP": {
+          "typedef": "std::uint64_t (*CM_FN_PDEP)(std::uint64_t, std::uint64_t)",
+          "pointer": "g_BitDepDispatch",
+          "runtime_select": "CM_DetectIntrinsics",
+          "fallback": "CM_BitDepositFallback",
+          "intrinsic": "CM_BitDepositIntrinsic",
+          "query_function": "CM_HasBMI2"
+        },
+        "CM_FN_PEXT": {
+          "typedef": "std::uint64_t (*CM_FN_PEXT)(std::uint64_t, std::uint64_t)",
+          "pointer": "g_BitExtDispatch",
+          "runtime_select": "CM_DetectIntrinsics",
+          "fallback": "CM_BitExtractFallback",
+          "intrinsic": "CM_BitExtractIntrinsic",
+          "query_function": "CM_HasBMI2"
+        },
+        "CM_FN_BSF": {
+          "typedef": "std::int8_t (*CM_FN_BSF)(std::uint64_t)",
+          "pointer": "g_BsfDispatch",
+          "runtime_select": "CM_DetectIntrinsics",
+          "fallback": "CM_BitScanForwardFallback",
+          "intrinsic": "CM_BitScanForwardIntrinsic",
+          "query_function": "CM_HasBMI"
+        },
+        "CM_FN_POPLSB": {
+          "typedef": "bool (*CM_FN_POPLSB)(std::uint64_t&, std::int8_t&)",
+          "pointer": "g_PopLsbDispatch",
+          "runtime_select": "CM_DetectIntrinsics",
+          "fallback": "CM_PopLsbFallback",
+          "intrinsic": "CM_PopLsbIntrinsic",
+          "query_function": "CM_HasBMI"
+        }
+      },
+      "platform_constraints": {
+        "MSVC": {
+          "dispatch": "enabled",
+          "cpuid_required": true,
+          "intrinsics_conditioned_on": [
+            "CM_HAVE_POPCNT",
+            "CM_HAVE_BMI2",
+            "CM_HAVE_BMI"
+          ]
+        },
+        "other_compilers": {
+          "dispatch": "static or fallback",
+          "behavior": "resolved at compile-time by preprocessor"
+        }
+      }
+    }
+  }
 }

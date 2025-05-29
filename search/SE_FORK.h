@@ -5,6 +5,7 @@
 #include "libMovegen.h"
 #include "SE_Types.h"
 #include "SE_FSM.h"
+#include "SE_FORKMASK.h"
 
 #define SEARCH_FORK_MAX_MOVES 25
 
@@ -19,8 +20,12 @@ struct CM_ALIGN_CACHELINE SE_FORK
 	std::uint8_t Padding;
 };
 
+static_assert((sizeof(SE_FORK) - sizeof(MG_POSITION)) == 128);
+
 bool FORK_IsValid(const SE_FORK* pFork);
 
-void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, const MG_MOVE* pMoves, MG_MOVEINDEX countMoves, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId);
+void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition,SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId);
+
+void FORK_AddMove(SE_FORK* pFork, MG_MOVE move);
 
 #endif // SE_FORK_H

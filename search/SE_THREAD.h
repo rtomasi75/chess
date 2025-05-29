@@ -6,6 +6,7 @@
 #include "SE_NODE.h"
 #include "SE_CONTROLFLAGS.h"
 #include "SE_SEARCH.h"
+#include "SE_FORK.h"
 #include "libMovegen.h"
 #include "libCommon.h"
 
@@ -17,6 +18,7 @@
 typedef std::thread* SE_SYSTEMTHREADHANDLE;
 typedef std::atomic_bool SE_TERMINATIONFLAG;
 
+struct SE_DISPATCHER; 
 
 struct CM_ALIGN_CACHELINE SE_THREAD
 {
@@ -31,18 +33,26 @@ struct CM_ALIGN_CACHELINE SE_THREAD
 	SE_SYSTEMTHREADHANDLE Handle;
 	SE_TERMINATIONFLAG TerminationRequested;
 	SE_FSM StateMachine;
-	const SE_HOSTCONTEXT* pHostContext;
+	SE_DISPATCHER* pDispatcher;
+	SE_HOSTCONTEXT HostContext;
+	CM_LOCK LockNodeCount; 
+	SE_FORKINDEX ActiveFork;
 };
 
 struct SE_DISPATCHER;
 
 void THREAD_PrepareRoot(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, const  SE_HOSTCONTEXT* pHostContext);
 
-void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, const SE_THREADINDEX parentId, SE_FSM stateMachine, const SE_HOSTCONTEXT* pHostContext);
+void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, const SE_THREADINDEX parentId, SE_FSM stateMachine, const  SE_HOSTCONTEXT* pHostContext, const SE_FORK* pFork, const SE_FORKINDEX forkIndex);
 
 void THREAD_Initialize(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const SE_THREADINDEX threadId, const MG_MOVEGEN* pMoveGen);
 
 void THREAD_Deinitialize(SE_THREAD* pThread);
 
+#ifdef SEARCH_TRACE_THREAD
+#define THREAD_TRACE(fmt, ...) CM_TRACE(fmt, ##__VA_ARGS__)
+#else
+#define THREAD_TRACE(fmt, ...) do { } while (0)
+#endif
 
 #endif // SE_THREAD_H

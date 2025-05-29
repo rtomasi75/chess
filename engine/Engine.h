@@ -41,7 +41,7 @@ private:
 	bool TryParse(const std::string& commandString);
 	void MainThread();
 	void AutoPerft(const int& depth);
-	static void SignalExecutionToken(SE_EXECUTIONTOKEN token);
+	static void SignalExecutionToken(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTSTORAGE* pSearchContext, SE_THREAD* pTerminatingThread);
 public:
 	SE_LEAFCOUNT Perft(const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& nodeCount);
 	MG_PLAYER MovingPlayer() const;

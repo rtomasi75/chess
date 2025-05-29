@@ -1,19 +1,27 @@
 #include "SE_FORK.h"
+#include "libCommon.h"
 
 bool FORK_IsValid(const SE_FORK* pFork)
 {
-	return pFork->CountMoves > 0 && pFork->CountMoves <= 25 && pFork->StateMachine != nullptr;
+	ASSERT(pFork);
+	return (pFork->CountMoves <= SEARCH_FORK_MAX_MOVES) && (pFork->StateMachine != nullptr);
 }
 
-void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, const MG_MOVE* pMoves, MG_MOVEINDEX countMoves, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId)
+void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId)
 {
-	ASSERT(countMoves <= SEARCH_FORK_MAX_MOVES);
+	ASSERT(pFork);
 	pFork->Position = *pPosition;
-	pFork->CountMoves = countMoves;
-	for (MG_MOVEINDEX i = 0; i < countMoves; ++i)
-		pFork->Moves[i] = pMoves[i];
+	pFork->CountMoves = 0;
 	pFork->DistanceToHorizon = distanceToHorizon;
 	pFork->StateMachine = stateMachine;
 	pFork->ParentId = parentId;
 	ASSERT(FORK_IsValid(pFork));
+}
+
+void FORK_AddMove(SE_FORK* pFork, MG_MOVE move)
+{
+	ASSERT(pFork != nullptr);
+	ASSERT(FORK_IsValid(pFork));
+	ASSERT(pFork->CountMoves < SEARCH_FORK_MAX_MOVES);
+	pFork->Moves[pFork->CountMoves++] = move;
 }

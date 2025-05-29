@@ -219,9 +219,11 @@ MG_PLAYER Engine::PassivePlayer() const
 	return _game.CurrentPosition.Header.PassivePlayer;
 }
 
-void Engine::SignalExecutionToken(SE_EXECUTIONTOKEN token)
+void Engine::SignalExecutionToken(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTSTORAGE* pSearchContext, SE_THREAD* pTerminatingThread)
 {
-	static_cast<ExecutionToken*>(token)->Signal();
+	ExecutionToken* pToken = static_cast<ExecutionToken*>(token);
+	pToken->SetSearchContext(pSearchContext);
+	pToken->Signal();
 }
 
 SE_LEAFCOUNT Engine::Perft(const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& nodeCount)
@@ -234,11 +236,12 @@ SE_LEAFCOUNT Engine::Perft(const SE_DEPTH distanceToHorizon, SE_POSITIONCOUNT& n
 	std::shared_ptr<ExecutionToken> pToken = std::make_shared<ExecutionToken>(&searchContext);
 	SE_CALLBACKS callbacks;
 	CALLBACKS_Initialize(&callbacks, Engine::SignalExecutionToken);
+	callbacks.OnAggregateSearchContext = SEARCH_AggregatePerftContext;
 	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pToken.get());
 	SEARCH_PerftRoot(&_dispatcher, &callbacks, &localPosition, distanceToHorizon, &hostContext);
 	pToken->Wait();
 	nodeCount = _dispatcher.pThreadPool[0].NodeCount;
-	return searchContext.LeafCount;
+	return reinterpret_cast<const SE_CONTEXT_PERFT*>(pToken->SearchContext())->LeafCount;
 }
 
 

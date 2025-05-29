@@ -6,5 +6,6 @@
 #include "common/CM_Assert.h"
 #include "common/CM_Intrinsics.h"
 #include "common/CM_Helpers.h"
+#include "common/CM_LOCK.h"
 
 #endif

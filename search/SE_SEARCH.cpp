@@ -55,7 +55,7 @@ static inline void SEARCH_Explore(SE_THREAD* pThread, SE_NODE* pNode)
 	if (pThread->DistanceToHorizon > 0)
 	{
 		pThread->DistanceToHorizon--;
-		NODE_Initialize(pNode - 1);
+		NODE_Initialize(pThread, pNode - 1);
 	}
 }
 
@@ -71,12 +71,16 @@ static inline SE_NODESTATE SEARCH_Apply(SE_THREAD* pThread, SE_NODE* pNode, cons
 	const MG_MOVE move = pNode->MoveList.Move[pNode->MoveIndex];
 	MOVEGEN_MakeMove(pMoveGen, move, &pNode->MoveData, &pThread->SharedPosition);
 #ifdef MOVEGEN_LEGAL
+	LOCK_Aquire(&pThread->LockNodeCount);
 	pThread->NodeCount++;
+	LOCK_Release(&pThread->LockNodeCount);
 	return NODESTATE_PROCESS;
 #else
 	if (POSITION_IsLegal(&pThread->SharedPosition))
 	{
+		LOCK_Aquire(&pThread->LockNodeCount);
 		pThread->NodeCount++;
+		LOCK_Release(&pThread->LockNodeCount);
 		return NODESTATE_PROCESS;
 	}
 	else
@@ -90,31 +94,176 @@ static inline void SEARCH_Perft_ProcessNode(SE_THREAD* pThread, SE_CONTEXT_PERFT
 {
 	if (pThread->DistanceToHorizon == 0)
 	{
+		LOCK_Aquire(&pSearchContext->Lock);
 		pSearchContext->LeafCount++;
+		LOCK_Release(&pSearchContext->Lock);
 	}
 }
 
-static SE_NODESTATE SEARCH_Iterate(SE_THREAD* pThread, SE_NODE* pNode)
+static bool SEARCH_Iterate(SE_THREAD* pThread, SE_NODE* pNode)
 {
+	for (; pNode->MoveIndex < pNode->MoveList.CountMoves; pNode->MoveIndex++)
+	{
+		if (!FORKMASK_CheckIfMasked(&pNode->ForkMask, pNode->MoveIndex))
+			break;
+	}
 	if (pNode->MoveIndex >= pNode->MoveList.CountMoves)
 	{
-		pThread->DistanceToHorizon++;
-		return NODESTATE_INVALID;
+		return false;
 	}
 	else
 	{
-		return NODESTATE_APPLY;
+		return true;
 	}
 }
 
-static void SEARCH_Perft_FSM(SE_THREAD* pThread, void* pContext, const MG_MOVEGEN* pMoveGen)
+static void SEARCH_Finish(SE_THREAD* pThread)
+{
+	pThread->DistanceToHorizon++;
+}
+
+static void SEARCH_NotifyForkComplete(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTSTORAGE* pSearchContext, SE_THREAD* pChildThread)
+{
+	SE_NODE* pNode = (SE_NODE*)token;
+	pNode->CountLiveForks.fetch_sub(1, std::memory_order_acq_rel);
+	if (pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext)
+		pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext(pNode, pSearchContext);
+	LOCK_Aquire(&pNode->pThread->LockNodeCount);
+	pNode->pThread->NodeCount += pChildThread->NodeCount;
+	LOCK_Release(&pNode->pThread->LockNodeCount);
+}
+
+
+static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
+{
+	const MG_MOVEINDEX halfCount = pNode->MoveList.CountMoves / 2;
+	const MG_MOVEINDEX forkCount = halfCount > SEARCH_FORK_MAX_MOVES ? SEARCH_FORK_MAX_MOVES : halfCount;
+	SE_FORK fork;
+	SE_FORKMASK forkMaskRoot;
+	FORKMASK_Initialize(&forkMaskRoot);
+	FORK_Initialize(&fork, &pThread->SharedPosition, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId);
+	for (MG_MOVEINDEX forkMoveIndex = 0; forkMoveIndex < forkCount; forkMoveIndex++)
+	{
+		FORKMASK_MaskMove(&forkMaskRoot, forkMoveIndex);
+		FORK_AddMove(&fork, pNode->MoveList.Move[forkMoveIndex]);
+	}
+	SE_CALLBACKS callbacks;
+	CALLBACKS_Initialize(&callbacks, SEARCH_NotifyForkComplete);
+	callbacks.OnAggregateSearchContext = SEARCH_AggregatePerftContext;
+	SE_HOSTCONTEXT hostContext;
+	SE_CONTEXT_PERFT searchContext;
+	searchContext.LeafCount = 0;
+	LOCK_Initialize(&searchContext.Lock);
+	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pNode);
+	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext))
+	{
+		memcpy(&pNode->ForkMask, &forkMaskRoot, sizeof(SE_FORKMASK));
+		pNode->CountLiveForks.fetch_add(1, std::memory_order_relaxed);
+	}
+}
+
+static void SEARCH_Join(SE_THREAD* pThread, SE_NODE* pNode)
+{
+	while (pNode->CountLiveForks.load(std::memory_order_acquire) > 0)
+	{
+		std::this_thread::yield();
+	}
+}
+
+void SEARCH_AggregatePerftContext(SE_NODE* pParentNode, SE_SEARCHCONTEXTSTORAGE* pStorage)
+{
+	SE_CONTEXT_PERFT* pChild = (SE_CONTEXT_PERFT*)pStorage;
+	SE_CONTEXT_PERFT* pParent = (SE_CONTEXT_PERFT*)&pParentNode->pThread->HostContext.SearchContext;
+	LOCK_Aquire(&pParent->Lock);
+	pParent->LeafCount += pChild->LeafCount;
+	LOCK_Release(&pParent->Lock);
+}
+
+static void SEARCH_Perft_FSM_Parallel(SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
 {
 	ASSERT(CONTROLFLAGS_IS_INITIALIZED(pThread->ControlFlags));
-	SE_CONTEXT_PERFT* pSearchContext = (SE_CONTEXT_PERFT*)pContext;
+	SE_CONTEXT_PERFT* pSearchContext = (SE_CONTEXT_PERFT*)&pThread->HostContext.SearchContext;
 	while (pThread->DistanceToHorizon <= pThread->RootDistanceToHorizon)
 	{
 		SE_NODE* pNode = &pThread->Stack[pThread->DistanceToHorizon];
 		ASSERT(NODEFLAGS_IS_INITIALIZED(pNode->Flags));
+#ifdef SEARCH_TRACE_FSM
+		char buffer[16];
+		std::memset(buffer, 0, 16);
+		int strPos = 0;
+		const bool bStatus = NODESTATE_ToString(buffer, 16, strPos, pNode->State);
+		ASSERT(bStatus);
+		FSM_TRACE("FSM (PerftParallel): Thread %u | DTH %d | NodeState = %s", pThread->ThreadId, pThread->DistanceToHorizon, buffer);
+#endif
+		ASSERT(pNode->pThread != nullptr);
+		switch (pNode->State)
+		{
+		default:
+			ASSERT(false);
+			break;
+		case NODESTATE_FORK:
+			SEARCH_ForkPerft(pThread, pNode);
+			pNode->State = NODESTATE_ITERATE;
+			break;
+		case NODESTATE_EXPLORE:
+			SEARCH_Explore(pThread, pNode);
+			pNode->State = NODESTATE_RESUME;
+			break;
+		case NODESTATE_GENERATE:
+			SEARCH_GenerateMoves(pNode, &pThread->SharedPosition, pMoveGen);
+			pNode->State = NODESTATE_FORK;
+			break;
+		case NODESTATE_ITERATE:
+			if (SEARCH_Iterate(pThread, pNode))
+			{
+				pNode->State = NODESTATE_APPLY;
+			}
+			else
+			{
+				pNode->State = NODESTATE_JOIN;
+			}
+			break;
+		case NODESTATE_APPLY:
+			pNode->State = SEARCH_Apply(pThread, pNode, pMoveGen);
+			break;
+		case NODESTATE_PROCESS:
+			SEARCH_Perft_ProcessNode(pThread, pSearchContext, pMoveGen);
+			pNode->State = NODESTATE_EXPLORE;
+			break;
+		case NODESTATE_RESUME:
+			SEARCH_Resume(pThread, pNode, pMoveGen);
+			pNode->State = NODESTATE_ITERATE;
+			break;
+		case NODESTATE_JOIN:
+			SEARCH_Join(pThread, pNode);
+			pNode->State = NODESTATE_FINISH;
+			break;
+		case NODESTATE_FINISH:
+			SEARCH_Finish(pThread);
+#ifdef _DEBUG
+			pNode->State = NODESTATE_INVALID;
+#endif
+			break;
+		}
+	}
+}
+
+static void SEARCH_Perft_FSM_Sequential(SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
+{
+	ASSERT(CONTROLFLAGS_IS_INITIALIZED(pThread->ControlFlags));
+	SE_CONTEXT_PERFT* pSearchContext = (SE_CONTEXT_PERFT*)&pThread->HostContext.SearchContext;
+	while (pThread->DistanceToHorizon <= pThread->RootDistanceToHorizon)
+	{
+		SE_NODE* pNode = &pThread->Stack[pThread->DistanceToHorizon];
+		ASSERT(NODEFLAGS_IS_INITIALIZED(pNode->Flags));
+#ifdef SEARCH_TRACE_FSM
+		char buffer[16];
+		std::memset(buffer, 0, 16);
+		int strPos = 0;
+		const bool bStatus = NODESTATE_ToString(buffer, 16, strPos, pNode->State);
+		ASSERT(bStatus);
+		FSM_TRACE("FSM (PerftSequential): Thread %u | DTH %d | NodeState = %s", pThread->ThreadId, pThread->DistanceToHorizon, buffer);
+#endif
 		switch (pNode->State)
 		{
 		default:
@@ -129,7 +278,14 @@ static void SEARCH_Perft_FSM(SE_THREAD* pThread, void* pContext, const MG_MOVEGE
 			pNode->State = NODESTATE_ITERATE;
 			break;
 		case NODESTATE_ITERATE:
-			pNode->State = SEARCH_Iterate(pThread, pNode);
+			if (SEARCH_Iterate(pThread, pNode))
+			{
+				pNode->State = NODESTATE_APPLY;
+			}
+			else
+			{
+				pNode->State = NODESTATE_FINISH;
+			}
 			break;
 		case NODESTATE_APPLY:
 			pNode->State = SEARCH_Apply(pThread, pNode, pMoveGen);
@@ -142,6 +298,12 @@ static void SEARCH_Perft_FSM(SE_THREAD* pThread, void* pContext, const MG_MOVEGE
 			SEARCH_Resume(pThread, pNode, pMoveGen);
 			pNode->State = NODESTATE_ITERATE;
 			break;
+		case NODESTATE_FINISH:
+			SEARCH_Finish(pThread);
+#ifdef _DEBUG
+			pNode->State = NODESTATE_INVALID;
+#endif
+			break;
 		}
 	}
 }
@@ -149,5 +311,5 @@ static void SEARCH_Perft_FSM(SE_THREAD* pThread, void* pContext, const MG_MOVEGE
 void SEARCH_PerftRoot(SE_DISPATCHER* pDispatcher, const SE_CALLBACKS* pCallbacks, MG_POSITION* pPosition, const SE_DEPTH distanceToHorizon, SE_HOSTCONTEXT* pHostContext)
 {
 	ASSERT(distanceToHorizon < SEARCH_MAX_DEPTH);
-	DISPATCHER_Dispatch(pDispatcher, pPosition, distanceToHorizon - 1, &SEARCH_Perft_FSM, pHostContext);
+	DISPATCHER_Dispatch(pDispatcher, pPosition, distanceToHorizon - 1, &SEARCH_Perft_FSM_Parallel, pHostContext);
 }
