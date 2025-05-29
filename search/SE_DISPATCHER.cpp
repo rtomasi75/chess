@@ -105,6 +105,10 @@ void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPositio
 	ASSERT(!pDispatcher->InExecution);
 	LOCK_Aquire(&pDispatcher->LockThreadPool);
 	pDispatcher->InExecution = true;
+	for (SE_THREADINDEX threadIndex = 0; threadIndex < pDispatcher->CountThreads; threadIndex++)
+	{
+		THREAD_WakeUp(pDispatcher->pThreadPool + threadIndex);
+	}
 	SE_THREAD* pTargetThread = &pDispatcher->pThreadPool[0];
 	ASSERT(CONTROLFLAGS_IS_READY(pTargetThread->ControlFlags));
 	CONTROLFLAGS_CLEAR_READY(pTargetThread->ControlFlags);
@@ -119,6 +123,10 @@ void DISPATCHER_HandleFsmCompletion(SE_THREAD* pThread)
 {
 	if (pThread->ThreadId == 0)
 	{
+		for (SE_THREADINDEX threadIndex = 0; threadIndex < pThread->pDispatcher->CountThreads; threadIndex++)
+		{
+			THREAD_Hibernate(pThread->pDispatcher->pThreadPool + threadIndex);
+		}
 		pThread->pDispatcher->InExecution = false;
 	}
 	DISPATCH_TRACE("DISPATCHER: Thread with ID %u has signaled completion.", pThread->ThreadId);

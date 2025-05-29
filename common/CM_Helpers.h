@@ -6,4 +6,8 @@ bool CM_ParseDecimalInt(const char* pString, const int len, int& strPos, int& ou
 
 void CM_SetCurrentThreadName(const char* name);
 
+#define CM_YIELD() std::this_thread::yield()
+
+#define CM_SLEEP(_mcs_) std::this_thread::sleep_for(std::chrono::microseconds(_mcs_))
+
 #endif

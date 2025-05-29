@@ -20,7 +20,7 @@ typedef std::atomic_bool SE_TERMINATIONFLAG;
 
 struct SE_DISPATCHER; 
 
-struct CM_ALIGN_CACHELINE SE_THREAD
+struct SE_THREAD
 {
 	SE_ATOMICCONTROLFLAGS ControlFlags;
 	SE_POSITIONCOUNT NodeCount;
@@ -37,6 +37,8 @@ struct CM_ALIGN_CACHELINE SE_THREAD
 	SE_HOSTCONTEXT HostContext;
 	CM_LOCK LockNodeCount; 
 	SE_FORKINDEX ActiveFork;
+	SE_ATOMICRETENTIONSTATE RetentionState;
+	SE_TICKCOUNT CountIdleTicks;
 };
 
 struct SE_DISPATCHER;
@@ -48,6 +50,10 @@ void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEP
 void THREAD_Initialize(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const SE_THREADINDEX threadId, const MG_MOVEGEN* pMoveGen);
 
 void THREAD_Deinitialize(SE_THREAD* pThread);
+
+void THREAD_WakeUp(SE_THREAD* pThread);
+
+void THREAD_Hibernate(SE_THREAD* pThread);
 
 #ifdef SEARCH_TRACE_THREAD
 #define THREAD_TRACE(fmt, ...) CM_TRACE(fmt, ##__VA_ARGS__)

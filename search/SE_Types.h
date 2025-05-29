@@ -3,6 +3,7 @@
 #define SE_TYPES_H
 
 #include <cstdint>
+#include <atomic>
 
 struct SE_THREAD;
 struct MG_MOVEGEN;
@@ -14,6 +15,14 @@ typedef std::int16_t SE_THREADINDEX;
 typedef void* SE_CONTEXTPTR;
 typedef void* SE_EXECUTIONTOKEN;
 typedef std::int8_t SE_FORKINDEX;
+typedef std::int8_t SE_RETENTIONSTATE;
+typedef std::atomic<std::int8_t> SE_ATOMICRETENTIONSTATE;
+typedef std::uint32_t SE_TICKCOUNT;
+
+#define RETENTIONSTATE_AWAKE  INT8_C(0)
+#define RETENTIONSTATE_DROWSY   INT8_C(1)
+#define RETENTIONSTATE_SLEEPING INT8_C(2)
+#define RETENTIONSTATE_HIBERNATING INT8_C(3)
 
 #define FORKINDEX_NONE INT8_C(-1)
 

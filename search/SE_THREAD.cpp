@@ -2,6 +2,65 @@
 #include "SE_DISPATCHER.h"
 #include <cstring>
 
+#define RETENTIONTHRESHOLD_DROWSY 100
+#define RETENTIONTHRESHOLD_SLEEPING 300
+
+#define RETENTIONDELAY_SLEEP 0
+#define RETENTIONDELAY_HIBERNATE 1
+
+static inline void THREAD_HandleIdle(SE_THREAD* pThread)
+{
+	const SE_RETENTIONSTATE oldState = pThread->RetentionState.load();
+	switch (pThread->RetentionState)
+	{
+	case RETENTIONSTATE_AWAKE:
+		if (pThread->CountIdleTicks++ >= RETENTIONTHRESHOLD_DROWSY)
+		{
+			SE_RETENTIONSTATE expected = RETENTIONSTATE_AWAKE;
+			pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_DROWSY);
+		}
+		break;
+	case RETENTIONSTATE_DROWSY:
+		CM_YIELD();
+		if (pThread->CountIdleTicks++ >= RETENTIONTHRESHOLD_SLEEPING)
+		{
+			SE_RETENTIONSTATE expected = RETENTIONSTATE_DROWSY;
+			pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_SLEEPING);
+		}
+		break;
+	case RETENTIONSTATE_SLEEPING:
+		CM_SLEEP(RETENTIONDELAY_SLEEP);
+		break;
+	case RETENTIONSTATE_HIBERNATING:
+		CM_SLEEP(RETENTIONDELAY_HIBERNATE);
+		break;
+	}
+#ifdef SEARCH_TRACE_THREAD
+	if (pThread->RetentionState != oldState)
+		THREAD_TRACE("THREAD %d: State = %d | IdleTicks = %u\n", pThread->ThreadId, (int)pThread->RetentionState, (unsigned)pThread->CountIdleTicks);
+#endif
+}
+
+void THREAD_WakeUp(SE_THREAD* pThread)
+{
+	const SE_RETENTIONSTATE oldState = pThread->RetentionState.exchange(RETENTIONSTATE_AWAKE);
+	if (oldState != RETENTIONSTATE_AWAKE)
+	{
+		THREAD_TRACE("THREAD %d: Wake requested (was state %d)\n", pThread->ThreadId, pThread->RetentionState);
+		pThread->CountIdleTicks = 0;
+	}
+}
+
+void THREAD_Hibernate(SE_THREAD* pThread)
+{
+	const SE_RETENTIONSTATE oldState = pThread->RetentionState.exchange(RETENTIONSTATE_HIBERNATING);
+	if (oldState != RETENTIONSTATE_HIBERNATING)
+	{
+		THREAD_TRACE("THREAD %d: Hibernation requested (was state %d)\n", pThread->ThreadId, pThread->RetentionState);
+		pThread->CountIdleTicks = 0;
+	}
+}
+
 static void THREAD_MainLoop(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
 {
 	THREAD_TRACE("THREAD: Thread with ID %u entering main loop.", pThread->ThreadId);
@@ -15,6 +74,7 @@ static void THREAD_MainLoop(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, cons
 		{
 			ASSERT(pThread->StateMachine != nullptr);
 			THREAD_TRACE("THREAD: Thread with ID %u activating.", pThread->ThreadId);
+			THREAD_WakeUp(pThread);
 			CONTROLFLAGS_SET_RUNNING(pThread->ControlFlags);
 			DISPATCHER_SignalRunning(pDispatcher, pThread);
 			pThread->StateMachine(pThread, pMoveGen);
@@ -24,7 +84,10 @@ static void THREAD_MainLoop(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, cons
 			CONTROLFLAGS_SET_READY(pThread->ControlFlags);
 			THREAD_TRACE("THREAD: Thread with ID %u deactivating.", pThread->ThreadId);
 		}
-		std::this_thread::yield();
+		else
+		{
+			THREAD_HandleIdle(pThread);
+		}
 	}
 	THREAD_TRACE("THREAD: Thread with ID %u exiting main loop.", pThread->ThreadId);
 }
@@ -77,6 +140,8 @@ void THREAD_Initialize(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const SE_
 	pThread->Handle = new std::thread([pThread, pMoveGen, pDispatcher]() { THREAD_MainLoop(pDispatcher, pThread, pMoveGen); });
 	pThread->pDispatcher = pDispatcher;
 	pThread->ActiveFork = FORKINDEX_NONE;
+	pThread->CountIdleTicks = 0;
+	pThread->RetentionState = RETENTIONSTATE_HIBERNATING;
 	LOCK_Initialize(&pThread->LockNodeCount);
 }
 
