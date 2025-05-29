@@ -5,6 +5,10 @@
 static void THREAD_MainLoop(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
 {
 	THREAD_TRACE("THREAD: Thread with ID %u entering main loop.", pThread->ThreadId);
+	char nameBuffer[32];
+	std::memset(nameBuffer, 0, 32);
+	std::snprintf(nameBuffer, 32, "Dispatcher thread %u", pThread->ThreadId);
+	CM_SetCurrentThreadName(nameBuffer);
 	while (!pThread->TerminationRequested)
 	{
 		if (CONTROLFLAGS_IS_ACTIVE(pThread->ControlFlags))
@@ -14,10 +18,10 @@ static void THREAD_MainLoop(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, cons
 			CONTROLFLAGS_SET_RUNNING(pThread->ControlFlags);
 			DISPATCHER_SignalRunning(pDispatcher, pThread);
 			pThread->StateMachine(pThread, pMoveGen);
-			CONTROLFLAGS_CLEAR_ACTIVE(pThread->ControlFlags);
-			CONTROLFLAGS_SET_READY(pThread->ControlFlags);
 			ASSERT(pThread->HostContext.Callbacks.OnFsmComplete != nullptr);
 			DISPATCHER_HandleFsmCompletion(pThread);
+			CONTROLFLAGS_CLEAR_ACTIVE(pThread->ControlFlags);
+			CONTROLFLAGS_SET_READY(pThread->ControlFlags);
 			THREAD_TRACE("THREAD: Thread with ID %u deactivating.", pThread->ThreadId);
 		}
 		std::this_thread::yield();

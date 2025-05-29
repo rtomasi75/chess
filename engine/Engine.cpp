@@ -144,6 +144,7 @@ bool Engine::IsUCI()
 
 void Engine::MainThread()
 {
+	CM_SetCurrentThreadName("Engine main loop");
 	std::string inputLine;
 	while (_isRunning)
 	{

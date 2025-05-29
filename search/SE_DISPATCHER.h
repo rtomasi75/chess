@@ -23,6 +23,7 @@ struct SE_DISPATCHER
 	SE_FORK Forks[SEARCH_MAX_FORKS];
 	SE_DISPATCHMASK AvailableForks;
 	CM_ATOMICBOOL InExecution;
+	CM_LOCK LockThreadPool;
 };
 
 void DISPATCHER_Initialize(SE_DISPATCHER* pDispatcher, const MG_MOVEGEN* pMoveGen);

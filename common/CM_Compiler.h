@@ -51,7 +51,8 @@
 #endif
 
 #ifdef _DEBUG
-#define CM_TRACE(fmt, ...) do { std::fprintf(stderr, fmt "\n", ##__VA_ARGS__); std::fflush(stderr); } while (0)
+//#define CM_TRACE(fmt, ...) do { std::fprintf(stderr, fmt "\n", ##__VA_ARGS__); std::fflush(stderr); } while (0)
+#define CM_TRACE(fmt, ...) do { std::printf(fmt "\n", ##__VA_ARGS__); std::fflush(stderr); } while (0)
 #else
 #define CM_TRACE(fmt, ...) do { } while (0)
 #endif

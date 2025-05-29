@@ -4,9 +4,9 @@
 SE_THREADINDEX DISPATCHER_DetectThreadCount()
 {
 #ifdef _DEBUG
-	return 3;
+	return 4;
 #else
-	return 3;
+	return 20;
 #endif
 }
 
@@ -68,6 +68,7 @@ bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition
 		DISPATCH_TRACE("DISPATCHER: Fork request at horizon refused for thread with ID %u", parentId);
 		return false;
 	}
+	LOCK_Aquire(&pDispatcher->LockThreadPool);
 	DISPATCH_TRACE("DISPATCHER: Trying to fork parent thread with ID %u", parentId);
 	SE_FORKINDEX forkIndex;
 	if (!DISPATCHER_FetchFork(pDispatcher, forkIndex))
@@ -86,6 +87,7 @@ bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition
 	{
 		DISPATCH_TRACE("DISPATCHER: All thraeds busy - forking rejected.");
 		DISPATCHER_RecycleFork(pDispatcher, forkIndex);
+		LOCK_Release(&pDispatcher->LockThreadPool);
 		return false;
 	}
 	memcpy(&pDispatcher->Forks[forkIndex], pFork, sizeof(SE_FORK));
@@ -94,12 +96,14 @@ bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition
 	THREAD_PrepareFork(pTargetThread, pPosition, distanceToHorizon, parentId, stateMachine, pHostContext, pFork, forkIndex);
 	DISPATCH_TRACE("DISPATCHER: Scheduling fork with ID %u on thread with ID %u.", forkIndex, pTargetThread->ThreadId);
 	CONTROLFLAGS_SET_ACTIVE(pTargetThread->ControlFlags);
+	LOCK_Release(&pDispatcher->LockThreadPool);
 	return true;
 }
 
 void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, const SE_HOSTCONTEXT* pHostContext)
 {
 	ASSERT(!pDispatcher->InExecution);
+	LOCK_Aquire(&pDispatcher->LockThreadPool);
 	pDispatcher->InExecution = true;
 	SE_THREAD* pTargetThread = &pDispatcher->pThreadPool[0];
 	ASSERT(CONTROLFLAGS_IS_READY(pTargetThread->ControlFlags));
@@ -108,6 +112,7 @@ void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPositio
 	THREAD_PrepareRoot(pTargetThread, pPosition, distanceToHorizon, stateMachine, pHostContext);
 	DISPATCH_TRACE("DISPATCHER: Scheduling root FSM on thread with ID %u.", pTargetThread->ThreadId);
 	CONTROLFLAGS_SET_ACTIVE(pTargetThread->ControlFlags);
+	LOCK_Release(&pDispatcher->LockThreadPool);
 }
 
 void DISPATCHER_HandleFsmCompletion(SE_THREAD* pThread)

@@ -353,7 +353,7 @@ bool POSITION_Equals(const MG_POSITION* pPosition1, const MG_POSITION* pPosition
 				return false;
 			if (pPosition1->InterestPlayerPiece[player][piece] != pPosition2->InterestPlayerPiece[player][piece])
 				return false;
-			if (pPosition1->InterestPlayerPiece[player][piece] != pPosition2->InterestPlayerPiece[player][piece])
+			if (pPosition1->AttacksPlayerPiece[player][piece] != pPosition2->AttacksPlayerPiece[player][piece])
 				return false;
 		}
 	}

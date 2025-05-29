@@ -125,6 +125,7 @@ static void SEARCH_Finish(SE_THREAD* pThread)
 static void SEARCH_NotifyForkComplete(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTSTORAGE* pSearchContext, SE_THREAD* pChildThread)
 {
 	SE_NODE* pNode = (SE_NODE*)token;
+	DISPATCH_TRACE("SEARCH: Thread %u reported completion of a fork and now joins with its parent thread %u.", pChildThread->ThreadId, pNode->pThread->ThreadId);
 	pNode->CountLiveForks.fetch_sub(1, std::memory_order_acq_rel);
 	if (pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext)
 		pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext(pNode, pSearchContext);
@@ -157,8 +158,9 @@ static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
 	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pNode);
 	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext))
 	{
+		DISPATCH_TRACE("SEARCH: Thread %u has forked.", pThread->ThreadId);
 		memcpy(&pNode->ForkMask, &forkMaskRoot, sizeof(SE_FORKMASK));
-		pNode->CountLiveForks.fetch_add(1, std::memory_order_relaxed);
+		pNode->CountLiveForks.fetch_add(1, std::memory_order_release);
 	}
 }
 

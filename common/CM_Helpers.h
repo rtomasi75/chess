@@ -4,4 +4,6 @@
 
 bool CM_ParseDecimalInt(const char* pString, const int len, int& strPos, int& outValue);
 
+void CM_SetCurrentThreadName(const char* name);
+
 #endif
