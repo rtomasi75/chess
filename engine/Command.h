@@ -3,6 +3,7 @@
 #define COMMAND_H
 
 #include <string>
+#include <sstream>
 #include "libCommon.h"
 #include "libMovegen.h"
 
@@ -30,6 +31,21 @@ protected:
 	std::string PositionToFEN(const MG_POSITION& position) const;
 	bool PositionFromFEN(MG_POSITION& position, const std::string& fen) const;
 	std::string SquareToString(const BB_SQUARE& square) const;
+	template<typename T>
+	void PrintStructLayout(std::ostream& os, const std::string& name, int indentation = 0) const
+	{
+		std::stringstream sstream;
+		for (int i = 0; i < indentation; i++)
+			sstream << " ";
+		sstream << name << ":" << std::endl;
+		for (int i = 0; i < indentation; i++)
+			sstream << " ";
+		sstream << "  sizeof(" << name << ") = " << sizeof(T) << " bytes" << std::endl;
+		for (int i = 0; i < indentation; i++)
+			sstream << " ";
+		sstream << "  alignof(" << name << ") = " << alignof(T) << std::endl;
+		os << sstream.str();
+	}
 public:
 	virtual ~Command() = default;
 	virtual bool Try(const std::string& commandString) abstract;

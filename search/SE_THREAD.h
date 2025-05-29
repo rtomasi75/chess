@@ -39,6 +39,10 @@ struct SE_THREAD
 	SE_FORKINDEX ActiveFork;
 	SE_ATOMICRETENTIONSTATE RetentionState;
 	SE_TICKCOUNT CountIdleTicks;
+	CM_ATOMICCOUNTER SleepCount;
+	CM_ATOMICCOUNTER YieldCount;
+	CM_ATOMICCOUNTER WakeCount;
+	CM_ATOMICCOUNTER RetentionTransitions;
 };
 
 struct SE_DISPATCHER;

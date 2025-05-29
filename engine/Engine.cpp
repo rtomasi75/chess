@@ -15,8 +15,11 @@
 #include "commands/Command_Perft.h"
 #include "commands/Command_Divide.h"
 #include "commands/Command_SetFen.h"
+#include "commands/Command_DebugSearch.h"
+#include "commands/Command_DebugRetention.h"
 #include <sstream>
 #include <cstring>
+#include "libCommon.h"
 
 Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode) :
 	_isRunning(false),
@@ -46,6 +49,8 @@ Engine::Engine(std::istream& inputStream, std::ostream& outputStream, EngineStar
 	_basicCommands.emplace_back(std::make_unique<Command_Divide>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_SetFen>(this));
 	_basicCommands.emplace_back(std::make_unique<Command_DebugUnmove>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugSearch>(this));
+	_basicCommands.emplace_back(std::make_unique<Command_DebugRetention>(this));
 	switch (startupMode)
 	{
 	default: // just break out into interactive mode
@@ -99,9 +104,18 @@ void Engine::SetPosition(const MG_POSITION& newPosition)
 
 }
 
-SE_DISPATCHER& Engine::Dispatcher()
+void Engine::GetRetentionInfo(const SE_THREADINDEX threadIndex, CM_COUNTER& outSleepCount, CM_COUNTER& outYieldCount, CM_COUNTER& outWakeCount, CM_COUNTER& outRetentionTransitions) const
 {
-	return _dispatcher;
+	ASSERT(threadIndex < SEARCH_MAX_DEPTH);
+	outSleepCount = _dispatcher.pThreadPool[threadIndex].SleepCount.load();
+	outYieldCount = _dispatcher.pThreadPool[threadIndex].YieldCount.load();
+	outWakeCount = _dispatcher.pThreadPool[threadIndex].WakeCount.load();
+	outRetentionTransitions = _dispatcher.pThreadPool[threadIndex].RetentionTransitions.load();
+}
+
+SE_THREADINDEX Engine::ThreadCount() const
+{
+	return _dispatcher.CountThreads;
 }
 
 MG_POSITION Engine::Position() const

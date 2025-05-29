@@ -62,4 +62,9 @@ std::string CM_GetIntrinsicInfo();
 typedef std::uint8_t CM_BOOL;
 typedef std::atomic_bool CM_ATOMICBOOL;
 
+typedef std::uint32_t CM_COUNTER;
+typedef std::atomic<CM_COUNTER> CM_ATOMICCOUNTER;
+
+#define CM_COUNT_INC(_counter_) (_counter_.fetch_add(1, std::memory_order_relaxed))
+
 #endif // CM_INTRINSICS_H

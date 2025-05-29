@@ -17,7 +17,10 @@ static inline void THREAD_HandleIdle(SE_THREAD* pThread)
 		if (pThread->CountIdleTicks++ >= RETENTIONTHRESHOLD_DROWSY)
 		{
 			SE_RETENTIONSTATE expected = RETENTIONSTATE_AWAKE;
-			pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_DROWSY);
+			if (pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_DROWSY))
+			{
+				CM_COUNT_INC(pThread->RetentionTransitions);
+			}
 		}
 		break;
 	case RETENTIONSTATE_DROWSY:
@@ -25,11 +28,16 @@ static inline void THREAD_HandleIdle(SE_THREAD* pThread)
 		if (pThread->CountIdleTicks++ >= RETENTIONTHRESHOLD_SLEEPING)
 		{
 			SE_RETENTIONSTATE expected = RETENTIONSTATE_DROWSY;
-			pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_SLEEPING);
+			if (pThread->RetentionState.compare_exchange_strong(expected, RETENTIONSTATE_SLEEPING))
+			{
+				CM_COUNT_INC(pThread->RetentionTransitions);
+			}
 		}
+		CM_COUNT_INC(pThread->YieldCount);
 		break;
 	case RETENTIONSTATE_SLEEPING:
 		CM_SLEEP(RETENTIONDELAY_SLEEP);
+		CM_COUNT_INC(pThread->SleepCount);
 		break;
 	case RETENTIONSTATE_HIBERNATING:
 		CM_SLEEP(RETENTIONDELAY_HIBERNATE);
@@ -46,6 +54,11 @@ void THREAD_WakeUp(SE_THREAD* pThread)
 	const SE_RETENTIONSTATE oldState = pThread->RetentionState.exchange(RETENTIONSTATE_AWAKE);
 	if (oldState != RETENTIONSTATE_AWAKE)
 	{
+		if (oldState != RETENTIONDELAY_HIBERNATE)
+		{
+			CM_COUNT_INC(pThread->RetentionTransitions);
+			CM_COUNT_INC(pThread->WakeCount);
+		}
 		THREAD_TRACE("THREAD %d: Wake requested (was state %d)\n", pThread->ThreadId, pThread->RetentionState);
 		pThread->CountIdleTicks = 0;
 	}
@@ -142,6 +155,10 @@ void THREAD_Initialize(SE_DISPATCHER* pDispatcher, SE_THREAD* pThread, const SE_
 	pThread->ActiveFork = FORKINDEX_NONE;
 	pThread->CountIdleTicks = 0;
 	pThread->RetentionState = RETENTIONSTATE_HIBERNATING;
+	pThread->RetentionTransitions = 0;
+	pThread->SleepCount = 0;
+	pThread->YieldCount = 0;
+	pThread->WakeCount = 0;
 	LOCK_Initialize(&pThread->LockNodeCount);
 }
 

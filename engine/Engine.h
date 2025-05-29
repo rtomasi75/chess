@@ -51,7 +51,7 @@ public:
 	std::istream& InputStream();
 	std::ostream& OutputStream();
 	MG_POSITION Position() const;
-	SE_DISPATCHER& Dispatcher();
+	SE_THREADINDEX ThreadCount() const;
 	SE_GAME Game() const;
 	const MG_MOVEGEN& MoveGen() const;
 	MG_MOVELIST LegalMoves() const;
@@ -62,6 +62,7 @@ public:
 	void MakeMove(const MG_MOVE& move);
 	void UnmakeMove();
 	void SetPosition(const MG_POSITION& newPosition);
+	void GetRetentionInfo(const SE_THREADINDEX threadIndex, CM_COUNTER& outSleepCount, CM_COUNTER& outYieldCount, CM_COUNTER& outWakeCount, CM_COUNTER& outRetentionTransitions) const;
 	Engine(std::istream& inputStream, std::ostream& outputStream, EngineStartupMode startupMode = EngineStartupMode::Default);
 	~Engine();
 };
