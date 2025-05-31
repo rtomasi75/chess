@@ -15,6 +15,9 @@
 typedef std::atomic<std::uint64_t> SE_DISPATCHMASK;
 
 #define FORKMASK_ALL UINT64_C(0xffffffffffffffff)
+struct SE_NODE;
+
+typedef void(*SE_FN_ONFORKSUCCESS)(SE_NODE*);
 
 struct SE_DISPATCHER
 {
@@ -34,7 +37,7 @@ SE_THREADINDEX DISPATCHER_DetectThreadCount();
 
 SE_THREADINDEX DISPATCHER_GetThreadCount();
 
-bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext);
+bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext, SE_FN_ONFORKSUCCESS successCallback, SE_NODE* pForkingNode);
 
 void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, const SE_HOSTCONTEXT* pHostContext);
 

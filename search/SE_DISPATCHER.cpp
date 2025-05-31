@@ -4,7 +4,7 @@
 SE_THREADINDEX DISPATCHER_DetectThreadCount()
 {
 #ifdef _DEBUG
-	return 4;
+	return 20;
 #else
 	return 20;
 #endif
@@ -57,22 +57,26 @@ static inline bool DISPATCHER_FetchFork(SE_DISPATCHER* pDispatcher, SE_FORKINDEX
 static inline void DISPATCHER_RecycleFork(SE_DISPATCHER* pDispatcher, const SE_FORKINDEX forkIndex)
 {
 	DISPATCH_TRACE("DISPATCHER: Recycling fork with ID %u.", forkIndex);
-	pDispatcher->AvailableForks.fetch_or(UINT64_C(1) << forkIndex, std::memory_order_release);
+	pDispatcher->AvailableForks.fetch_or(UINT64_C(1) << forkIndex, std::memory_order_seq_cst);
 }
 
-bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext)
+bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext, SE_FN_ONFORKSUCCESS successCallback, SE_NODE* pForkingNode)
 {
 	ASSERT(pDispatcher->InExecution);
-	if (distanceToHorizon <= 0)
+	ASSERT(distanceToHorizon >= 0);
+/*	if (distanceToHorizon <= 0)
 	{
 		DISPATCH_TRACE("DISPATCHER: Fork request at horizon refused for thread with ID %u", parentId);
 		return false;
-	}
+	}*/
 	LOCK_Aquire(&pDispatcher->LockThreadPool);
 	DISPATCH_TRACE("DISPATCHER: Trying to fork parent thread with ID %u", parentId);
 	SE_FORKINDEX forkIndex;
 	if (!DISPATCHER_FetchFork(pDispatcher, forkIndex))
+	{
+		LOCK_Release(&pDispatcher->LockThreadPool);
 		return false;
+	}
 	SE_THREAD* pTargetThread = nullptr;
 	for (SE_THREADINDEX threadIndex = 0; threadIndex < pDispatcher->CountThreads; threadIndex++)
 	{
@@ -91,10 +95,11 @@ bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition
 		return false;
 	}
 	memcpy(&pDispatcher->Forks[forkIndex], pFork, sizeof(SE_FORK));
-	CONTROLFLAGS_CLEAR_READY(pTargetThread->ControlFlags);
 	CONTROLFLAGS_CLEAR_ROOT(pTargetThread->ControlFlags);
 	THREAD_PrepareFork(pTargetThread, pPosition, distanceToHorizon, parentId, stateMachine, pHostContext, pFork, forkIndex);
+	successCallback(pForkingNode);
 	DISPATCH_TRACE("DISPATCHER: Scheduling fork with ID %u on thread with ID %u.", forkIndex, pTargetThread->ThreadId);
+	CONTROLFLAGS_CLEAR_READY(pTargetThread->ControlFlags);
 	CONTROLFLAGS_SET_ACTIVE(pTargetThread->ControlFlags);
 	LOCK_Release(&pDispatcher->LockThreadPool);
 	return true;

@@ -125,15 +125,15 @@ static bool CM_PopLsbFallback(std::uint64_t& value, std::int8_t& bit)
 
 bool CM_PopLsbAtomic(std::atomic<std::uint64_t>& bb, std::int8_t& bit)
 {
-	std::uint64_t current = bb.load(std::memory_order_relaxed);
+	std::uint64_t current = bb.load(std::memory_order_seq_cst);
 	while (current != 0)
 	{
 		std::uint64_t lsb = current & -current;
 		std::uint64_t cleared = current ^ lsb;
 
 		if (bb.compare_exchange_weak(current, cleared,
-			std::memory_order_acquire,
-			std::memory_order_relaxed))
+			std::memory_order_seq_cst,
+			std::memory_order_seq_cst))
 		{
 			bit = static_cast<std::int8_t>(CM_BitScanForward(lsb)); 
 			return true;

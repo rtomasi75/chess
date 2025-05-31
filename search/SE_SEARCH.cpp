@@ -126,7 +126,8 @@ static void SEARCH_NotifyForkComplete(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTS
 {
 	SE_NODE* pNode = (SE_NODE*)token;
 	DISPATCH_TRACE("SEARCH: Thread %u reported completion of a fork and now joins with its parent thread %u.", pChildThread->ThreadId, pNode->pThread->ThreadId);
-	pNode->CountLiveForks.fetch_sub(1, std::memory_order_acq_rel);
+	const SE_FORKCOUNT previousCount = pNode->CountLiveForks.fetch_sub(1, std::memory_order_seq_cst);
+	ASSERT(previousCount != 0);
 	if (pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext)
 		pNode->pThread->HostContext.Callbacks.OnAggregateSearchContext(pNode, pSearchContext);
 	LOCK_Aquire(&pNode->pThread->LockNodeCount);
@@ -134,6 +135,10 @@ static void SEARCH_NotifyForkComplete(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTS
 	LOCK_Release(&pNode->pThread->LockNodeCount);
 }
 
+static void SEARCH_OnSuccessfulFork(SE_NODE* pNode)
+{
+	pNode->CountLiveForks.fetch_add(1, std::memory_order_seq_cst);
+}
 
 static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
 {
@@ -156,17 +161,16 @@ static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
 	searchContext.LeafCount = 0;
 	LOCK_Initialize(&searchContext.Lock);
 	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pNode);
-	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext))
+	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext, SEARCH_OnSuccessfulFork, pNode))
 	{
 		DISPATCH_TRACE("SEARCH: Thread %u has forked.", pThread->ThreadId);
 		memcpy(&pNode->ForkMask, &forkMaskRoot, sizeof(SE_FORKMASK));
-		pNode->CountLiveForks.fetch_add(1, std::memory_order_release);
 	}
 }
 
 static void SEARCH_Join(SE_THREAD* pThread, SE_NODE* pNode)
 {
-	while (pNode->CountLiveForks.load(std::memory_order_acquire) > 0)
+	while (pNode->CountLiveForks.load(std::memory_order_seq_cst) > 0)
 	{
 		std::this_thread::yield();
 	}
@@ -184,6 +188,7 @@ void SEARCH_AggregatePerftContext(SE_NODE* pParentNode, SE_SEARCHCONTEXTSTORAGE*
 static void SEARCH_Perft_FSM_Parallel(SE_THREAD* pThread, const MG_MOVEGEN* pMoveGen)
 {
 	ASSERT(CONTROLFLAGS_IS_INITIALIZED(pThread->ControlFlags));
+	ASSERT(pThread->DistanceToHorizon <= pThread->RootDistanceToHorizon);
 	SE_CONTEXT_PERFT* pSearchContext = (SE_CONTEXT_PERFT*)&pThread->HostContext.SearchContext;
 	while (pThread->DistanceToHorizon <= pThread->RootDistanceToHorizon)
 	{
