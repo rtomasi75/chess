@@ -120,7 +120,7 @@ void THREAD_PrepareRoot(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEP
 	NODE_Initialize(pThread, &pThread->Stack[distanceToHorizon]);
 }
 
-void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, const SE_THREADINDEX parentId, SE_FSM stateMachine, const  SE_HOSTCONTEXT* pHostContext, const SE_FORK* pFork, const SE_FORKINDEX forkIndex)
+void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, const SE_THREADINDEX parentId, SE_FSM stateMachine, const SE_FORK* pFork, const SE_FORKINDEX forkIndex)
 {
 	ASSERT(!CONTROLFLAGS_IS_ACTIVE(pThread->ControlFlags));
 	ASSERT(!CONTROLFLAGS_IS_ROOT(pThread->ControlFlags));
@@ -131,7 +131,7 @@ void THREAD_PrepareFork(SE_THREAD* pThread, const MG_POSITION* pPosition, SE_DEP
 	pThread->NodeCount = 0;
 	pThread->StateMachine = stateMachine;
 	pThread->ActiveFork = forkIndex;
-	memcpy(&pThread->HostContext, pHostContext, sizeof(SE_HOSTCONTEXT));
+	memcpy(&pThread->HostContext, &pFork->HostContext, sizeof(SE_HOSTCONTEXT));
 	memcpy(&pThread->SharedPosition, pPosition, sizeof(MG_POSITION));
 	NODE_Initialize(pThread, &pThread->Stack[distanceToHorizon]);
 	for (MG_MOVEINDEX forkMoveIndex = 0; forkMoveIndex < pFork->CountMoves; forkMoveIndex++)

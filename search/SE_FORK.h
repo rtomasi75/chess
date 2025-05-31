@@ -6,10 +6,11 @@
 #include "SE_Types.h"
 #include "SE_FSM.h"
 #include "SE_FORKMASK.h"
+#include "SE_HOSTCONTEXT.h"
 
 #define SEARCH_FORK_MAX_MOVES 25
 
-struct CM_ALIGN_CACHELINE SE_FORK
+struct SE_FORK
 {
 	MG_POSITION Position;
 	MG_MOVEINDEX CountMoves;
@@ -17,14 +18,12 @@ struct CM_ALIGN_CACHELINE SE_FORK
 	SE_DEPTH DistanceToHorizon;
 	SE_FSM StateMachine;
 	SE_THREADINDEX ParentId;
-	std::uint8_t Padding;
+	SE_HOSTCONTEXT HostContext;
 };
-
-static_assert((sizeof(SE_FORK) - sizeof(MG_POSITION)) == 128);
 
 bool FORK_IsValid(const SE_FORK* pFork);
 
-void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition,SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId);
+void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext);
 
 void FORK_AddMove(SE_FORK* pFork, MG_MOVE move);
 

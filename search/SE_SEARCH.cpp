@@ -135,9 +135,10 @@ static void SEARCH_NotifyForkComplete(SE_EXECUTIONTOKEN token, SE_SEARCHCONTEXTS
 	LOCK_Release(&pNode->pThread->LockNodeCount);
 }
 
-static void SEARCH_OnSuccessfulFork(SE_NODE* pNode)
+static void SEARCH_OnSuccessfulFork(SE_NODE* pNode, const SE_FORKMASK* pForkMask)
 {
 	pNode->CountLiveForks.fetch_add(1, std::memory_order_seq_cst);
+	memcpy(&pNode->ForkMask, pForkMask, sizeof(SE_FORKMASK));
 }
 
 static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
@@ -147,12 +148,6 @@ static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
 	SE_FORK fork;
 	SE_FORKMASK forkMaskRoot;
 	FORKMASK_Initialize(&forkMaskRoot);
-	FORK_Initialize(&fork, &pThread->SharedPosition, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId);
-	for (MG_MOVEINDEX forkMoveIndex = 0; forkMoveIndex < forkCount; forkMoveIndex++)
-	{
-		FORKMASK_MaskMove(&forkMaskRoot, forkMoveIndex);
-		FORK_AddMove(&fork, pNode->MoveList.Move[forkMoveIndex]);
-	}
 	SE_CALLBACKS callbacks;
 	CALLBACKS_Initialize(&callbacks, SEARCH_NotifyForkComplete);
 	callbacks.OnAggregateSearchContext = SEARCH_AggregatePerftContext;
@@ -161,10 +156,15 @@ static void SEARCH_ForkPerft(SE_THREAD* pThread, SE_NODE* pNode)
 	searchContext.LeafCount = 0;
 	LOCK_Initialize(&searchContext.Lock);
 	HOSTCONTEXT_Initialize(&hostContext, &callbacks, &searchContext, pNode);
-	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext, SEARCH_OnSuccessfulFork, pNode))
+	FORK_Initialize(&fork, &pThread->SharedPosition, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &hostContext);
+	for (MG_MOVEINDEX forkMoveIndex = 0; forkMoveIndex < forkCount; forkMoveIndex++)
 	{
-		DISPATCH_TRACE("SEARCH: Thread %u has forked.", pThread->ThreadId);
-		memcpy(&pNode->ForkMask, &forkMaskRoot, sizeof(SE_FORKMASK));
+		FORKMASK_MaskMove(&forkMaskRoot, forkMoveIndex);
+		FORK_AddMove(&fork, pNode->MoveList.Move[forkMoveIndex]);
+	}
+	if (DISPATCHER_TryFork(pThread->pDispatcher, &pThread->SharedPosition, &fork, pThread->DistanceToHorizon, pThread->StateMachine, pThread->ThreadId, &forkMaskRoot, SEARCH_OnSuccessfulFork, pNode))
+	{
+		DISPATCH_TRACE("SEARCH: Thread %u scheduled a fork with token=0x%016llX containing %u moves.\n", pThread->ThreadId, (std::uint64_t)pNode, forkCount);
 	}
 }
 

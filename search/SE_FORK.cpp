@@ -7,7 +7,7 @@ bool FORK_IsValid(const SE_FORK* pFork)
 	return (pFork->CountMoves <= SEARCH_FORK_MAX_MOVES) && (pFork->StateMachine != nullptr);
 }
 
-void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId)
+void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext)
 {
 	ASSERT(pFork);
 	pFork->Position = *pPosition;
@@ -15,6 +15,7 @@ void FORK_Initialize(SE_FORK* pFork, const MG_POSITION* pPosition, SE_DEPTH dist
 	pFork->DistanceToHorizon = distanceToHorizon;
 	pFork->StateMachine = stateMachine;
 	pFork->ParentId = parentId;
+	memcpy(&pFork->HostContext, pHostContext, sizeof(SE_HOSTCONTEXT));
 	ASSERT(FORK_IsValid(pFork));
 }
 

@@ -12,19 +12,20 @@
 
 #define SEARCH_MAX_FORKS 64
 
-typedef std::atomic<std::uint64_t> SE_DISPATCHMASK;
+typedef std::uint64_t SE_DISPATCHMASK;
+typedef std::atomic<std::uint64_t> SE_ATOMICDISPATCHMASK;
 
 #define FORKMASK_ALL UINT64_C(0xffffffffffffffff)
 struct SE_NODE;
 
-typedef void(*SE_FN_ONFORKSUCCESS)(SE_NODE*);
+typedef void(*SE_FN_ONFORKSUCCESS)(SE_NODE*, const SE_FORKMASK*);
 
 struct SE_DISPATCHER
 {
 	SE_THREADINDEX CountThreads;
 	SE_THREAD* pThreadPool;
 	SE_FORK Forks[SEARCH_MAX_FORKS];
-	SE_DISPATCHMASK AvailableForks;
+	SE_ATOMICDISPATCHMASK AvailableForks;
 	CM_ATOMICBOOL InExecution;
 	CM_LOCK LockThreadPool;
 };
@@ -37,7 +38,7 @@ SE_THREADINDEX DISPATCHER_DetectThreadCount();
 
 SE_THREADINDEX DISPATCHER_GetThreadCount();
 
-bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId, const SE_HOSTCONTEXT* pHostContext, SE_FN_ONFORKSUCCESS successCallback, SE_NODE* pForkingNode);
+bool DISPATCHER_TryFork(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, const SE_FORK* pFork, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, SE_THREADINDEX parentId,const SE_FORKMASK* pForkMask, SE_FN_ONFORKSUCCESS successCallback, SE_NODE* pForkingNode);
 
 void DISPATCHER_Dispatch(SE_DISPATCHER* pDispatcher, const MG_POSITION* pPosition, SE_DEPTH distanceToHorizon, SE_FSM stateMachine, const SE_HOSTCONTEXT* pHostContext);
 
